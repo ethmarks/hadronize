@@ -1,5 +1,10 @@
-import { Player, validatePlayerInits, type PlayerInit } from "./Player";
-import { prngFlavor, type Flavor, Quark } from "./Quark";
+import {
+  Chamber,
+  Player,
+  validatePlayerInits,
+  type PlayerInit,
+} from "./Player";
+import { prngFlavor, type Flavor, Quark, Hadron } from "./Quark";
 
 /**
  * The maximum number of turns before the game is declared a draw. Also used to determine how many quarks to pregenerate.
@@ -13,6 +18,11 @@ const TURN_LIMIT = 300;
  * The number of quarks each player starts with. Traditionally, should be 4.
  */
 const STARTING_QUARK_COUNT = 4;
+
+export type ObservationResult = {
+  type: "no reaction" | "hadronized" | "tunneled";
+  activeFlavor: Flavor;
+};
 
 export class Hadronize {
   /**
@@ -37,9 +47,9 @@ export class Hadronize {
   public usedQuarks: number = 0;
 
   /**
-   * The quark currently in superposition.
+   * The index of the quark currently in superposition, if any.
    */
-  public activeQuark: Quark;
+  public activeQuark: number | undefined;
 
   /**
    * * 0 while the game is being initialized.
@@ -86,16 +96,16 @@ export class Hadronize {
 
       // Add starting quarks to chamber
       Array.from({ length: STARTING_QUARK_COUNT }).forEach(() => {
-        const quark = this.nextQuark();
-        quark.collapse();
-        player.chamber.push(quark);
+        const quark = this.nextQuarkIndex();
+        this.quarks[quark].collapse();
+        player.chamber.indices.push(quark);
       });
 
       return player;
     });
 
-    // Initialize the first new quark
-    this.activeQuark = this.nextQuark();
+    // Initialize the first active quark
+    this.activeQuark = this.nextQuarkIndex();
 
     // Set turn counter to 1 and begin the game!
     this.turnCount = 1;
@@ -104,11 +114,109 @@ export class Hadronize {
   /**
    * Gets the next unused quark in this.quarks.
    */
-  nextQuark() {
+  nextQuarkIndex(): number {
     this.usedQuarks++;
-    return this.quarks[this.usedQuarks - 1];
+    return this.usedQuarks - 1;
+  }
+
+  /**
+   * Tunnels quarks all non-hadronized quarks of a specified flavor from one
+   * chamber to another.
+   *
+   * @param flavor The flavor of quarks to tunnel.
+   * @param from The chamber the quarks tunnel from.
+   * @param to The chamber the quarks tunnel to.
+   */
+  tunnelQuarks(flavor: Flavor, from: Chamber, to: Chamber) {
+    const quarksToTunnel = from.indices.filter((index) => {
+      const quark = this.quarks[index];
+      return quark.flavor === flavor && quark.isHadronized === false;
+    });
+    to.indices.push(...quarksToTunnel);
+
+    // Mutate from in order to remove the quarks that tunneled
+    from.indices = from.indices.filter((index) => {
+      const quark = this.quarks[index];
+      return quark.isHadronized === true || quark.flavor !== flavor;
+    });
+  }
+
+  /**
+   * Hadronizes all quarks of a specified flavor in a chamber.
+   *
+   * @param flavor The flavor of quarks to hadronized.
+   * @param player The chamber that quarks the quarks hadronize in.
+   */
+  hadronizeQuarks(flavor: Flavor, chamber: Chamber) {
+    const hadronizedQuarks: number[] = [];
+    chamber.indices.forEach((index) => {
+      const quark = this.quarks[index];
+      if (quark.flavor === flavor && quark.isHadronized === false) {
+        quark.hadronize();
+        hadronizedQuarks.push(index);
+      }
+    });
+    chamber.hadrons.push(new Hadron(hadronizedQuarks));
+  }
+
+  /**
+   * Collapses the current active quark into the observing player's chamber and
+   * simulates subsequent reactions, if any.
+   *
+   * @param observingPlayer
+   * @param activePlayer
+   * @returns
+   */
+  observeQuark(
+    observingPlayer: Player,
+    activePlayer: Player,
+  ): ObservationResult {
+    if (this.activeQuark === undefined) {
+      throw new Error("Cannot observe when there is no active quark!");
+    }
+
+    const activeFlavor = this.quarks[this.activeQuark].flavor;
+
+    // Determine whether or not the observer's chamber has a quark
+    // with the same flavor as the active quark.
+    //
+    // This step must happen _before_ we move the quark to the observing
+    // player's chamber.
+    const willReact = observingPlayer.chamber.indices.some(
+      (index) => this.quarks[index].flavor === activeFlavor,
+    );
+
+    // Move active quark to observing player's chamber.
+    observingPlayer.chamber.indices.push(this.activeQuark);
+
+    // Collapse the active quark.
+    this.quarks[this.activeQuark].collapse();
+
+    // Reset the active quark now that it's been moved.
+    this.activeQuark = undefined;
+
+    // If no reaction, return early.
+    if (!willReact) {
+      return { activeFlavor, type: "no reaction" };
+    }
+
+    // Determine which kind of reaction will occur.
+    if (observingPlayer.id === activePlayer.id) {
+      this.hadronizeQuarks(activeFlavor, activePlayer.chamber);
+      return { activeFlavor, type: "hadronized" };
+    } else {
+      this.tunnelQuarks(
+        activeFlavor,
+        observingPlayer.chamber,
+        activePlayer.chamber,
+      );
+      return { activeFlavor, type: "tunneled" };
+    }
   }
 }
 
-// const game = new Hadronize(87539319, [{ name: "ethan" }]);
-// console.log(game.players[0].chamber[0].collapsedInfo);
+// const game = new Hadronize(1, [{ name: "alice" }]);
+// const alice = game.players.find((p) => p.name === "alice")!;
+// console.log(alice.chamber.indices.map((i) => game.quarks[i].flavor));
+// console.log(game.observeQuark(alice, alice));
+// console.log(alice.chamber);
