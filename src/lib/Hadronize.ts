@@ -130,14 +130,14 @@ export class Hadronize {
   tunnelQuarks(flavor: Flavor, from: Chamber, to: Chamber) {
     const quarksToTunnel = from.indices.filter((index) => {
       const quark = this.quarks[index];
-      return quark.flavor === flavor && quark.isHadronized === false;
+      return quark.flavor === flavor;
     });
     to.indices.push(...quarksToTunnel);
 
-    // Mutate from in order to remove the quarks that tunneled
+    // Remove the quarks that tunneled from the `from` chamber
     from.indices = from.indices.filter((index) => {
       const quark = this.quarks[index];
-      return quark.isHadronized === true || quark.flavor !== flavor;
+      return quark.flavor !== flavor;
     });
   }
 
@@ -151,11 +151,16 @@ export class Hadronize {
     const hadronizedQuarks: number[] = [];
     chamber.indices.forEach((index) => {
       const quark = this.quarks[index];
-      if (quark.flavor === flavor && quark.isHadronized === false) {
+      if (quark.flavor === flavor) {
         quark.hadronize();
         hadronizedQuarks.push(index);
       }
     });
+
+    // Remove the quarks that hadronized from the chamber
+    chamber.indices = chamber.indices.filter(
+      (index) => this.quarks[index].flavor !== flavor,
+    );
     chamber.hadrons.push(new Hadron(hadronizedQuarks));
   }
 
