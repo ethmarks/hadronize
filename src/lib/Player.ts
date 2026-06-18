@@ -36,4 +36,11 @@ export class Player {
     public readonly id: number,
     public readonly name: string,
   ) {}
+
+  public get score() {
+    return this.chamber.hadrons.reduce(
+      (acc, hadron) => (acc += hadron.indices.length),
+      0,
+    );
+  }
 }

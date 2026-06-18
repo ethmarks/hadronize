@@ -218,10 +218,29 @@ export class Hadronize {
       return { activeFlavor, type: "tunneled" };
     }
   }
+
+  printState() {
+    console.log(`It is turn #${this.turnCount}`);
+
+    this.players.forEach((player) => {
+      console.log(
+        `${player.name} has ${player.chamber.indices.map((index) => this.quarks[index].flavor[0].toLowerCase())} in their chamber and ${player.score} hadronized quarks.`,
+      );
+    });
+
+    if (this.activeQuark === undefined) {
+      console.log("The next quark hasn't been produced yet.");
+    } else {
+      console.log(
+        `The next quark is '${this.quarks[this.activeQuark].flavor}'`,
+      );
+    }
+  }
 }
 
-// const game = new Hadronize(1, [{ name: "alice" }]);
+// const game = new Hadronize(4, [{ name: "alice" }, { name: "bob" }]);
 // const alice = game.players.find((p) => p.name === "alice")!;
-// console.log(alice.chamber.indices.map((i) => game.quarks[i].flavor));
-// console.log(game.observeQuark(alice, alice));
-// console.log(alice.chamber);
+// const bob = game.players.find((p) => p.name === "bob")!;
+// game.printState();
+// console.log(game.observeQuark(bob, alice));
+// game.printState();
