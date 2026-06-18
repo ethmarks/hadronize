@@ -25,8 +25,9 @@ to tell which flavor the quark will resolve into ahead of time.
 ### Setup
 
 At the start of the game, each player starts with 4 collapsed quarks with
-randomly-chosen flavors. Each player's collection of quarks is called a **Cloud
-Chamber**. Cloud chambers can hold an unlimited number of quarks.
+randomly-chosen flavors. Each player's collection of quarks is called a
+[**Cloud Chamber**](https://en.wikipedia.org/wiki/Cloud_chamber). Cloud chambers
+can hold an unlimited number of quarks.
 
 ### Gameplay
 
@@ -85,3 +86,17 @@ superposition is between charm, strange, and up. Alice...
     (3 existing + 1 new) quarks quantum tunnel into Alice's cloud chamber. Alice
     now has four strange quarks in her cloud chamber and Bob has zero strange
     quarks in his cloud chamber.
+
+## Acknowledgements
+
+The rules/mechanics of Hadronize are _heavily_ inspired by the card game
+[Mantis](https://www.explodingkittens.com/products/mantis) by Exploding Kittens.
+My original intention was to just create a digital version of Mantis, but I was
+concerned about copyright, so instead I created a separate game with _very_
+similar rules to Mantis (though there are some differences) with a quantum
+physics theme of my own design.
+
+## License
+
+This project is under an MIT License. See [LICENSE](LICENSE) for more
+information.
