@@ -18,9 +18,10 @@ Be the first player to hadronize 10 or more quarks.
 quark: up, down, strange, charm, bottom, and top.
 
 **Superposed Quarks** are quarks in a state of superposition between three
-different flavors. Upon being observed, the superposition collapses into one of
-the flavors, and the superposed quark becomes a normal quark. It is impossible
-to tell which flavor the quark will resolve into ahead of time.
+different flavors. The flavors of the superposition are public information and
+can be seen by all players. Upon being observed, the superposition collapses
+into one of the flavors, and the superposed quark becomes a normal quark. It is
+impossible to tell which flavor the quark will ahead into ahead of time.
 
 ### Setup
 
