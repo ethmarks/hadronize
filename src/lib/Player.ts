@@ -1,8 +1,20 @@
+import type { CurrentGameState } from "./Hadronize";
 import { Hadron, Quark } from "./Quark";
 
 export interface PlayerInit {
   name: string;
+  driver: Driver;
 }
+
+export interface Scratchpad {
+  read: () => string;
+  write: (content: string) => void;
+}
+
+export type Driver = (
+  state: CurrentGameState,
+  scratchpad: Scratchpad,
+) => number;
 
 export function validatePlayerInits(inits: PlayerInit[]): void {
   // check for duplicate names
@@ -30,12 +42,28 @@ export class Chamber {
 }
 
 export class Player {
+  /**
+   * Stores all the non-hadronized quarks.
+   */
   public chamber: Chamber = new Chamber();
+
+  /**
+   * Persistent scratchpad for the drivers.
+   */
+  private scratchpadContent: string = "";
+
+  public readonly scratchpad: Scratchpad;
 
   constructor(
     public readonly order: number,
     public readonly name: string,
-  ) {}
+    public readonly driver: Driver,
+  ) {
+    this.scratchpad = {
+      read: () => this.scratchpadContent,
+      write: (content: string) => (this.scratchpadContent = content),
+    };
+  }
 
   public get score() {
     return this.chamber.hadrons.reduce(

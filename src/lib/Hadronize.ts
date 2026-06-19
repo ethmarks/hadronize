@@ -12,7 +12,39 @@ import {
   type Superposition,
 } from "./Quark";
 
-export interface GameState {
+/**
+ * The maximum number of turns before the game is declared a draw. Also used to determine how many quarks to pregenerate.
+ *
+ * Set this to such a big number that players are unlikely to hit it, but not
+ * too large a number that pregenerating the quarks will take too long.
+ */
+const TURN_LIMIT = 300;
+
+/**
+ * The number of quarks each player starts with. Traditionally, should be 4.
+ */
+const STARTING_QUARK_COUNT = 4;
+
+export type Reaction = "no reaction" | "hadronized" | "tunneled";
+
+export type Observation = {
+  /**
+   * The order number of the observer player.
+   */
+  observer: number;
+
+  /**
+   * What kind of reaction the observation resulted in.
+   */
+  reaction: Reaction;
+
+  /**
+   * What flavor the activeQuark collapsed into.
+   */
+  activeFlavor: Flavor;
+};
+
+interface BaseGameState {
   /**
    * The turn count.
    */
@@ -53,33 +85,21 @@ export interface GameState {
      */
     score: number;
   }[];
-
-  /**
-   * An array of all previous game states.
-   *
-   * This must ONLY be used on the highest level. Failure to do will result in
-   * pointless quadratic memory use.
-   */
-  timeline?: GameState[];
 }
 
-/**
- * The maximum number of turns before the game is declared a draw. Also used to determine how many quarks to pregenerate.
- *
- * Set this to such a big number that players are unlikely to hit it, but not
- * too large a number that pregenerating the quarks will take too long.
- */
-const TURN_LIMIT = 300;
+export interface PastGameState extends BaseGameState {
+  /**
+   * The observation on this turn.
+   */
+  observation: Observation;
+}
 
-/**
- * The number of quarks each player starts with. Traditionally, should be 4.
- */
-const STARTING_QUARK_COUNT = 4;
-
-export type ObservationResult = {
-  type: "no reaction" | "hadronized" | "tunneled";
-  activeFlavor: Flavor;
-};
+export interface CurrentGameState extends BaseGameState {
+  /**
+   * An array of all previous game states.
+   */
+  timeline: PastGameState[];
+}
 
 export class Hadronize {
   /**
@@ -116,7 +136,12 @@ export class Hadronize {
    */
   public turn: number = 0;
 
-  public state: GameState | undefined = undefined;
+  /**
+   * The current game state.
+   */
+  public state: CurrentGameState | undefined = undefined;
+
+  public mostRecentObservation: Observation | undefined = undefined;
 
   constructor(seed: number, playerInits: PlayerInit[]) {
     // https://github.com/cprosche/mulberry32
@@ -151,7 +176,7 @@ export class Hadronize {
     // Initialize players
     validatePlayerInits(playerInits);
     this.players = playerInits.map((playerInit, index) => {
-      const player = new Player(index, playerInit.name);
+      const player = new Player(index, playerInit.name, playerInit.driver);
 
       // Add starting quarks to chamber
       Array.from({ length: STARTING_QUARK_COUNT }).forEach(() => {
@@ -176,6 +201,18 @@ export class Hadronize {
   nextQuarkIndex(): number {
     this.usedQuarks++;
     return this.usedQuarks - 1;
+  }
+
+  /**
+   * Produces a new superposed quark (a.k.a. activeQuark).
+   */
+  produceQuark(): void {
+    if (this.activeQuark !== undefined) {
+      throw new Error(
+        "produceSuperposedQuark() was called, but this.activeQuark already exists!",
+      );
+    }
+    this.activeQuark = this.nextQuarkIndex();
   }
 
   /**
@@ -231,10 +268,7 @@ export class Hadronize {
    * @param activePlayer
    * @returns
    */
-  observeQuark(
-    observingPlayer: Player,
-    activePlayer: Player,
-  ): ObservationResult {
+  observeQuark(observingPlayer: Player, activePlayer: Player): Observation {
     if (this.activeQuark === undefined) {
       throw new Error("Cannot observe when there is no active quark!");
     }
@@ -259,27 +293,38 @@ export class Hadronize {
     // Reset the active quark now that it's been moved.
     this.activeQuark = undefined;
 
+    let reaction: Reaction;
+
     // If no reaction, return early.
-    if (!willReact) {
-      return { activeFlavor, type: "no reaction" };
+    if (willReact) {
+      // Determine which kind of reaction will occur.
+      if (observingPlayer.order === activePlayer.order) {
+        this.hadronizeQuarks(activeFlavor, activePlayer.chamber);
+        reaction = "hadronized";
+      } else {
+        this.tunnelQuarks(
+          activeFlavor,
+          observingPlayer.chamber,
+          activePlayer.chamber,
+        );
+        reaction = "tunneled";
+      }
+    } else {
+      reaction = "no reaction";
     }
 
-    // Determine which kind of reaction will occur.
-    if (observingPlayer.order === activePlayer.order) {
-      this.hadronizeQuarks(activeFlavor, activePlayer.chamber);
-      return { activeFlavor, type: "hadronized" };
-    } else {
-      this.tunnelQuarks(
-        activeFlavor,
-        observingPlayer.chamber,
-        activePlayer.chamber,
-      );
-      return { activeFlavor, type: "tunneled" };
-    }
+    const observation: Observation = {
+      activeFlavor,
+      reaction,
+      observer: observingPlayer.order,
+    };
+
+    this.mostRecentObservation = observation;
+    return observation;
   }
 
   get activePlayer(): Player {
-    return this.players[this.turn % this.players.length];
+    return this.players[(this.turn - 1) % this.players.length];
   }
 
   /**
@@ -289,7 +334,7 @@ export class Hadronize {
    *
    * @returns
    */
-  updateState(): GameState {
+  updateState(): CurrentGameState {
     const currentState = this.state;
 
     // Validate
@@ -309,7 +354,7 @@ export class Hadronize {
       );
     }
 
-    const newState: GameState = {
+    const newState: CurrentGameState = {
       turn: this.turn,
       activePlayer: this.activePlayer.order,
       activeQuark: this.quarks[this.activeQuark].superposition,
@@ -322,15 +367,24 @@ export class Hadronize {
           score: player.score,
         };
       }),
+      timeline: [],
     };
 
-    if (currentState === undefined || currentState?.timeline === undefined) {
-      // This runs on turn #1.
-      newState.timeline = [];
-    } else {
+    // This runs if there are any past states to add to the timeline
+    if (currentState !== undefined) {
       // This runs on all subsequent turns.
+
       const { timeline, ...previousState } = currentState;
-      newState.timeline = [...timeline, previousState];
+
+      const previousObservation = this.mostRecentObservation;
+      if (previousObservation === undefined) {
+        throw new Error("previousObservation should not be undefined");
+      }
+
+      newState.timeline = [
+        ...timeline,
+        { ...previousState, observation: previousObservation },
+      ];
     }
 
     this.state = newState;
