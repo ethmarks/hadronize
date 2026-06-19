@@ -33,7 +33,7 @@ export class Player {
   public chamber: Chamber = new Chamber();
 
   constructor(
-    public readonly id: number,
+    public readonly order: number,
     public readonly name: string,
   ) {}
 

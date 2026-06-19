@@ -4,7 +4,64 @@ import {
   validatePlayerInits,
   type PlayerInit,
 } from "./Player";
-import { prngFlavor, type Flavor, Quark, Hadron } from "./Quark";
+import {
+  prngFlavor,
+  type Flavor,
+  Quark,
+  Hadron,
+  type Superposition,
+} from "./Quark";
+
+export interface GameState {
+  /**
+   * The turn count.
+   */
+  turn: number;
+
+  /**
+   * The order number of the active player.
+   */
+  activePlayer: number;
+
+  /**
+   * Only the flavors of the superposition are public information.
+   */
+  activeQuark: Superposition;
+
+  players: {
+    /**
+     * The player's order.
+     *
+     * Order number is how drivers refer to players and select them as
+     * observers.
+     */
+    order: number;
+
+    /**
+     * We intentionally omit the name because drivers shouldn't need to know it.
+     */
+    // name: string,
+
+    /**
+     * Only the flavors of the quarks in the player chamber are public
+     * information.
+     */
+    chamber: Flavor[];
+
+    /**
+     * The number of hadronized quarks.
+     */
+    score: number;
+  }[];
+
+  /**
+   * An array of all previous game states.
+   *
+   * This must ONLY be used on the highest level. Failure to do will result in
+   * pointless quadratic memory use.
+   */
+  timeline?: GameState[];
+}
 
 /**
  * The maximum number of turns before the game is declared a draw. Also used to determine how many quarks to pregenerate.
@@ -57,7 +114,9 @@ export class Hadronize {
    * * 2 on the second turn
    * * etc
    */
-  public turnCount: number = 0;
+  public turn: number = 0;
+
+  public state: GameState | undefined = undefined;
 
   constructor(seed: number, playerInits: PlayerInit[]) {
     // https://github.com/cprosche/mulberry32
@@ -77,7 +136,7 @@ export class Hadronize {
     const quarkCount =
       TURN_LIMIT + playerInits.length * STARTING_QUARK_COUNT + 10;
     this.quarks = Array.from({ length: quarkCount }, (_, index) => {
-      const superposFlavors: [Flavor, Flavor, Flavor] = [
+      const superposFlavors: Superposition = [
         prngFlavor(rng()),
         prngFlavor(rng()),
         prngFlavor(rng()),
@@ -108,7 +167,7 @@ export class Hadronize {
     this.activeQuark = this.nextQuarkIndex();
 
     // Set turn counter to 1 and begin the game!
-    this.turnCount = 1;
+    this.turn = 1;
   }
 
   /**
@@ -206,7 +265,7 @@ export class Hadronize {
     }
 
     // Determine which kind of reaction will occur.
-    if (observingPlayer.id === activePlayer.id) {
+    if (observingPlayer.order === activePlayer.order) {
       this.hadronizeQuarks(activeFlavor, activePlayer.chamber);
       return { activeFlavor, type: "hadronized" };
     } else {
@@ -219,8 +278,67 @@ export class Hadronize {
     }
   }
 
+  get activePlayer(): Player {
+    return this.players[this.turn % this.players.length];
+  }
+
+  /**
+   *
+   * This should only be run at the beginning of a turn, after the turn has been
+   * incremented and the new activeQuark has been set.
+   *
+   * @returns
+   */
+  updateState(): GameState {
+    const currentState = this.state;
+
+    // Validate
+    if (this.turn === 0) {
+      throw new Error(
+        "updateState() should not be called when the game is being set up.",
+      );
+    }
+    if (this.activeQuark === undefined) {
+      throw new Error(
+        "updateState() was called when activeQuark was undefined.",
+      );
+    }
+    if (currentState?.timeline?.some((state) => state.turn === this.turn)) {
+      throw new Error(
+        `updateState() should only be called once per turn, but a timeline entry with the current turn (${this.turn}) was found.`,
+      );
+    }
+
+    const newState: GameState = {
+      turn: this.turn,
+      activePlayer: this.activePlayer.order,
+      activeQuark: this.quarks[this.activeQuark].superposition,
+      players: this.players.map((player) => {
+        return {
+          order: player.order,
+          chamber: player.chamber.indices.map(
+            (index) => this.quarks[index].flavor,
+          ),
+          score: player.score,
+        };
+      }),
+    };
+
+    if (currentState === undefined || currentState?.timeline === undefined) {
+      // This runs on turn #1.
+      newState.timeline = [];
+    } else {
+      // This runs on all subsequent turns.
+      const { timeline, ...previousState } = currentState;
+      newState.timeline = [...timeline, previousState];
+    }
+
+    this.state = newState;
+    return newState;
+  }
+
   printState() {
-    console.log(`It is turn #${this.turnCount}`);
+    console.log(`It is turn #${this.turn}`);
 
     this.players.forEach((player) => {
       console.log(
