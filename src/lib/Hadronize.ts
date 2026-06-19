@@ -2,7 +2,9 @@ import {
   Chamber,
   Player,
   validatePlayerInits,
+  type Driver,
   type PlayerInit,
+  type Scratchpad,
 } from "./Player";
 import {
   prngFlavor,
@@ -25,7 +27,23 @@ const TURN_LIMIT = 300;
  */
 const STARTING_QUARK_COUNT = 4;
 
+/**
+ * The number of hadronized quarks required to win. Traditionally, should be 10.
+ */
+const WINNING_HADRON_COUNT = 10;
+
 export type Reaction = "no reaction" | "hadronized" | "tunneled";
+
+/**
+ * Possible return values for executeTurn().
+ *
+ * * If a number is returned, it represents the order number of the winning
+ * player.
+ * * If the string "too many turns" is returned, the turn limit has been
+ * exceeded.
+ * * If undefined is returned, the game is still in progress.
+ */
+export type Result = number | "too many turns" | undefined;
 
 export type Observation = {
   /**
@@ -143,6 +161,8 @@ export class Hadronize {
 
   public mostRecentObservation: Observation | undefined = undefined;
 
+  public result: Result = undefined;
+
   constructor(seed: number, playerInits: PlayerInit[]) {
     // https://github.com/cprosche/mulberry32
     function mulberry32(seed: number) {
@@ -188,9 +208,6 @@ export class Hadronize {
       return player;
     });
 
-    // Initialize the first active quark
-    this.activeQuark = this.nextQuarkIndex();
-
     // Set turn counter to 1 and begin the game!
     this.turn = 1;
   }
@@ -209,10 +226,16 @@ export class Hadronize {
   produceQuark(): void {
     if (this.activeQuark !== undefined) {
       throw new Error(
-        "produceSuperposedQuark() was called, but this.activeQuark already exists!",
+        "produceQuark() was called, but this.activeQuark already exists!",
       );
     }
-    this.activeQuark = this.nextQuarkIndex();
+
+    const nextIndex = this.nextQuarkIndex();
+
+    if (nextIndex > this.quarks.length) {
+      throw new Error("Ran out of quarks!");
+    }
+    this.activeQuark = nextIndex;
   }
 
   /**
@@ -408,11 +431,56 @@ export class Hadronize {
       );
     }
   }
+
+  /**
+   * Executes one game turn from end-to-end.
+   *
+   * @returns
+   */
+  executeTurn(): Result {
+    this.produceQuark();
+
+    const state = this.updateState();
+
+    const observerOrder = this.activePlayer.driver(
+      state,
+      this.activePlayer.scratchpad,
+    );
+
+    const observer = this.players[observerOrder];
+
+    this.observeQuark(observer, this.activePlayer);
+
+    this.turn++;
+
+    // Check for winners _before_ we check if the turn limit has been exceeded.
+    for (const player of this.players) {
+      if (player.score >= WINNING_HADRON_COUNT) {
+        this.result = player.order;
+        return this.result;
+      }
+    }
+
+    // Check if the turn limit has been exceeded.
+    if (this.turn >= TURN_LIMIT || this.usedQuarks >= this.quarks.length) {
+      this.result = "too many turns";
+      return this.result;
+    }
+  }
 }
 
-// const game = new Hadronize(4, [{ name: "alice" }, { name: "bob" }]);
-// const alice = game.players.find((p) => p.name === "alice")!;
-// const bob = game.players.find((p) => p.name === "bob")!;
-// game.printState();
-// console.log(game.observeQuark(bob, alice));
-// game.printState();
+// const hadronizeDriver: Driver = (s: CurrentGameState, p: Scratchpad): number =>
+//   s.activePlayer;
+
+// const game = new Hadronize(1, [
+//   { name: "alice", driver: hadronizeDriver },
+//   { name: "bob", driver: hadronizeDriver },
+// ]);
+
+// let i = 0;
+// while (game.executeTurn() === undefined) {
+//   i++;
+// }
+
+// console.log(game.state);
+// console.log(game.result);
