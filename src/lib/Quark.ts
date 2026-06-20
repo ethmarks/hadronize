@@ -3,8 +3,8 @@ export const FLAVORS = [
   "down",
   "strange",
   "charm",
-  "bottom",
   "top",
+  "bottom",
 ] as const;
 
 export type Flavor = (typeof FLAVORS)[number];

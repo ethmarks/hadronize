@@ -45,7 +45,7 @@ export type Reaction = "no reaction" | "hadronized" | "tunneled";
  */
 export type Result = number | "too many turns" | undefined;
 
-export type Observation = {
+export interface Observation {
   /**
    * The order number of the observer player.
    */
@@ -60,7 +60,33 @@ export type Observation = {
    * What flavor the activeQuark collapsed into.
    */
   activeFlavor: Flavor;
-};
+}
+
+export interface PlayerState {
+  /**
+   * The player's order.
+   *
+   * Order number is how drivers refer to players and select them as
+   * observers.
+   */
+  order: number;
+
+  /**
+   * The name of the player.
+   */
+  name: string;
+
+  /**
+   * Only the flavors of the quarks in the player chamber are public
+   * information.
+   */
+  chamber: Flavor[];
+
+  /**
+   * The number of hadronized quarks.
+   */
+  score: number;
+}
 
 interface BaseGameState {
   /**
@@ -78,31 +104,7 @@ interface BaseGameState {
    */
   activeQuark: Superposition;
 
-  players: {
-    /**
-     * The player's order.
-     *
-     * Order number is how drivers refer to players and select them as
-     * observers.
-     */
-    order: number;
-
-    /**
-     * We intentionally omit the name because drivers shouldn't need to know it.
-     */
-    // name: string,
-
-    /**
-     * Only the flavors of the quarks in the player chamber are public
-     * information.
-     */
-    chamber: Flavor[];
-
-    /**
-     * The number of hadronized quarks.
-     */
-    score: number;
-  }[];
+  players: PlayerState[];
 }
 
 export interface PastGameState extends BaseGameState {
@@ -384,6 +386,7 @@ export class Hadronize {
       players: this.players.map((player) => {
         return {
           order: player.order,
+          name: player.name,
           chamber: player.chamber.indices.map(
             (index) => this.quarks[index].flavor,
           ),
@@ -482,5 +485,4 @@ export class Hadronize {
 //   i++;
 // }
 
-// console.log(game.state);
-// console.log(game.result);
+// console.log(JSON.stringify(game.state));
