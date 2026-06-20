@@ -11,6 +11,7 @@ const STYLE_MAPPING = {
   blue: { ansi: pc.blue, css: "color: #5dafef;" },
   magenta: { ansi: pc.magenta, css: "color: #800080;" },
   gray: { ansi: pc.gray, css: "color: #808080;" },
+  white: { ansi: pc.white, css: "color: #ffffff;" },
 
   bold: { ansi: pc.bold, css: "font-weight: bold;" },
   italic: { ansi: pc.italic, css: "font-style: italic;" },
@@ -18,13 +19,13 @@ const STYLE_MAPPING = {
 
 export type Style = keyof typeof STYLE_MAPPING;
 
-export type outputChunk = { text: string; style?: Style };
+export type slChunk = { text: string; style?: Style };
 
 const isBrowser =
   typeof window !== "undefined" && typeof window.document !== "undefined";
 
-// const outputType: "ansi" | "css" = isBrowser ? "css" : "ansi";
-const outputType: "ansi" | "css" = "ansi";
+// const outputType: "ansi" | "css" | "none" = isBrowser ? "css" : "ansi";
+const outputType: "ansi" | "css" | "none" = "ansi";
 
 /**
  * **S**tyled **L**og.
@@ -38,7 +39,7 @@ const outputType: "ansi" | "css" = "ansi";
  * "css" for %c substitions that work in the browser.
  */
 export function sl(
-  chunks: outputChunk[],
+  chunks: slChunk[],
   outputFunc: (...data: any[]) => void = console.log,
 ) {
   if (outputType === "ansi") {
@@ -53,14 +54,16 @@ export function sl(
     }, "");
 
     outputFunc(string);
-  } else {
+  } else if (outputType === "css") {
     // We make the styles using %c placeholders and an array of styles
 
     const styles: string[] = [];
 
     const string = chunks.reduce((acc, { text, style }) => {
       if (style === undefined) {
-        return (acc += text);
+        // Reset
+        styles.push("");
+        return (acc += `%c${text}`);
       } else {
         styles.push(STYLE_MAPPING[style].css);
         return (acc += `%c${text}`);
@@ -68,6 +71,8 @@ export function sl(
     }, "");
 
     outputFunc(string, ...styles);
+  } else {
+    outputFunc(chunks.reduce((acc, { text, style }) => (acc += text), ""));
   }
 }
 
