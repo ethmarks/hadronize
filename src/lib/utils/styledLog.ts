@@ -15,11 +15,12 @@ const STYLE_MAPPING = {
 
   bold: { ansi: pc.bold, css: "font-weight: bold;" },
   italic: { ansi: pc.italic, css: "font-style: italic;" },
+  reset: { ansi: pc.reset, css: "" },
 } as const satisfies Record<string, { ansi: Formatter; css: string }>;
 
 export type Style = keyof typeof STYLE_MAPPING;
 
-export type slChunk = { text: string; style?: Style };
+export type slChunk = [string, Style] | string;
 
 const isBrowser =
   typeof window !== "undefined" && typeof window.document !== "undefined";
@@ -45,11 +46,14 @@ export function sl(
   if (outputType === "ansi") {
     // We make the styles using ANSII escape codes
 
-    const string = chunks.reduce((acc, { text, style }) => {
-      if (style === undefined) {
-        return (acc += text);
-      } else {
+    const string = chunks.reduce((acc, chunk) => {
+      if (Array.isArray(chunk)) {
+        const text = chunk[0];
+        const style = chunk[1];
+
         return (acc += STYLE_MAPPING[style].ansi(text));
+      } else {
+        return (acc += chunk);
       }
     }, "");
 
@@ -59,20 +63,28 @@ export function sl(
 
     const styles: string[] = [];
 
-    const string = chunks.reduce((acc, { text, style }) => {
-      if (style === undefined) {
-        // Reset
-        styles.push("");
-        return (acc += `%c${text}`);
-      } else {
+    const string = chunks.reduce((acc, chunk) => {
+      if (Array.isArray(chunk)) {
+        const text = chunk[0];
+        const style = chunk[1];
+
         styles.push(STYLE_MAPPING[style].css);
         return (acc += `%c${text}`);
+      } else {
+        // Reset
+        styles.push("");
+        return (acc += `%c${chunk}`);
       }
     }, "");
 
     outputFunc(string, ...styles);
   } else {
-    outputFunc(chunks.reduce((acc, { text, style }) => (acc += text), ""));
+    outputFunc(
+      chunks.reduce(
+        (acc, chunk) => (acc += Array.isArray(chunk) ? chunk[0] : chunk),
+        "",
+      ),
+    );
   }
 }
 
