@@ -20,6 +20,7 @@ interface Options {
   abbreviate: boolean;
   showEmpty: boolean;
   showPlayerOrder: boolean;
+  showPreviousObservation: boolean;
 }
 
 function getChamberChunks(
@@ -56,7 +57,7 @@ function getChamberChunks(
   return chunks;
 }
 
-function getPlayerChunks(
+function getPlayerNameChunks(
   player: PlayerState,
   opt: Options,
   highlight?: boolean,
@@ -79,6 +80,19 @@ function getPlayerChunks(
     }
   }
 
+  return chunks;
+}
+
+function getPlayerChunks(
+  player: PlayerState,
+  opt: Options,
+  highlight?: boolean,
+): slChunk[] {
+  const chunks: slChunk[] = [];
+
+  // Add name and possibly order
+  chunks.push(...getPlayerNameChunks(player, opt, highlight));
+
   // Separator
   chunks.push({ text: ": ", style: "gray" });
 
@@ -98,10 +112,146 @@ function getPlayerChunks(
     }
 
     chunks.push({
-      text: `${player.score}${opt.abbreviate ? "h" : " hadrons"}`,
+      text: `${player.score}${opt.abbreviate ? "h" : " hadron"}`,
       style: "bold",
     });
   }
+
+  return chunks;
+}
+
+function getObservationChunks(
+  state: PastGameState,
+  pastActive: PlayerState,
+  pastObserver: PlayerState,
+  opt: Options,
+): slChunk[] {
+  const chunks: slChunk[] = [];
+
+  // add a newline to visually separate the previous game state from its
+  // observation.
+  chunks.push({ text: "\n" });
+
+  const pastCollapsedFlavor = state.observation.activeFlavor;
+
+  if (state.observation.reaction === "hadronized") {
+    // bob [1] 2s -> h
+    // bob [1]'s 2 strange quarks hadronized!
+
+    chunks.push(...getPlayerNameChunks(pastObserver, opt, true));
+    chunks.push({
+      text: opt.abbreviate ? " " : "'s ",
+      style: "gray",
+    });
+
+    // +1 for the new quark
+    const count =
+      pastActive.chamber.filter((q) => q === pastCollapsedFlavor).length + 1;
+    const flavorString = opt.abbreviate
+      ? pastCollapsedFlavor.slice(0, 1)
+      : ` ${pastCollapsedFlavor}`;
+    chunks.push({
+      text: `${count}${flavorString}`,
+      style: QUARK_MAPPING[pastCollapsedFlavor],
+    });
+
+    if (opt.abbreviate) {
+      chunks.push({
+        text: " -> ",
+        style: "gray",
+      });
+      chunks.push({
+        text: "h",
+        style: "bold",
+      });
+    } else {
+      chunks.push({
+        text: " quarks ",
+        style: "gray",
+      });
+      chunks.push({
+        text: "hadronized",
+        style: "bold",
+      });
+      chunks.push({
+        text: "!",
+        style: "gray",
+      });
+    }
+  } else if (state.observation.reaction === "tunneled") {
+    // alice (0) 2s -> bob (1)
+    // alice (0)'s 2 strange quarks tunneled to bob (1)
+
+    chunks.push(...getPlayerNameChunks(pastObserver, opt, false));
+    chunks.push({
+      text: opt.abbreviate ? " " : "'s ",
+      style: "gray",
+    });
+
+    // +1 for the new quark
+    const count =
+      pastActive.chamber.filter((q) => q === pastCollapsedFlavor).length + 1;
+    const flavorString = opt.abbreviate
+      ? pastCollapsedFlavor.slice(0, 1)
+      : ` ${pastCollapsedFlavor}`;
+    chunks.push({
+      text: `${count}${flavorString}`,
+      style: QUARK_MAPPING[pastCollapsedFlavor],
+    });
+
+    if (opt.abbreviate) {
+      chunks.push({
+        text: " -> ",
+        style: "gray",
+      });
+      chunks.push(...getPlayerNameChunks(pastActive, opt, false));
+    } else {
+      chunks.push({
+        text: " quarks ",
+        style: "gray",
+      });
+      chunks.push({
+        text: "tunneled",
+        style: "italic",
+      });
+      chunks.push({
+        text: " to ",
+        style: "gray",
+      });
+      chunks.push(...getPlayerNameChunks(pastActive, opt, false));
+    }
+  } else {
+    // alice (0) +s
+    // alice (0) added a strange quark to their chamber.
+
+    chunks.push(
+      ...getPlayerNameChunks(
+        pastObserver,
+        opt,
+        pastActive.order === pastObserver.order,
+      ),
+    );
+    chunks.push({
+      text: opt.abbreviate ? " +" : " added a ",
+      style: "gray",
+    });
+
+    chunks.push({
+      text: opt.abbreviate
+        ? pastCollapsedFlavor.slice(0, 1)
+        : pastCollapsedFlavor,
+      style: QUARK_MAPPING[pastCollapsedFlavor],
+    });
+
+    if (!opt.abbreviate) {
+      chunks.push({
+        text: " quark to their chamber.",
+        style: "gray",
+      });
+    }
+  }
+
+  chunks.push({ text: "\n\n" });
 
   return chunks;
 }
@@ -111,6 +261,25 @@ function getStateChunks(
   opt: Options,
 ): slChunk[] {
   const chunks: slChunk[] = [];
+
+  // Log the previous observation
+  if (opt.showPreviousObservation && Object.hasOwn(state, "timeline")) {
+    // We know that state is a CurrentGameState because it has the "timeline"
+    // property.
+    const timeline = (state as CurrentGameState).timeline;
+
+    // We subtract 2 from the current turn to get the previous state's index in
+    // the timeline. -1 to normalize from 1-indexed to 0-indexed, and another
+    // -1 to get the previous one.
+    const pastState = timeline[state.turn - 2];
+
+    const pastActive = state.players[pastState.activePlayer];
+    const pastObserver = state.players[pastState.observation.observer];
+
+    chunks.push(
+      ...getObservationChunks(pastState, pastActive, pastObserver, opt),
+    );
+  }
 
   // Log the current turn
   chunks.push({ text: "Turn #", style: "white" });
@@ -159,16 +328,17 @@ function getStateChunks(
 }
 
 // function main() {
+//   const options: Options = {
+//     abbreviate: true,
+//     showEmpty: false,
+//     showPlayerOrder: true,
+//     showPreviousObservation: true,
+//   };
+
 //   // Copied from the final state of seed 83
 //   //
 //   // prettier-ignore
 //   const state: CurrentGameState = { "turn": 11, "activePlayer": 0, "activeQuark": ["up", "top", "charm"], "players": [{ "order": 0, "name": "alice", "chamber": ["charm"], "score": 8 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up", "bottom", "strange"], "score": 4 }], "timeline": [{ "turn": 1, "activePlayer": 0, "activeQuark": ["down", "up", "bottom"], "players": [{ "order": 0, "name": "alice", "chamber": ["down", "strange", "charm", "up"], "score": 0 }, { "order": 1, "name": "bob", "chamber": ["charm", "down", "up", "up"], "score": 0 }], "observation": { "activeFlavor": "down", "reaction": "hadronized", "observer": 0 } }, { "turn": 2, "activePlayer": 1, "activeQuark": ["strange", "bottom", "down"], "players": [{ "order": 0, "name": "alice", "chamber": ["strange", "charm", "up"], "score": 2 }, { "order": 1, "name": "bob", "chamber": ["charm", "down", "up", "up"], "score": 0 }], "observation": { "activeFlavor": "down", "reaction": "hadronized", "observer": 1 } }, { "turn": 3, "activePlayer": 0, "activeQuark": ["strange", "up", "charm"], "players": [{ "order": 0, "name": "alice", "chamber": ["strange", "charm", "up"], "score": 2 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up"], "score": 2 }], "observation": { "activeFlavor": "charm", "reaction": "hadronized", "observer": 0 } }, { "turn": 4, "activePlayer": 1, "activeQuark": ["down", "top", "strange"], "players": [{ "order": 0, "name": "alice", "chamber": ["strange", "up"], "score": 4 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up"], "score": 2 }], "observation": { "activeFlavor": "strange", "reaction": "no reaction", "observer": 1 } }, { "turn": 5, "activePlayer": 0, "activeQuark": ["charm", "up", "strange"], "players": [{ "order": 0, "name": "alice", "chamber": ["strange", "up"], "score": 4 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up", "strange"], "score": 2 }], "observation": { "activeFlavor": "strange", "reaction": "hadronized", "observer": 0 } }, { "turn": 6, "activePlayer": 1, "activeQuark": ["strange", "down", "top"], "players": [{ "order": 0, "name": "alice", "chamber": ["up"], "score": 6 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up", "strange"], "score": 2 }], "observation": { "activeFlavor": "strange", "reaction": "hadronized", "observer": 1 } }, { "turn": 7, "activePlayer": 0, "activeQuark": ["up", "bottom", "top"], "players": [{ "order": 0, "name": "alice", "chamber": ["up"], "score": 6 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up"], "score": 4 }], "observation": { "activeFlavor": "up", "reaction": "hadronized", "observer": 0 } }, { "turn": 8, "activePlayer": 1, "activeQuark": ["down", "top", "bottom"], "players": [{ "order": 0, "name": "alice", "chamber": [], "score": 8 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up"], "score": 4 }], "observation": { "activeFlavor": "bottom", "reaction": "no reaction", "observer": 1 } }, { "turn": 9, "activePlayer": 0, "activeQuark": ["charm", "top", "bottom"], "players": [{ "order": 0, "name": "alice", "chamber": [], "score": 8 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up", "bottom"], "score": 4 }], "observation": { "activeFlavor": "charm", "reaction": "no reaction", "observer": 0 } }, { "turn": 10, "activePlayer": 1, "activeQuark": ["strange", "bottom", "charm"], "players": [{ "order": 0, "name": "alice", "chamber": ["charm"], "score": 8 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up", "bottom"], "score": 4 }], "observation": { "activeFlavor": "strange", "reaction": "no reaction", "observer": 1 } }] };
-
-//   const options: Options = {
-//     abbreviate: false,
-//     showEmpty: false,
-//     showPlayerOrder: true,
-//   };
 
 //   sl(getStateChunks(state, options));
 // }
