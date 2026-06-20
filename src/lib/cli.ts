@@ -114,18 +114,11 @@ function getPlayerChunks(
   return chunks;
 }
 
-function getObservationChunks(
-  state: PastGameState,
-  pastActive: PlayerState,
-  pastObserver: PlayerState,
-  opt: Options,
-): slChunk[] {
+function getObservationChunks(state: PastGameState, opt: Options): slChunk[] {
   const chunks: slChunk[] = [];
 
-  // add a newline to visually separate the previous game state from its
-  // observation.
-  chunks.push("\n");
-
+  const pastActive = state.players[state.activePlayer];
+  const pastObserver = state.players[state.observation.observer];
   const pastCollapsedFlavor = state.observation.activeFlavor;
 
   if (state.observation.reaction === "hadronized") {
@@ -216,7 +209,11 @@ function getStateChunks(
   const chunks: slChunk[] = [];
 
   // Log the previous observation
-  if (opt.showPreviousObservation && Object.hasOwn(state, "timeline")) {
+  if (
+    opt.showPreviousObservation &&
+    Object.hasOwn(state, "timeline") &&
+    (state as CurrentGameState).timeline.length > 0
+  ) {
     // We know that state is a CurrentGameState because it has the "timeline"
     // property.
     const timeline = (state as CurrentGameState).timeline;
@@ -226,12 +223,7 @@ function getStateChunks(
     // -1 to get the previous one.
     const pastState = timeline[state.turn - 2];
 
-    const pastActive = state.players[pastState.activePlayer];
-    const pastObserver = state.players[pastState.observation.observer];
-
-    chunks.push(
-      ...getObservationChunks(pastState, pastActive, pastObserver, opt),
-    );
+    chunks.push(...getObservationChunks(pastState, opt));
   }
 
   // Log the current turn
