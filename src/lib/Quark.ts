@@ -7,8 +7,18 @@ export const FLAVORS = [
   "bottom",
 ] as const;
 
+export const SUPERPOSITION_SIZE = 3 as const;
+
 export type Flavor = (typeof FLAVORS)[number];
-export type Superposition = [Flavor, Flavor, Flavor];
+
+// Helper for creating a tuple of a specific length
+type TupleOf<
+  T,
+  N extends number,
+  R extends unknown[] = [],
+> = R["length"] extends N ? R : TupleOf<T, N, [T, ...R]>;
+
+export type Superposition = TupleOf<Flavor, typeof SUPERPOSITION_SIZE>;
 
 export interface SuperposedQuarkInfo {
   id: number;

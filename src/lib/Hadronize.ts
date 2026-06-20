@@ -12,6 +12,7 @@ import {
   Quark,
   Hadron,
   type Superposition,
+  SUPERPOSITION_SIZE,
 } from "./Quark";
 
 /**
@@ -183,11 +184,25 @@ export class Hadronize {
     const quarkCount =
       TURN_LIMIT + playerInits.length * STARTING_QUARK_COUNT + 10;
     this.quarks = Array.from({ length: quarkCount }, (_, index) => {
-      const superposFlavors: Superposition = [
-        prngFlavor(rng()),
-        prngFlavor(rng()),
-        prngFlavor(rng()),
-      ];
+      // This is the old superposition generator. It relied on a hardcoded
+      // SUPERPOSITION_SIZE and sometimes generated non-unique values.
+      //
+      // const superposFlavors: Superposition = [
+      //   prngFlavor(rng()),
+      //   prngFlavor(rng()),
+      //   prngFlavor(rng()),
+      // ];
+
+      // This is the new superposition generator. It leverages the fact that if
+      // you try to add an element to a Set that it already has, it silently
+      // rejects the new element.
+      const flavorSet = new Set<Flavor>();
+      while (flavorSet.size < SUPERPOSITION_SIZE) {
+        flavorSet.add(prngFlavor(rng()));
+      }
+      const superposFlavors: Superposition = Array.from(
+        flavorSet,
+      ) as Superposition;
 
       const flavor =
         superposFlavors[Math.floor(rng() * superposFlavors.length)];
@@ -475,7 +490,7 @@ export class Hadronize {
 // const hadronizeDriver: Driver = (s: CurrentGameState, p: Scratchpad): number =>
 //   s.activePlayer;
 
-// const game = new Hadronize(1, [
+// const game = new Hadronize(83, [
 //   { name: "alice", driver: hadronizeDriver },
 //   { name: "bob", driver: hadronizeDriver },
 // ]);
