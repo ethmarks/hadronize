@@ -2,7 +2,13 @@
  * This file provides utilities to interface with Hadronize as a CLI game.
  */
 
-import type { CurrentGameState, PastGameState, PlayerState } from "./Hadronize";
+import {
+  Hadronize,
+  type CurrentGameState,
+  type PastGameState,
+  type PlayerState,
+} from "./Hadronize";
+import type { Driver, Scratchpad } from "./Player";
 import { FLAVORS, type Flavor } from "./Quark";
 
 import sl, { type slChunk, type Style } from "./utils/styledLog";
@@ -197,8 +203,6 @@ function getObservationChunks(state: PastGameState, opt: Options): slChunk[] {
     }
   }
 
-  chunks.push("\n\n");
-
   return chunks;
 }
 
@@ -224,6 +228,9 @@ function getStateChunks(
     const pastState = timeline[state.turn - 2];
 
     chunks.push(...getObservationChunks(pastState, opt));
+
+    // add dashes to visually separate the past game from the current one.
+    chunks.push("\n\n---\n\n");
   }
 
   // Log the current turn
@@ -269,20 +276,33 @@ function getStateChunks(
   return chunks;
 }
 
-// function main() {
-//   const options: Options = {
-//     abbreviate: true,
-//     showEmpty: false,
-//     showPlayerOrder: true,
-//     showPreviousObservation: true,
-//   };
+function main() {
+  const options: Options = {
+    abbreviate: false,
+    showEmpty: false,
+    showPlayerOrder: true,
+    showPreviousObservation: true,
+  };
 
-//   // Copied from the final state of seed 83
-//   //
-//   // prettier-ignore
-//   const state: CurrentGameState = { "turn": 11, "activePlayer": 0, "activeQuark": ["up", "top", "charm"], "players": [{ "order": 0, "name": "alice", "chamber": ["charm"], "score": 8 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up", "bottom", "strange"], "score": 4 }], "timeline": [{ "turn": 1, "activePlayer": 0, "activeQuark": ["down", "up", "bottom"], "players": [{ "order": 0, "name": "alice", "chamber": ["down", "strange", "charm", "up"], "score": 0 }, { "order": 1, "name": "bob", "chamber": ["charm", "down", "up", "up"], "score": 0 }], "observation": { "activeFlavor": "down", "reaction": "hadronized", "observer": 0 } }, { "turn": 2, "activePlayer": 1, "activeQuark": ["strange", "bottom", "down"], "players": [{ "order": 0, "name": "alice", "chamber": ["strange", "charm", "up"], "score": 2 }, { "order": 1, "name": "bob", "chamber": ["charm", "down", "up", "up"], "score": 0 }], "observation": { "activeFlavor": "down", "reaction": "hadronized", "observer": 1 } }, { "turn": 3, "activePlayer": 0, "activeQuark": ["strange", "up", "charm"], "players": [{ "order": 0, "name": "alice", "chamber": ["strange", "charm", "up"], "score": 2 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up"], "score": 2 }], "observation": { "activeFlavor": "charm", "reaction": "hadronized", "observer": 0 } }, { "turn": 4, "activePlayer": 1, "activeQuark": ["down", "top", "strange"], "players": [{ "order": 0, "name": "alice", "chamber": ["strange", "up"], "score": 4 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up"], "score": 2 }], "observation": { "activeFlavor": "strange", "reaction": "no reaction", "observer": 1 } }, { "turn": 5, "activePlayer": 0, "activeQuark": ["charm", "up", "strange"], "players": [{ "order": 0, "name": "alice", "chamber": ["strange", "up"], "score": 4 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up", "strange"], "score": 2 }], "observation": { "activeFlavor": "strange", "reaction": "hadronized", "observer": 0 } }, { "turn": 6, "activePlayer": 1, "activeQuark": ["strange", "down", "top"], "players": [{ "order": 0, "name": "alice", "chamber": ["up"], "score": 6 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up", "strange"], "score": 2 }], "observation": { "activeFlavor": "strange", "reaction": "hadronized", "observer": 1 } }, { "turn": 7, "activePlayer": 0, "activeQuark": ["up", "bottom", "top"], "players": [{ "order": 0, "name": "alice", "chamber": ["up"], "score": 6 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up"], "score": 4 }], "observation": { "activeFlavor": "up", "reaction": "hadronized", "observer": 0 } }, { "turn": 8, "activePlayer": 1, "activeQuark": ["down", "top", "bottom"], "players": [{ "order": 0, "name": "alice", "chamber": [], "score": 8 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up"], "score": 4 }], "observation": { "activeFlavor": "bottom", "reaction": "no reaction", "observer": 1 } }, { "turn": 9, "activePlayer": 0, "activeQuark": ["charm", "top", "bottom"], "players": [{ "order": 0, "name": "alice", "chamber": [], "score": 8 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up", "bottom"], "score": 4 }], "observation": { "activeFlavor": "charm", "reaction": "no reaction", "observer": 0 } }, { "turn": 10, "activePlayer": 1, "activeQuark": ["strange", "bottom", "charm"], "players": [{ "order": 0, "name": "alice", "chamber": ["charm"], "score": 8 }, { "order": 1, "name": "bob", "chamber": ["charm", "up", "up", "bottom"], "score": 4 }], "observation": { "activeFlavor": "strange", "reaction": "no reaction", "observer": 1 } }] };
+  /**
+   * A placeholder driver that's fully autonomous and does nothing by try to
+   * hadronize.
+   */
+  const hadronizeDriver: Driver = (
+    s: CurrentGameState,
+    p: Scratchpad,
+  ): number => s.activePlayer;
 
-//   sl(getStateChunks(state, options));
-// }
+  const game = new Hadronize(83, [
+    { name: "alice", driver: hadronizeDriver },
+    { name: "bob", driver: hadronizeDriver },
+  ]);
 
-// main();
+  let i = 0;
+  while (game.executeTurn() === undefined) {
+    sl(getStateChunks(game.state!, options));
+    i++;
+  }
+}
+
+main();
