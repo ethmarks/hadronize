@@ -14,7 +14,7 @@ export interface Scratchpad {
 export type Driver = (
   state: CurrentGameState,
   scratchpad: Scratchpad,
-) => number;
+) => Promise<number>;
 
 export function validatePlayerInits(inits: PlayerInit[]): void {
   // check for duplicate names

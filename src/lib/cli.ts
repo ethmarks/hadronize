@@ -8,8 +8,8 @@ import {
   type PastGameState,
   type PlayerState,
 } from "./Hadronize";
-import type { Driver, Scratchpad } from "./Player";
 import { FLAVORS, type Flavor } from "./Quark";
+import { hadronizeDriver } from "./utils/hadronizeDriver";
 
 import sl, { type slChunk, type Style } from "./utils/styledLog";
 
@@ -276,7 +276,7 @@ function getStateChunks(
   return chunks;
 }
 
-function main() {
+async function main() {
   const options: Options = {
     abbreviate: false,
     showEmpty: false,
@@ -284,25 +284,16 @@ function main() {
     showPreviousObservation: true,
   };
 
-  /**
-   * A placeholder driver that's fully autonomous and does nothing by try to
-   * hadronize.
-   */
-  const hadronizeDriver: Driver = (
-    s: CurrentGameState,
-    p: Scratchpad,
-  ): number => s.activePlayer;
-
   const game = new Hadronize(83, [
     { name: "alice", driver: hadronizeDriver },
     { name: "bob", driver: hadronizeDriver },
   ]);
 
   let i = 0;
-  while (game.executeTurn() === undefined) {
+  while ((await game.executeTurn()) === undefined) {
     sl(getStateChunks(game.state!, options));
     i++;
   }
 }
 
-main();
+await main();

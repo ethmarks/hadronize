@@ -455,12 +455,12 @@ export class Hadronize {
    *
    * @returns
    */
-  executeTurn(): Result {
+  async executeTurn(): Promise<Result> {
     this.produceQuark();
 
     const state = this.updateState();
 
-    const observerOrder = this.activePlayer.driver(
+    const observerOrder = await this.activePlayer.driver(
       state,
       this.activePlayer.scratchpad,
     );
@@ -487,8 +487,10 @@ export class Hadronize {
   }
 }
 
-// const hadronizeDriver: Driver = (s: CurrentGameState, p: Scratchpad): number =>
-//   s.activePlayer;
+// const hadronizeDriver: Driver = async (
+//   s: CurrentGameState,
+//   p: Scratchpad,
+// ): Promise<number> => s.activePlayer;
 
 // const game = new Hadronize(83, [
 //   { name: "alice", driver: hadronizeDriver },
@@ -496,7 +498,7 @@ export class Hadronize {
 // ]);
 
 // let i = 0;
-// while (game.executeTurn() === undefined) {
+// while ((await game.executeTurn()) === undefined) {
 //   i++;
 // }
 
