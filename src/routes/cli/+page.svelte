@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { base } from "$app/paths";
     import { main } from "$lib/cli";
     import { consoleDriver } from "$lib/utils/consoleDriver";
 
@@ -28,7 +29,7 @@
 </svelte:head>
 
 <h1>Hadronize CLI</h1>
-<a href="../">Go home</a>
+<a href="{base}/">Go home</a>
 <p>
     <strong
         >Open your browser console (<kbd>F12</kbd>) to play Hadronize CLI.</strong
