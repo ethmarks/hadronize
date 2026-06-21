@@ -2,6 +2,33 @@
 
 Quark-themed set collection game you can play in your browser
 
+## How to use
+
+Hadronize is still under very heavy development, and right now the only usable part of Hadronize is the CLI. However, the CLI is (mostly) fully-functional, and you can use in a few different ways.
+
+### Node/Deno/Bun
+
+You can run Hadronize CLI in [Node](https://nodejs.org/), [Deno](https://deno.com/), and [Bun](https://bun.sh/).
+
+```sh
+# Clone the repo
+git clone https://github.com/ethmarks/hadronize.git
+cd hadronize
+
+# Run with Node (via npm or pnpm)
+npm run cli
+
+# Run with Deno
+deno task cli
+
+# Run with Bun
+bun run cli
+```
+
+### Browser
+
+If you'd like to play Hadronize CLI entirely in your browser console (yes, really!), visit <https://ethmarks.github.io/hadronize/cli>.
+
 ## Rules
 
 - 2-6 players

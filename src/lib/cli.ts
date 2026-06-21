@@ -339,18 +339,46 @@ export async function main(
   sl(getEndgameChunks(game, result, opt));
 }
 
-// await main(
-//   {
-//     abbreviate: false,
-//     showEmpty: false,
-//     showPlayerOrder: true,
-//     showPreviousObservation: true,
-//   },
-//   [
-//     1,
-//     [
-//       { name: "alice", driver: consoleDriver },
-//       { name: "bob", driver: consoleDriver },
-//     ],
-//   ],
-// );
+/**
+ * Basically Python's `__name__ == "__main__"`, but for JS.
+ *
+ * Work with Node, Deno, Bun, and browsers.
+ */
+function isMainScript(importMeta: ImportMeta): boolean {
+  // Check for Deno and Bun's native flag
+  if (importMeta.main) {
+    return true;
+  }
+
+  // Fallback for Node.js
+  if (typeof process !== "undefined" && process.argv?.[1]) {
+    try {
+      const entryPath = import.meta.resolve(process.argv[1]);
+      return importMeta.url === entryPath;
+    } catch {
+      const entryUrl = new URL(process.argv[1], "file://").href;
+      return importMeta.url === entryUrl;
+    }
+  }
+
+  return false;
+}
+
+if (isMainScript(import.meta)) {
+  // If cli.ts is being run as a direct script, run a demo of main().
+  await main(
+    {
+      abbreviate: false,
+      showEmpty: false,
+      showPlayerOrder: true,
+      showPreviousObservation: true,
+    },
+    [
+      1,
+      [
+        { name: "alice", driver: consoleDriver },
+        { name: "bob", driver: consoleDriver },
+      ],
+    ],
+  );
+}
