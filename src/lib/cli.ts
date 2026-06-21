@@ -47,7 +47,9 @@ function getChamberChunks(
   const chunks: slChunk[] = [];
   quarkCounts.forEach(({ count, flavor }) => {
     if (count > 0 || opt.showEmpty) {
-      const flavorString = opt.abbreviate ? flavor.slice(0, 1) : ` ${flavor}`;
+      const flavorString = opt.abbreviate
+        ? flavor.slice(0, 1)
+        : ` ${flavor}${count === 1 ? "" : "s"}`;
       chunks.push([`${count}${flavorString}`, QUARK_MAPPING[flavor]]);
 
       chunks.push([opt.abbreviate ? "," : ", ", "gray"]);
@@ -162,7 +164,7 @@ function getObservationChunks(state: PastGameState, opt: Options): slChunk[] {
 
     // +1 for the new quark
     const count =
-      pastActive.chamber.filter((q) => q === pastCollapsedFlavor).length + 1;
+      pastObserver.chamber.filter((q) => q === pastCollapsedFlavor).length + 1;
     const flavorString = opt.abbreviate
       ? pastCollapsedFlavor.slice(0, 1)
       : ` ${pastCollapsedFlavor}`;
@@ -173,12 +175,12 @@ function getObservationChunks(state: PastGameState, opt: Options): slChunk[] {
 
     if (opt.abbreviate) {
       chunks.push([" -> ", "gray"]);
-      chunks.push(...getPlayerNameChunks(pastActive, opt, false));
+      chunks.push(...getPlayerNameChunks(pastActive, opt, true));
     } else {
       chunks.push([" quarks ", "gray"]);
       chunks.push(["tunneled", "italic"]);
       chunks.push([" to ", "gray"]);
-      chunks.push(...getPlayerNameChunks(pastActive, opt, false));
+      chunks.push(...getPlayerNameChunks(pastActive, opt, true));
     }
   } else {
     // alice (0) +s
@@ -191,7 +193,12 @@ function getObservationChunks(state: PastGameState, opt: Options): slChunk[] {
         pastActive.order === pastObserver.order,
       ),
     );
-    chunks.push([opt.abbreviate ? " +" : " added a ", "gray"]);
+    chunks.push([
+      opt.abbreviate
+        ? " +"
+        : ` added a${pastCollapsedFlavor === "up" ? "n" : ""} `,
+      "gray",
+    ]);
 
     chunks.push([
       opt.abbreviate ? pastCollapsedFlavor.slice(0, 1) : pastCollapsedFlavor,
