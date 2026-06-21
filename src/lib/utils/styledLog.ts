@@ -1,6 +1,6 @@
 /**
  * A utility to print styled text to the terminal that works across Node, Deno,
- * and browser.
+ * Bun, and browsers.
  */
 
 import pc from "picocolors";

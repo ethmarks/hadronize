@@ -3,14 +3,16 @@ import type { CurrentGameState, PlayerState } from "$lib/Hadronize";
 import sl, { type slChunk } from "./styledLog";
 
 /**
- * Get input function of Non-browser runtimes (Node or Deno).
+ * Get input function of Non-browser runtimes (Node, Deno, and Bun).
  */
 function getNbrInputFunc(): (message: string) => Promise<string> {
-  if ("Deno" in globalThis) {
-    // Deno
-    return (globalThis as any).prompt as (message: string) => Promise<string>;
+  if ("Deno" in globalThis || "Bun" in globalThis) {
+    // Deno and Bun both expose globalThis.prompt
+    return async (message: string): Promise<string> => {
+      return globalThis.prompt(message)!;
+    };
   } else if ("process" in globalThis) {
-    // Node
+    // Node needs a readline polyfill
     return async (message: string) => {
       const readline = await import("node:readline/promises");
       const rl = readline.createInterface({
@@ -81,7 +83,7 @@ async function getUserInput(state: CurrentGameState): Promise<string> {
 
     return userInput;
   } else {
-    // We're in Node or Deno
+    // We're in Node, Deno, or Bun
     const prompt = getNbrInputFunc();
 
     const userInput = await prompt("");
@@ -92,7 +94,7 @@ async function getUserInput(state: CurrentGameState): Promise<string> {
 
 /**
  * Manual driver that uses the console to query the user for input in the
- * browser, Node, or Deno.
+ * browser, Node, Deno, or Bun.
  */
 export const consoleDriver: Driver = async (
   state: CurrentGameState,
