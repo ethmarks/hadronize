@@ -1,5 +1,6 @@
 import type { Driver, Scratchpad } from "$lib/Player";
 import type { CurrentGameState, PlayerState } from "$lib/Hadronize";
+import sl, { type slChunk } from "./styledLog";
 
 /**
  * Get input function of Non-browser runtimes (Node or Deno).
@@ -28,20 +29,55 @@ function getNbrInputFunc(): (message: string) => Promise<string> {
   }
 }
 
-async function getUserInput(message: string): Promise<string> {
+async function getUserInput(state: CurrentGameState): Promise<string> {
   const isBrowser =
     typeof window !== "undefined" && typeof window.document !== "undefined";
 
   if (isBrowser) {
     // We're in the browser
-    throw new Error("Browser support is WIP");
+    let resumeExecution: () => void;
+    let userInput: string = "";
+
+    function takeTurn(input: string) {
+      userInput = input;
+      resumeExecution();
+    }
+
+    // Fallback function. Called like `turn("alice")`. Inelegant syntax but
+    // reliable.
+    (window as any).turn = takeTurn;
+
+    // Main interface. Called like `alice`. Very elegant syntax, but can have
+    // problems.
+    state.players.forEach((player) => {
+      try {
+        Object.defineProperty(window, player.name, {
+          get: function () {
+            takeTurn(player.name);
+          },
+          configurable: true,
+        });
+      } catch {
+        // window already had a property with the same name as the player, and
+        // it wasn't configurable. This probably means that the player was
+        // named something like "localStorage" or any other already-existant
+        // property of window. They can just use the fallback function.
+      }
+    });
+
+    // Pause execution until takeTurn() is run
+    await new Promise<void>((resolve) => {
+      resumeExecution = resolve;
+    });
+
+    return userInput;
   } else {
     // We're in Node or Deno
     const prompt = getNbrInputFunc();
 
-    const input = await prompt(message);
+    const userInput = await prompt("");
 
-    return input;
+    return userInput;
   }
 }
 
@@ -59,12 +95,36 @@ export const consoleDriver: Driver = async (
 
   while (player === undefined) {
     if (userInput !== "") {
-      console.log("Invalid input. Please try again.");
+      // Create chunks for error message
+      const chunks: slChunk[] = [];
+
+      chunks.push(["Invalid input! ", "red"]);
+      chunks.push([
+        "Please type the name or order number of the player who you want to observe the superposed quark.",
+        "white",
+      ]);
+
+      sl(chunks);
     }
 
-    const message = `${state.players[state.activePlayer].name}'s turn: (${state.players.map((p) => p.name).join(", ")}) `;
+    // Create chunks for message
+    const chunks: slChunk[] = [];
+    chunks.push([state.players[state.activePlayer].name, "white"]);
+    chunks.push(["'s turn", "gray"]);
+    chunks.push([":", "white"]);
+    chunks.push([" (", "gray"]);
+    (state.players.forEach((p, index, arr) => {
+      chunks.push([p.name, "italic"]);
+      if (index < arr.length - 1) {
+        chunks.push([", ", "gray"]);
+      }
+    }),
+      chunks.push([") ", "gray"]));
 
-    userInput = await getUserInput(message);
+    // Print message
+    sl(chunks);
+
+    userInput = await getUserInput(state);
 
     const num = Number(userInput);
 
