@@ -36,29 +36,34 @@
     >
 </p>
 
-<h2>Instructions</h2>
-<p>
-    See the <a href="https://github.com/ethmarks/hadronize#rules"
-        >Hadronize README</a
-    >
-    for an explanation of Hadronize's rules. Check out
-    <a
-        href="https://github.com/ethmarks/hadronize/blob/main/src/lib/utils/consoleDriver.ts"
-        ><code>consoleDriver.ts</code></a
-    > in the source code to see how the browser console input works (it's pretty clever).
-</p>
-<p>
-    To use the CLI, all you need to do is enter one of the player's names
-    directly into the browser console (e.g. <kbd>alice</kbd>) on your turn. If
-    it doesn't work, try the fallback function: <kbd>turn("alice")</kbd>.
-</p>
+<blockquote class="finehide">
+    <p>
+        NOTE: Your device appears to lack a mouse pointer, which suggests that
+        you're using a mobile browser. Most mobile browsers do not allow you to
+        open the console, which at this stage is required to use Hadronize CLI.
+    </p>
+    <p>
+        I'm sorry if this is inconvenient, but please remember that Hadronize is
+        still under heavy development and mobile support is not a priority for
+        me right now.
+    </p>
+</blockquote>
 
-<p>
-    <em>
-        Note: The CLI obviously only works if you can open your browser console.
-        This means that you can't use it on mobile unless you really know what
-        you're doing. Please remember that Hadronize is under heavy development,
-        and eventually it will have a UI which will probably be
-        mobile-accessible.
-    </em>
-</p>
+<h2>Instructions</h2>
+<ol>
+    <li>
+        Learn the Hadronize rules. These are not explained in the CLI, so you'll
+        want to check out the <a
+            href="https://github.com/ethmarks/hadronize#rules">README</a
+        >.
+    </li>
+</ol>
+
+<style>
+    /** This hides the mobile-only*/
+    @media (pointer: fine) {
+        .finehide {
+            display: none;
+        }
+    }
+</style>
