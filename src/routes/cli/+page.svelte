@@ -14,7 +14,7 @@
                 showPreviousObservation: true,
             },
             [
-                1,
+                Math.floor(Math.random() * 2 ** 32),
                 [
                     { name: "alice", driver: consoleDriver },
                     { name: "bob", driver: consoleDriver },
