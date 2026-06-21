@@ -21,17 +21,20 @@ import {
  * Set this to such a big number that players are unlikely to hit it, but not
  * too large a number that pregenerating the quarks will take too long.
  */
-const TURN_LIMIT = 300;
+export const TURN_LIMIT = 300;
 
 /**
  * The number of quarks each player starts with. Traditionally, should be 4.
  */
-const STARTING_QUARK_COUNT = 4;
+export const STARTING_QUARK_COUNT = 4;
 
 /**
  * The number of hadronized quarks required to win. Traditionally, should be 10.
  */
-const WINNING_HADRON_COUNT = 10;
+export const WINNING_HADRON_COUNT = 10;
+
+export const MIN_PLYERS = 2;
+export const MAX_PLAYERS = 6;
 
 export type Reaction = "no reaction" | "hadronized" | "tunneled";
 
