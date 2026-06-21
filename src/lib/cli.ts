@@ -5,8 +5,10 @@
 import {
   Hadronize,
   type CurrentGameState,
+  type Observation,
   type PastGameState,
   type PlayerState,
+  type Result,
 } from "./Hadronize";
 import { FLAVORS, type Flavor } from "./Quark";
 import { hadronizeDriver } from "./utils/hadronizeDriver";
@@ -23,7 +25,7 @@ const QUARK_MAPPING: Record<Flavor, Style> = {
   bottom: "red",
 };
 
-interface Options {
+export interface Options {
   abbreviate: boolean;
   showEmpty: boolean;
   showPlayerOrder: boolean;
@@ -123,23 +125,26 @@ function getPlayerChunks(
   return chunks;
 }
 
-function getObservationChunks(state: PastGameState, opt: Options): slChunk[] {
+function getObservationChunks(
+  active: PlayerState,
+  observer: PlayerState,
+  observation: Observation,
+  opt: Options,
+): slChunk[] {
   const chunks: slChunk[] = [];
 
-  const pastActive = state.players[state.activePlayer];
-  const pastObserver = state.players[state.observation.observer];
-  const pastCollapsedFlavor = state.observation.activeFlavor;
+  const pastCollapsedFlavor = observation.activeFlavor;
 
-  if (state.observation.reaction === "hadronized") {
+  if (observation.reaction === "hadronized") {
     // bob [1] 2s -> h
     // bob [1]'s 2 strange quarks hadronized!
 
-    chunks.push(...getPlayerNameChunks(pastObserver, opt, true));
+    chunks.push(...getPlayerNameChunks(observer, opt, true));
     chunks.push([opt.abbreviate ? " " : "'s ", "gray"]);
 
     // +1 for the new quark
     const count =
-      pastActive.chamber.filter((q) => q === pastCollapsedFlavor).length + 1;
+      active.chamber.filter((q) => q === pastCollapsedFlavor).length + 1;
     const flavorString = opt.abbreviate
       ? pastCollapsedFlavor.slice(0, 1)
       : ` ${pastCollapsedFlavor}`;
@@ -156,16 +161,16 @@ function getObservationChunks(state: PastGameState, opt: Options): slChunk[] {
       chunks.push(["hadronized", "bold"]);
       chunks.push(["!", "gray"]);
     }
-  } else if (state.observation.reaction === "tunneled") {
+  } else if (observation.reaction === "tunneled") {
     // alice (0) 2s -> bob (1)
     // alice (0)'s 2 strange quarks tunneled to bob (1)
 
-    chunks.push(...getPlayerNameChunks(pastObserver, opt, false));
+    chunks.push(...getPlayerNameChunks(observer, opt, false));
     chunks.push([opt.abbreviate ? " " : "'s ", "gray"]);
 
     // +1 for the new quark
     const count =
-      pastObserver.chamber.filter((q) => q === pastCollapsedFlavor).length + 1;
+      observer.chamber.filter((q) => q === pastCollapsedFlavor).length + 1;
     const flavorString = opt.abbreviate
       ? pastCollapsedFlavor.slice(0, 1)
       : ` ${pastCollapsedFlavor}`;
@@ -176,23 +181,19 @@ function getObservationChunks(state: PastGameState, opt: Options): slChunk[] {
 
     if (opt.abbreviate) {
       chunks.push([" -> ", "gray"]);
-      chunks.push(...getPlayerNameChunks(pastActive, opt, true));
+      chunks.push(...getPlayerNameChunks(active, opt, true));
     } else {
       chunks.push([" quarks ", "gray"]);
       chunks.push(["tunneled", "italic"]);
       chunks.push([" to ", "gray"]);
-      chunks.push(...getPlayerNameChunks(pastActive, opt, true));
+      chunks.push(...getPlayerNameChunks(active, opt, true));
     }
   } else {
     // alice (0) +s
     // alice (0) added a strange quark to their chamber.
 
     chunks.push(
-      ...getPlayerNameChunks(
-        pastObserver,
-        opt,
-        pastActive.order === pastObserver.order,
-      ),
+      ...getPlayerNameChunks(observer, opt, active.order === observer.order),
     );
     chunks.push([
       opt.abbreviate
@@ -235,7 +236,11 @@ function getStateChunks(
     // -1 to get the previous one.
     const pastState = timeline[state.turn - 2];
 
-    chunks.push(...getObservationChunks(pastState, opt));
+    const observation = pastState.observation;
+    const active = pastState.players[pastState.activePlayer];
+    const observer = pastState.players[observation.observer];
+
+    chunks.push(...getObservationChunks(active, observer, observation, opt));
 
     // add dashes to visually separate the past game from the current one.
     chunks.push("\n\n---\n\n");
@@ -284,25 +289,68 @@ function getStateChunks(
   return chunks;
 }
 
-async function main() {
-  const options: Options = {
-    abbreviate: false,
-    showEmpty: false,
-    showPlayerOrder: true,
-    showPreviousObservation: true,
-  };
+function getEndgameChunks(
+  game: Hadronize,
+  result: Exclude<Result, undefined>,
+  opt: Options,
+): slChunk[] {
+  const chunks: slChunk[] = [];
 
-  const game = new Hadronize(1, [
-    { name: "alice", driver: consoleDriver },
-    { name: "bob", driver: consoleDriver },
-  ]);
+  // Log final obseravtion
+  const observation = game.mostRecentObservation!;
+  const active = game.state!.players[game.state!.activePlayer];
+  const observer = game.state!.players[observation.observer];
+  chunks.push(...getObservationChunks(active, observer, observation, opt));
+  chunks.push("\n\n---\n\n");
 
-  const preDriverFunc = async () => sl(getStateChunks(game.state!, options));
+  // Log game summary
+  if (result === "too many turns") {
+    chunks.push(["Too many turns!", "red"]);
+    chunks.push(
+      " The vacuum has stopped fluctuating and nobody hadronized enough quarks to win.\n",
+    );
+  } else {
+    // The game ended normally after someone hadronized enough quarks.
+    const winner = game.players[result];
 
-  let i = 0;
-  while ((await game.executeTurn(preDriverFunc)) === undefined) {
-    i++;
+    chunks.push([winner.name, "bold"]);
+    chunks.push(" has won with ");
+    chunks.push([winner.score.toString(), "bold"]);
+    chunks.push(" hadrons!");
   }
+
+  return chunks;
 }
 
-await main();
+export async function main(
+  opt: Options,
+  gameParams: ConstructorParameters<typeof Hadronize>,
+) {
+  const game = new Hadronize(...gameParams);
+
+  const preDriverFunc = async () => sl(getStateChunks(game.state!, opt));
+
+  let result: Result = undefined;
+
+  while (result === undefined) {
+    result = await game.executeTurn(preDriverFunc);
+  }
+
+  sl(getEndgameChunks(game, result, opt));
+}
+
+// await main(
+//   {
+//     abbreviate: false,
+//     showEmpty: false,
+//     showPlayerOrder: true,
+//     showPreviousObservation: true,
+//   },
+//   [
+//     1,
+//     [
+//       { name: "alice", driver: consoleDriver },
+//       { name: "bob", driver: consoleDriver },
+//     ],
+//   ],
+// );
