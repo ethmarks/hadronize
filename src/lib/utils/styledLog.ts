@@ -9,14 +9,14 @@ import pc from "picocolors";
 type Formatter = (input: string | number | null | undefined) => string;
 
 const STYLE_MAPPING = {
-  red: { ansi: pc.red, css: "color: #ff0000;" },
-  yellow: { ansi: pc.yellow, css: "color: #ffff00;" },
-  green: { ansi: pc.green, css: "color: #00ff00;" },
-  cyan: { ansi: pc.cyan, css: "color: #077362;" },
+  red: { ansi: pc.red, css: "color: #ef657a;" },
+  yellow: { ansi: pc.yellow, css: "color: #e5c07b;" },
+  green: { ansi: pc.green, css: "color: #98c379;" },
+  cyan: { ansi: pc.cyan, css: "color: #4db6ac;" },
   blue: { ansi: pc.blue, css: "color: #5dafef;" },
-  magenta: { ansi: pc.magenta, css: "color: #800080;" },
-  gray: { ansi: pc.gray, css: "color: #808080;" },
-  white: { ansi: pc.white, css: "color: #ffffff;" },
+  magenta: { ansi: pc.magenta, css: "color: #c678dd;" },
+  gray: { ansi: pc.gray, css: "color: #abb2bf;" },
+  white: { ansi: pc.white, css: "color: #abb2bf;" },
 
   bold: { ansi: pc.bold, css: "font-weight: bold;" },
   italic: { ansi: pc.italic, css: "font-style: italic;" },
