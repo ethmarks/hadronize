@@ -16,12 +16,14 @@ git clone https://github.com/ethmarks/hadronize.git
 cd hadronize
 
 # Run with Node (via npm or pnpm)
+npm install
 npm run cli
 
 # Run with Deno
 deno task cli
 
 # Run with Bun
+bun install
 bun run cli
 ```
 
