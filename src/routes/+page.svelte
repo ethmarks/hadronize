@@ -11,5 +11,5 @@
 <h2>CLI</h2>
 <p>
     Right now, the only usable part of Hadronize is the CLI. You can try it out
-    on the <a href="cli">/cli</a> page.
+    on the <a href="./cli">/cli</a> page.
 </p>
