@@ -43,12 +43,15 @@ async function getUserInput(state: CurrentGameState): Promise<string> {
       resumeExecution();
     }
 
+    // Function containing all of the window properties to clean up after
+    // they're used.
+    const cleanup: string[] = ["turn"];
+
     // Fallback function. Called like `turn("alice")`. Inelegant syntax but
     // reliable.
     (window as any).turn = takeTurn;
 
-    // Main interface. Called like `alice`. Very elegant syntax, but can have
-    // problems.
+    // Main interface. Called like `alice`. Very elegant syntax, but unreliable due to the possibility of overriding properties.
     state.players.forEach((player) => {
       try {
         Object.defineProperty(window, player.name, {
@@ -57,6 +60,7 @@ async function getUserInput(state: CurrentGameState): Promise<string> {
           },
           configurable: true,
         });
+        cleanup.push(player.name);
       } catch {
         // window already had a property with the same name as the player, and
         // it wasn't configurable. This probably means that the player was
@@ -68,6 +72,11 @@ async function getUserInput(state: CurrentGameState): Promise<string> {
     // Pause execution until takeTurn() is run
     await new Promise<void>((resolve) => {
       resumeExecution = resolve;
+    });
+
+    // Clean up the window properties
+    cleanup.forEach((prop) => {
+      delete (window as any)[prop];
     });
 
     return userInput;
