@@ -1,3 +1,8 @@
+/**
+ * A utility to print styled text to the terminal that works across Node, Deno,
+ * and browser.
+ */
+
 import pc from "picocolors";
 
 // https://github.com/alexeyraspopov/picocolors/blob/main/types.d.ts#L1
@@ -25,8 +30,7 @@ export type slChunk = [string, Style] | string;
 const isBrowser =
   typeof window !== "undefined" && typeof window.document !== "undefined";
 
-// const outputType: "ansi" | "css" | "none" = isBrowser ? "css" : "ansi";
-const outputType: "ansi" | "css" | "none" = "ansi";
+const outputType: "ansi" | "css" | "none" = isBrowser ? "css" : "ansi";
 
 /**
  * **S**tyled **L**og.

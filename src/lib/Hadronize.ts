@@ -455,10 +455,15 @@ export class Hadronize {
    *
    * @returns
    */
-  async executeTurn(): Promise<Result> {
+  async executeTurn(preDriverFunc?: () => Promise<void>): Promise<Result> {
     this.produceQuark();
 
     const state = this.updateState();
+
+    // Call the preDriverFunc, if it was provided.
+    if (preDriverFunc) {
+      await preDriverFunc();
+    }
 
     const observerOrder = await this.activePlayer.driver(
       state,
@@ -468,8 +473,6 @@ export class Hadronize {
     const observer = this.players[observerOrder];
 
     this.observeQuark(observer, this.activePlayer);
-
-    this.turn++;
 
     // Check for winners _before_ we check if the turn limit has been exceeded.
     for (const player of this.players) {
@@ -484,6 +487,8 @@ export class Hadronize {
       this.result = "too many turns";
       return this.result;
     }
+
+    this.turn++;
   }
 }
 

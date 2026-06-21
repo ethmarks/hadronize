@@ -12,6 +12,7 @@ import { FLAVORS, type Flavor } from "./Quark";
 import { hadronizeDriver } from "./utils/hadronizeDriver";
 
 import sl, { type slChunk, type Style } from "./utils/styledLog";
+import { consoleDriver } from "./utils/consoleDriver";
 
 const QUARK_MAPPING: Record<Flavor, Style> = {
   up: "blue",
@@ -291,14 +292,15 @@ async function main() {
     showPreviousObservation: true,
   };
 
-  const game = new Hadronize(83, [
-    { name: "alice", driver: hadronizeDriver },
-    { name: "bob", driver: hadronizeDriver },
+  const game = new Hadronize(1, [
+    { name: "alice", driver: consoleDriver },
+    { name: "bob", driver: consoleDriver },
   ]);
 
+  const preDriverFunc = async () => sl(getStateChunks(game.state!, options));
+
   let i = 0;
-  while ((await game.executeTurn()) === undefined) {
-    sl(getStateChunks(game.state!, options));
+  while ((await game.executeTurn(preDriverFunc)) === undefined) {
     i++;
   }
 }
