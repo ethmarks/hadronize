@@ -13,12 +13,11 @@ import {
   type Result,
 } from "./Hadronize";
 import { FLAVORS, type Flavor } from "./Quark";
-import { prngDriver } from "./utils/prngDriver";
+import { prngDriver, manualDriver } from "./drivers";
 
 import sl, { type slChunk, type Style } from "./utils/styledLog";
-import { consoleDriver } from "./utils/consoleDriver";
 import { getNbrInputFunc } from "./utils/nbrInput";
-import type { Driver, PlayerInit } from "./Player";
+import type { PlayerInit } from "./Player";
 
 const QUARK_MAPPING: Record<Flavor, Style> = {
   up: "blue",
@@ -517,7 +516,7 @@ async function demo() {
     const players: PlayerInit[] = playerInputs.map((p) => {
       return {
         name: p.name,
-        driver: p.type === "human" ? consoleDriver : prngDriver,
+        driver: p.type === "human" ? manualDriver : prngDriver,
       };
     });
 

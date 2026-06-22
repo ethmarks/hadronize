@@ -1,7 +1,7 @@
 import type { Driver, Scratchpad } from "$lib/Player";
 import type { CurrentGameState, PlayerState } from "$lib/Hadronize";
-import sl, { type slChunk } from "./styledLog";
-import { getNbrInputFunc } from "./nbrInput";
+import sl, { type slChunk } from "../utils/styledLog";
+import { getNbrInputFunc } from "../utils/nbrInput";
 
 async function getUserInput(state: CurrentGameState): Promise<string> {
   const isBrowser =
@@ -68,7 +68,7 @@ async function getUserInput(state: CurrentGameState): Promise<string> {
  * Manual driver that uses the console to query the user for input in the
  * browser, Node, Deno, or Bun.
  */
-export const consoleDriver: Driver = async (
+export const manualDriver: Driver = async (
   state: CurrentGameState,
   _pad: Scratchpad,
 ): Promise<number> => {

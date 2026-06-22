@@ -3,8 +3,7 @@
     import { getValidatedUserInput, main } from "$lib/cli";
     import { MAX_PLAYERS, MIN_PLAYERS } from "$lib/Hadronize";
     import { validatePlayerInits, type PlayerInit } from "$lib/Player";
-    import { consoleDriver } from "$lib/utils/consoleDriver";
-    import { prngDriver } from "$lib/utils/prngDriver";
+    import { prngDriver, manualDriver } from "$lib/drivers";
     import sl from "$lib/utils/styledLog";
 
     import { onMount } from "svelte";
@@ -26,7 +25,7 @@
         playerInputs.slice(0, playerCount).map((p) => {
             return {
                 name: p.name,
-                driver: p.type === "Human" ? consoleDriver : prngDriver,
+                driver: p.type === "Human" ? manualDriver : prngDriver,
             };
         }),
     );

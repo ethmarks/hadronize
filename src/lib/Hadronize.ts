@@ -14,7 +14,7 @@ import {
   type Superposition,
   SUPERPOSITION_SIZE,
 } from "./Quark";
-import { prngDriver } from "./utils/prngDriver";
+import { prngDriver } from "./drivers";
 
 /**
  * The maximum number of turns before the game is declared a draw. Also used to determine how many quarks to pregenerate.
