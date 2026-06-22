@@ -28,25 +28,3 @@ export function getNbrInputFunc(): (message: string) => Promise<string> {
     );
   }
 }
-
-export async function getValidatedNbrUserInput(
-  promptMessage: slChunk[],
-  invalidMessage: slChunk[],
-  validator: (input: string) => boolean,
-): Promise<string> {
-  const nbrInput = getNbrInputFunc();
-
-  let userInput: string | undefined = undefined;
-
-  while (userInput === undefined || !validator(userInput)) {
-    if (userInput !== undefined) {
-      sl(invalidMessage);
-    }
-
-    sl(promptMessage);
-
-    userInput = await nbrInput("");
-  }
-
-  return userInput;
-}

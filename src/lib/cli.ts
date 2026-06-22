@@ -17,8 +17,8 @@ import { hadronizeDriver } from "./utils/hadronizeDriver";
 
 import sl, { type slChunk, type Style } from "./utils/styledLog";
 import { consoleDriver } from "./utils/consoleDriver";
-import { getValidatedNbrUserInput } from "./utils/nbrInput";
-import type { Driver } from "./Player";
+import { getNbrInputFunc } from "./utils/nbrInput";
+import type { Driver, PlayerInit } from "./Player";
 
 const QUARK_MAPPING: Record<Flavor, Style> = {
   up: "blue",
@@ -369,6 +369,30 @@ function isMainScript(importMeta: ImportMeta): boolean {
 }
 
 /**
+ * Generic helper for getting validated user input.
+ */
+export async function getValidatedUserInput(
+  userInputFunc: () => Promise<string>,
+  promptMessage: slChunk[],
+  invalidMessage: slChunk[],
+  validator: (input: string) => boolean,
+): Promise<string> {
+  let userInput: string | undefined = undefined;
+
+  while (userInput === undefined || !validator(userInput)) {
+    if (userInput !== undefined) {
+      sl(invalidMessage);
+    }
+
+    sl(promptMessage);
+
+    userInput = await userInputFunc();
+  }
+
+  return userInput;
+}
+
+/**
  * Runs a demo of main()
  */
 async function demo() {
@@ -383,7 +407,10 @@ async function demo() {
   try {
     sl([["Welcome to Hadronize!\n", "blue"]]);
 
-    const seedInput: string = await getValidatedNbrUserInput(
+    const nbrInput: () => Promise<string> = async () => getNbrInputFunc()("");
+
+    const seedInput: string = await getValidatedUserInput(
+      nbrInput,
       [
         "What seed to use?",
         [" (enter an integer or leave blank for random)", "gray"],
@@ -411,7 +438,8 @@ async function demo() {
       [".\n", "gray"],
     ]);
 
-    const playerCountInput: string = await getValidatedNbrUserInput(
+    const playerCountInput: string = await getValidatedUserInput(
+      nbrInput,
       [
         "How many players?",
         [
@@ -438,7 +466,8 @@ async function demo() {
 
     const playerInputs: { name: string; type: "human" | "bot" }[] = [];
     for (let i: number = 0; i < playerCount; i++) {
-      const playerName: string = await getValidatedNbrUserInput(
+      const playerName: string = await getValidatedUserInput(
+        nbrInput,
         [
           `What is the name of `,
           [`player ${i}`, "magenta"],
@@ -455,7 +484,8 @@ async function demo() {
         },
       );
 
-      const playerType: string = await getValidatedNbrUserInput(
+      const playerType: string = await getValidatedUserInput(
+        nbrInput,
         [
           `What player type is `,
           [playerName, "magenta"],
@@ -484,14 +514,12 @@ async function demo() {
       });
     }
 
-    const players: { name: string; driver: Driver }[] = playerInputs.map(
-      (p) => {
-        return {
-          name: p.name,
-          driver: p.type === "human" ? consoleDriver : hadronizeDriver,
-        };
-      },
-    );
+    const players: PlayerInit[] = playerInputs.map((p) => {
+      return {
+        name: p.name,
+        driver: p.type === "human" ? consoleDriver : hadronizeDriver,
+      };
+    });
 
     const opt: CliOptions = {
       abbreviate: false,
