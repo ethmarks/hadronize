@@ -70,7 +70,7 @@ async function getUserInput(state: CurrentGameState): Promise<string> {
  */
 export const consoleDriver: Driver = async (
   state: CurrentGameState,
-  _scratchpad: Scratchpad,
+  _pad: Scratchpad,
 ): Promise<number> => {
   let userInput: string = "";
 

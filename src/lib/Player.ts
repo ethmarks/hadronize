@@ -13,7 +13,7 @@ export interface Scratchpad {
 
 export type Driver = (
   state: CurrentGameState,
-  scratchpad: Scratchpad,
+  pad: Scratchpad,
 ) => Promise<number>;
 
 export function validatePlayerInits(inits: PlayerInit[]): void {
@@ -43,7 +43,7 @@ export class Chamber {
 
 export class Player {
   /**
-   * Stores all the non-hadronized quarks.
+   * Stores all the player's quarks.
    */
   public chamber: Chamber = new Chamber();
 

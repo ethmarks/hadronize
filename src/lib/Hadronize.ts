@@ -14,6 +14,7 @@ import {
   type Superposition,
   SUPERPOSITION_SIZE,
 } from "./Quark";
+import { prngDriver } from "./utils/prngDriver";
 
 /**
  * The maximum number of turns before the game is declared a draw. Also used to determine how many quarks to pregenerate.
@@ -495,14 +496,9 @@ export class Hadronize {
   }
 }
 
-// const hadronizeDriver: Driver = async (
-//   s: CurrentGameState,
-//   p: Scratchpad,
-// ): Promise<number> => s.activePlayer;
-
 // const game = new Hadronize(83, [
-//   { name: "alice", driver: hadronizeDriver },
-//   { name: "bob", driver: hadronizeDriver },
+//   { name: "alice", driver: prngDriver },
+//   { name: "bob", driver: prngDriver },
 // ]);
 
 // let i = 0;

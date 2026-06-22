@@ -4,7 +4,7 @@
     import { MAX_PLAYERS, MIN_PLAYERS } from "$lib/Hadronize";
     import { validatePlayerInits, type PlayerInit } from "$lib/Player";
     import { consoleDriver } from "$lib/utils/consoleDriver";
-    import { hadronizeDriver } from "$lib/utils/hadronizeDriver";
+    import { prngDriver } from "$lib/utils/prngDriver";
     import sl from "$lib/utils/styledLog";
 
     import { onMount } from "svelte";
@@ -26,7 +26,7 @@
         playerInputs.slice(0, playerCount).map((p) => {
             return {
                 name: p.name,
-                driver: p.type === "Human" ? consoleDriver : hadronizeDriver,
+                driver: p.type === "Human" ? consoleDriver : prngDriver,
             };
         }),
     );

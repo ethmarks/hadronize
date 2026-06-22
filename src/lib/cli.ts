@@ -13,7 +13,7 @@ import {
   type Result,
 } from "./Hadronize";
 import { FLAVORS, type Flavor } from "./Quark";
-import { hadronizeDriver } from "./utils/hadronizeDriver";
+import { prngDriver } from "./utils/prngDriver";
 
 import sl, { type slChunk, type Style } from "./utils/styledLog";
 import { consoleDriver } from "./utils/consoleDriver";
@@ -517,7 +517,7 @@ async function demo() {
     const players: PlayerInit[] = playerInputs.map((p) => {
       return {
         name: p.name,
-        driver: p.type === "human" ? consoleDriver : hadronizeDriver,
+        driver: p.type === "human" ? consoleDriver : prngDriver,
       };
     });
 
