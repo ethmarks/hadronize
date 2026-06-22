@@ -5,7 +5,7 @@
 import {
   Hadronize,
   MAX_PLAYERS,
-  MIN_PLYERS,
+  MIN_PLAYERS,
   type CurrentGameState,
   type Observation,
   type PastGameState,
@@ -415,18 +415,18 @@ async function demo() {
       [
         "How many players?",
         [
-          ` (enter an integer between ${MIN_PLYERS} and ${MAX_PLAYERS})`,
+          ` (enter an integer between ${MIN_PLAYERS} and ${MAX_PLAYERS})`,
           "gray",
         ],
       ],
       [
         ["Invalid player count!", "red"],
-        ` Enter an integer between ${MIN_PLYERS} and ${MAX_PLAYERS})`,
+        ` Enter an integer between ${MIN_PLAYERS} and ${MAX_PLAYERS})`,
       ],
       (input: string): boolean => {
         const num = Number(input);
         if (Number.isNaN(num)) return false;
-        if (num < MIN_PLYERS) return false;
+        if (num < MIN_PLAYERS) return false;
         if (num > MAX_PLAYERS) return false;
         return true;
       },

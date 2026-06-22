@@ -33,7 +33,7 @@ export const STARTING_QUARK_COUNT = 4;
  */
 export const WINNING_HADRON_COUNT = 10;
 
-export const MIN_PLYERS = 2;
+export const MIN_PLAYERS = 2;
 export const MAX_PLAYERS = 6;
 
 export type Reaction = "no reaction" | "hadronized" | "tunneled";
