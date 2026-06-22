@@ -1,12 +1,8 @@
 <script lang="ts">
     import { base } from "$app/paths";
-    import { main } from "$lib/cli";
+    import { getValidatedUserInput, main } from "$lib/cli";
     import { MAX_PLAYERS, MIN_PLAYERS } from "$lib/Hadronize";
-    import {
-        validatePlayerInits,
-        type Driver,
-        type PlayerInit,
-    } from "$lib/Player";
+    import { validatePlayerInits, type PlayerInit } from "$lib/Player";
     import { consoleDriver } from "$lib/utils/consoleDriver";
     import { hadronizeDriver } from "$lib/utils/hadronizeDriver";
     import sl from "$lib/utils/styledLog";
@@ -35,10 +31,21 @@
         }),
     );
 
+    // For storing error messages from any source to display in the errorMsg
+    // text at the bottom of the fieldset.
     let errorMsg: string = $state("");
+
+    // For storing the resolve function for all Promise<void> tricks.
+    let resumeExecution: () => void;
+
+    // Pretty self-explanatory, yeah?
+    const specialValueString: string =
+        "string that no user will enter that can be used as a special value but that is still a string type.";
 
     async function startMain() {
         errorMsg = "";
+
+        if (typeof resumeExecution !== "undefined") resumeExecution();
 
         sl([["Setup form submitted! Starting Hadronize...", "gray"]]);
 
@@ -69,11 +76,165 @@
         );
     }
 
+    /**
+     * Helper to solicit user input in the browser console via the
+     * `window.r` property.
+     */
+    async function browserConsoleInput(): Promise<string> {
+        let userInput: string = "";
+
+        function respond(input: unknown) {
+            if (typeof input === "string") {
+                userInput = input;
+            } else if (typeof input === "number") {
+                userInput = input.toString();
+            } else {
+                userInput = specialValueString;
+            }
+
+            resumeExecution();
+        }
+
+        // I would have liked to use the anonymous getter trick that I used
+        // in the NBR CLI, but I don't think that setting `window.0` is a
+        // good idea, especially because we'd have to do it for all 32-bit
+        // numbers in order to allow all possible seed inputs to be inputted.
+        (window as any).r = respond;
+
+        await new Promise<void>((resolve) => {
+            resumeExecution = resolve;
+        });
+
+        delete (window as any)["r"];
+
+        return userInput;
+    }
+
+    /**
+     * Get the setup values from the console using getBrowserConsoleInput,
+     * allowing users to set up a Hadronize game entirely from the browser
+     * console without interacting with the webpage form.
+     */
+    async function setupViaConsole(): Promise<void> {
+        // Seed
+        const seedInput: string = await getValidatedUserInput(
+            browserConsoleInput,
+            [
+                "What seed to use?",
+                [" (enter an integer or leave blank for random)", "gray"],
+            ],
+            [
+                ["Invalid seed!", "red"],
+                " Enter a positive integer to use as the seed or leave blank for a random seed.",
+            ],
+            (input: string): boolean => {
+                if (input === specialValueString) return false;
+                if (input === "") return true;
+                const num = Number(input);
+                if (Number.isNaN(num)) return false;
+                if (num < 1) return false;
+                return true;
+            },
+        );
+        seed =
+            seedInput === ""
+                ? Math.floor(Math.random() * 2 ** 32)
+                : Number(seedInput);
+        sl([
+            ["Using seed ", "gray"],
+            [seed.toString(), "yellow"],
+            [".\n", "gray"],
+        ]);
+
+        // Player Count
+        const playerCountInput: string = await getValidatedUserInput(
+            browserConsoleInput,
+            [
+                "How many players?",
+                [
+                    ` (enter an integer between ${MIN_PLAYERS} and ${MAX_PLAYERS})`,
+                    "gray",
+                ],
+            ],
+            [
+                ["Invalid player count!", "red"],
+                ` Enter an integer between ${MIN_PLAYERS} and ${MAX_PLAYERS})`,
+            ],
+            (input: string): boolean => {
+                if (input === specialValueString) return false;
+                const num = Number(input);
+                if (Number.isNaN(num)) return false;
+                if (num < MIN_PLAYERS) return false;
+                if (num > MAX_PLAYERS) return false;
+                return true;
+            },
+        );
+        playerCount = Number(playerCountInput);
+
+        // Player Inits
+        for (let i: number = 0; i < playerCount; i++) {
+            const playerName: string = await getValidatedUserInput(
+                browserConsoleInput,
+                [
+                    `What is the name of `,
+                    [`player ${i}`, "magenta"],
+                    "?",
+                    [` (enter an string)`, "gray"],
+                ],
+                [
+                    ["Invalid player name!", "red"],
+                    ` Try only using letters, and ensure that there isn't already a player with that name.`,
+                ],
+                (input: string): boolean => {
+                    if (input === specialValueString) return false;
+                    if (playerInputs.some((p) => p.name === input))
+                        return false;
+                    return true;
+                },
+            );
+            const playerType: string = await getValidatedUserInput(
+                browserConsoleInput,
+                [
+                    `What player type is `,
+                    [playerName, "magenta"],
+                    "?",
+                    [` (enter either "human" or "bot")`, "gray"],
+                ],
+                [
+                    ["Invalid player type!", "red"],
+                    ` Enter either "human" or "bot".`,
+                ],
+                (input: string): boolean => {
+                    if (input === specialValueString) return false;
+                    if (input.toLowerCase() === "human") return true;
+                    if (input.toLowerCase() === "bot") return true;
+                    return false;
+                },
+            );
+            sl([
+                [`Player ${i} is named `, "gray"],
+                [playerName, "yellow"],
+                [" and is a ", "gray"],
+                [playerType.toLowerCase(), "yellow"],
+                [".\n", "gray"],
+            ]);
+            playerInputs[0] = {
+                name: playerName,
+                type: playerType.toLowerCase() as "human" | "bot",
+            };
+            playerInputs = playerInputs;
+        }
+
+        await startMain();
+    }
+
     onMount(async () => {
         seed = Math.floor(Math.random() * 2 ** 32);
 
         sl([["Welcome to Hadronize!", "blue"]]);
         sl([["Waiting on setup form...", "gray"]]);
+
+        await setupViaConsole();
     });
 </script>
 
