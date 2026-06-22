@@ -2,7 +2,11 @@
     import { base } from "$app/paths";
     import { main } from "$lib/cli";
     import { MAX_PLAYERS, MIN_PLAYERS } from "$lib/Hadronize";
-    import type { Driver } from "$lib/Player";
+    import {
+        validatePlayerInits,
+        type Driver,
+        type PlayerInit,
+    } from "$lib/Player";
     import { consoleDriver } from "$lib/utils/consoleDriver";
     import { hadronizeDriver } from "$lib/utils/hadronizeDriver";
     import sl from "$lib/utils/styledLog";
@@ -22,7 +26,7 @@
         { name: "Frank", type: "bot" },
     ]);
 
-    let players: { name: string; driver: Driver }[] = $derived(
+    let playerInits: PlayerInit[] = $derived(
         playerInputs.slice(0, playerCount).map((p) => {
             return {
                 name: p.name,
@@ -31,8 +35,26 @@
         }),
     );
 
+    let errorMsg: string = $state("");
+
     async function startMain() {
+        errorMsg = "";
+
         sl([["Setup form submitted! Starting Hadronize...", "gray"]]);
+
+        try {
+            validatePlayerInits(playerInits);
+        } catch (err) {
+            errorMsg =
+                "Player names are not valid! Remember that you can't have duplicate player names.";
+        }
+
+        // Return early if there was an error message.
+        if (errorMsg !== "") {
+            sl([["Setup form was not valid!", "red"]]);
+            return;
+        }
+
         sl([["Have fun!", "green"]]);
         sl([""]);
 
@@ -43,7 +65,7 @@
                 showPlayerOrder: true,
                 showPreviousObservation: true,
             },
-            [seed, players],
+            [seed, playerInits],
         );
     }
 
@@ -141,6 +163,10 @@
         </div>
 
         <button onclick={startMain}>Start Hadronize</button>
+
+        {#if errorMsg !== ""}
+            <p class="errorMsg">{errorMsg}</p>
+        {/if}
     </fieldset>
     <li>
         Open your browser console with <kbd>F12</kbd>.
@@ -191,5 +217,9 @@
                 flex-direction: column;
             }
         }
+    }
+
+    .errorMsg {
+        color: #dc143c;
     }
 </style>
