@@ -7,7 +7,15 @@ export function getNbrInputFunc(): (message: string) => Promise<string> {
   if ("Deno" in globalThis || "Bun" in globalThis) {
     // Deno and Bun both expose globalThis.prompt
     return async (message: string): Promise<string> => {
-      return globalThis.prompt(message)!;
+      const response = globalThis.prompt(message)!;
+
+      // In Deno, if you CTRL+C during a prompt(), it returns null rather than
+      // throwing.
+      if (response === null) {
+        throw new DOMException("aborted", "AbortError");
+      }
+
+      return response;
     };
   } else if ("process" in globalThis) {
     // Node needs a readline polyfill
