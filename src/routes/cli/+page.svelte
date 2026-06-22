@@ -13,26 +13,26 @@
 
     let playerCount: number = $state(2);
 
-    let playerInputs: { name: string; type: "human" | "bot" }[] = $state([
-        { name: "Alice", type: "human" },
-        { name: "Bob", type: "bot" },
-        { name: "Charlie", type: "bot" },
-        { name: "David", type: "bot" },
-        { name: "Eve", type: "bot" },
-        { name: "Frank", type: "bot" },
+    let playerInputs: { name: string; type: "Human" | "Bot" }[] = $state([
+        { name: "Alice", type: "Human" },
+        { name: "Bob", type: "Bot" },
+        { name: "Charlie", type: "Bot" },
+        { name: "David", type: "Bot" },
+        { name: "Eve", type: "Bot" },
+        { name: "Frank", type: "Bot" },
     ]);
 
     let playerInits: PlayerInit[] = $derived(
         playerInputs.slice(0, playerCount).map((p) => {
             return {
                 name: p.name,
-                driver: p.type === "human" ? consoleDriver : hadronizeDriver,
+                driver: p.type === "Human" ? consoleDriver : hadronizeDriver,
             };
         }),
     );
 
     // For storing error messages from any source to display in the errorMsg
-    // text at the bottom of the fieldset.
+    // text at the Bottom of the fieldset.
     let errorMsg: string = $state("");
 
     // For storing the resolve function for all Promise<void> tricks.
@@ -88,6 +88,8 @@
                 userInput = input;
             } else if (typeof input === "number") {
                 userInput = input.toString();
+            } else if (typeof input === "undefined") {
+                userInput = "";
             } else {
                 userInput = specialValueString;
             }
@@ -99,12 +101,22 @@
         // in the NBR CLI, but I don't think that setting `window.0` is a
         // good idea, especially because we'd have to do it for all 32-bit
         // numbers in order to allow all possible seed inputs to be inputted.
+        //
         (window as any).r = respond;
+
+        // Alternative syntax
+        // Object.defineProperty(window, "r", {
+        //     set(val) {
+        //         respond(val);
+        //     },
+        //     configurable: true,
+        // });
 
         await new Promise<void>((resolve) => {
             resumeExecution = resolve;
         });
 
+        // Clean up
         delete (window as any)["r"];
 
         return userInput;
@@ -136,10 +148,9 @@
                 return true;
             },
         );
-        seed =
-            seedInput === ""
-                ? Math.floor(Math.random() * 2 ** 32)
-                : Number(seedInput);
+        if (seedInput !== "") {
+            seed = Number(seedInput);
+        }
         sl([
             ["Using seed ", "gray"],
             [seed.toString(), "yellow"],
@@ -187,22 +198,28 @@
                 ],
                 (input: string): boolean => {
                     if (input === specialValueString) return false;
-                    if (playerInputs.some((p) => p.name === input))
+                    if (
+                        playerInputs.some(
+                            (p, index) => p.name === input && index !== i,
+                        )
+                    )
                         return false;
                     return true;
                 },
             );
+            playerInputs[i].name = playerName;
+            playerInputs = playerInputs;
             const playerType: string = await getValidatedUserInput(
                 browserConsoleInput,
                 [
                     `What player type is `,
                     [playerName, "magenta"],
                     "?",
-                    [` (enter either "human" or "bot")`, "gray"],
+                    [` (enter either "Human" or "Bot")`, "gray"],
                 ],
                 [
                     ["Invalid player type!", "red"],
-                    ` Enter either "human" or "bot".`,
+                    ` Enter either "Human" or "Bot".`,
                 ],
                 (input: string): boolean => {
                     if (input === specialValueString) return false;
@@ -211,18 +228,17 @@
                     return false;
                 },
             );
+            playerInputs[i].type =
+                playerType.toLowerCase() === "human" ? "Human" : "Bot";
+            playerInputs = playerInputs;
+
             sl([
                 [`Player ${i} is named `, "gray"],
-                [playerName, "yellow"],
+                [playerInputs[i].name, "yellow"],
                 [" and is a ", "gray"],
-                [playerType.toLowerCase(), "yellow"],
+                [playerInputs[i].type, "yellow"],
                 [".\n", "gray"],
             ]);
-            playerInputs[0] = {
-                name: playerName,
-                type: playerType.toLowerCase() as "human" | "bot",
-            };
-            playerInputs = playerInputs;
         }
 
         await startMain();
@@ -231,8 +247,34 @@
     onMount(async () => {
         seed = Math.floor(Math.random() * 2 ** 32);
 
+        // Welcome to Hadronize!
+        // To setup Hadronize in the console, use the r(myinput) syntax.
+        // For example, to respond to the query below about setting the seed,
+        // you could type r(42) to set the seed to the number 42. Remember to
+        // add quotes for string inputs.
         sl([["Welcome to Hadronize!", "blue"]]);
-        sl([["Waiting on setup form...", "gray"]]);
+        sl([
+            ["To setup Hadronize in the console, use the ", "gray"],
+            ["r", "magenta"],
+            ["(", "white"],
+            ["myinput", "blue"],
+            [")", "white"],
+            [" syntax.", "gray"],
+        ]);
+        sl([
+            [
+                "For example, to respond to the query below about setting the seed, \nyou could type ",
+                "gray",
+            ],
+            ["r", "magenta"],
+            ["(", "white"],
+            ["42", "blue"],
+            [")", "white"],
+            [
+                " to set the seed to the number 42. Remember to \nadd quotes for string inputs.",
+                "gray",
+            ],
+        ]);
 
         await setupViaConsole();
     });
@@ -271,9 +313,9 @@
         >.
     </li>
     <li>
-        Fill out the setup form below. Decide how many players you want, then
-        come up with names for each of them and specify whether they should be
-        controlled by a human or by a bot.
+        Complete out the setup, such as choosing a seed and specifying the
+        players. You can either do this using the form below or in the browser
+        console.
     </li>
     <fieldset>
         <legend>Hadronize Setup</legend>
@@ -315,8 +357,8 @@
                             id={`player${index}-type`}
                             bind:value={player.type}
                         >
-                            <option value="human">Human</option>
-                            <option value="bot">Bot</option>
+                            <option value="Human">Human</option>
+                            <option value="Bot">Bot</option>
                         </select>
                     </div>
                 </div>
@@ -330,7 +372,7 @@
         {/if}
     </fieldset>
     <li>
-        Open your browser console with <kbd>F12</kbd>.
+        Open your browser console with <kbd>F12</kbd> to start playing Hadronize.
     </li>
     <li>
         On each turn, info about the current game state will be logged to the
