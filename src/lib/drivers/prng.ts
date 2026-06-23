@@ -1,5 +1,5 @@
-import type { CurrentGameState } from "$lib/Hadronize";
-import type { Scratchpad, Driver } from "$lib/Player";
+import type { CurrentGameState } from "../Hadronize";
+import type { Scratchpad, Driver } from "../Player";
 
 /**
  * Modified version of mulberry32 that's stateless and doesn't use side effects.

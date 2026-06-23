@@ -1,5 +1,5 @@
-import type { Driver, Scratchpad } from "$lib/Player";
-import type { CurrentGameState, PlayerState } from "$lib/Hadronize";
+import type { Driver, Scratchpad } from "../Player";
+import type { CurrentGameState, PlayerState } from "../Hadronize";
 import sl, { type slChunk } from "../utils/styledLog";
 import { getNbrInputFunc } from "../utils/nbrInput";
 
