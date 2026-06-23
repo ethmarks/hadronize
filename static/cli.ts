@@ -18,4 +18,4 @@ const version = commits[0].sha.substring(0, 7);
 const { demo } = await import(
   `https://cdn.jsdelivr.net/gh/ethmarks/hadronize@${version}/mod.ts`
 );
-demo();
+await demo();
