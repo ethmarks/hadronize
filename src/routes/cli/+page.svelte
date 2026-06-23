@@ -1,11 +1,13 @@
 <script lang="ts">
-    import { base } from "$app/paths";
-    import { getValidatedUserInput, main } from "$lib/cli";
     import { MAX_PLAYERS, MIN_PLAYERS } from "$lib/Hadronize";
     import { validatePlayerInits, type PlayerInit } from "$lib/Player";
     import { prngDriver, manualDriver } from "$lib/drivers";
-    import sl from "$lib/utils/styledLog";
 
+    import { main } from "$lib/cli/main";
+    import sl from "$lib/cli/styledLog";
+    import { getValidatedUserInput } from "$lib/cli/input";
+
+    import { base } from "$app/paths";
     import { onMount } from "svelte";
 
     let seed: number = $state(0);

@@ -36,3 +36,27 @@ export function getNbrInputFunc(): (message: string) => Promise<string> {
     );
   }
 }
+
+/**
+ * Generic helper for getting validated user input.
+ */
+export async function getValidatedUserInput(
+  userInputFunc: () => Promise<string>,
+  promptMessage: slChunk[],
+  invalidMessage: slChunk[],
+  validator: (input: string) => boolean,
+): Promise<string> {
+  let userInput: string | undefined = undefined;
+
+  while (userInput === undefined || !validator(userInput)) {
+    if (userInput !== undefined) {
+      sl(invalidMessage);
+    }
+
+    sl(promptMessage);
+
+    userInput = await userInputFunc();
+  }
+
+  return userInput;
+}
