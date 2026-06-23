@@ -3,7 +3,7 @@
  * Bun, and browsers.
  */
 
-import pc from "../deps/picocolors.ts";
+import pc from "picocolors";
 
 // https://github.com/alexeyraspopov/picocolors/blob/main/types.d.ts#L1
 type Formatter = (input: string | number | null | undefined) => string;
