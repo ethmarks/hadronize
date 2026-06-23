@@ -9,10 +9,10 @@ import type {
   PastGameState,
   PlayerState,
   Result,
-} from "$lib/Hadronize";
-import { FLAVORS, type Flavor } from "$lib/Quark";
+} from "../Hadronize.ts";
+import { FLAVORS, type Flavor } from "../Quark.ts";
 
-import { type Style, type slChunk } from "./styledLog";
+import { type Style, type slChunk } from "./styledLog.ts";
 
 export interface CliOptions {
   abbreviate: boolean;

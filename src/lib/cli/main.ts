@@ -1,7 +1,7 @@
-import { Hadronize, type Result } from "../Hadronize";
+import { Hadronize, type Result } from "../Hadronize.ts";
 
-import sl from "./styledLog";
-import { getEndgameChunks, getStateChunks, type CliOptions } from "./print";
+import sl from "./styledLog.ts";
+import { getEndgameChunks, getStateChunks, type CliOptions } from "./print.ts";
 
 export async function main(
   opt: CliOptions,

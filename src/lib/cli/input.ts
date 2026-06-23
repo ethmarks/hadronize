@@ -1,4 +1,4 @@
-import { sl, type slChunk } from "./styledLog";
+import { sl, type slChunk } from "./styledLog.ts";
 
 /**
  * Get input function of Non-browser runtimes (Node, Deno, and Bun).

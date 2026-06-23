@@ -1,5 +1,5 @@
-import type { CurrentGameState } from "../Hadronize";
-import type { Scratchpad, Driver } from "../Player";
+import type { CurrentGameState } from "../Hadronize.ts";
+import type { Scratchpad, Driver } from "../Player.ts";
 
 /**
  * Modified version of mulberry32 that's stateless and doesn't use side effects.
@@ -35,7 +35,7 @@ export const prngDriver: Driver = async (
   state: CurrentGameState,
   pad: Scratchpad,
 ): Promise<number> => {
-  let scratch: string = pad.read();
+  const scratch: string = pad.read();
 
   const seed: number =
     !scratch || scratch.trim() === ""

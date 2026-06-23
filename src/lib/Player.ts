@@ -1,5 +1,9 @@
-import { MAX_PLAYERS, type CurrentGameState, MIN_PLAYERS } from "./Hadronize";
-import { Hadron } from "./Quark";
+import {
+  MAX_PLAYERS,
+  type CurrentGameState,
+  MIN_PLAYERS,
+} from "./Hadronize.ts";
+import { Hadron } from "./Quark.ts";
 
 export interface PlayerInit {
   name: string;

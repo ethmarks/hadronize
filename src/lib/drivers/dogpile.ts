@@ -1,5 +1,5 @@
-import type { CurrentGameState } from "../Hadronize";
-import type { Scratchpad, Driver } from "../Player";
+import type { CurrentGameState } from "../Hadronize.ts";
+import type { Scratchpad, Driver } from "../Player.ts";
 
 /**
  * An extremely similar driver that just dogpiles on the player who goes

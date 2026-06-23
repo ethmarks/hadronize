@@ -1,11 +1,12 @@
-import { MAX_PLAYERS, MIN_PLAYERS } from "../Hadronize";
-import { prngDriver, manualDriver } from "../drivers";
+import { MAX_PLAYERS, MIN_PLAYERS } from "../Hadronize.ts";
 
-import sl from "./styledLog";
-import { getNbrInputFunc, getValidatedUserInput } from "./input";
-import type { PlayerInit } from "../Player";
-import { type CliOptions } from "./print";
-import { main } from "./main";
+import sl from "./styledLog.ts";
+import { getNbrInputFunc, getValidatedUserInput } from "./input.ts";
+import type { PlayerInit } from "../Player.ts";
+import { type CliOptions } from "./print.ts";
+import { main } from "./main.ts";
+import { manualDriver } from "../drivers/manual.ts";
+import { prngDriver } from "../drivers/prng.ts";
 
 /**
  * Runs a demo of main()
@@ -22,7 +23,7 @@ export async function demo() {
   try {
     sl([["Welcome to Hadronize!\n", "blue"]]);
 
-    const nbrInput: () => Promise<string> = async () => getNbrInputFunc()("");
+    const nbrInput: () => Promise<string> = () => getNbrInputFunc()("");
 
     const seedInput: string = await getValidatedUserInput(
       nbrInput,

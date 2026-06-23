@@ -1,11 +1,11 @@
 import { expect, describe, it } from "vitest";
-import { Hadronize, STARTING_QUARK_COUNT, type Result } from "./Hadronize";
-import { dogpileDriver } from "./drivers";
+import { Hadronize, STARTING_QUARK_COUNT, type Result } from "./Hadronize.ts";
+import { dogpileDriver } from "./drivers/dogpile.ts";
 
-import type { Chamber, PlayerInit } from "./Player";
+import type { Chamber, PlayerInit } from "./Player.ts";
 
 // To sate typescript's strictness
-import { FLAVORS as _STRICT_FLAVORS, Hadron, type Flavor } from "./Quark";
+import { FLAVORS as _STRICT_FLAVORS, Hadron, type Flavor } from "./Quark.ts";
 const FLAVORS = _STRICT_FLAVORS.map((f) => f);
 
 /**
@@ -227,7 +227,7 @@ describe.each([1, 3752815185, 1042408937])(
         expect(result).toBe("too many turns");
       });
 
-      it("should form hadron under hadron-forming circumstance", async () => {
+      it("should form hadron under hadron-forming circumstance", () => {
         const game = getGame();
 
         // To ensure that our actions actually changed the player's score.
@@ -258,7 +258,7 @@ describe.each([1, 3752815185, 1042408937])(
         expect(game.activePlayer.score).toBeGreaterThan(0);
       });
 
-      it("should quantum tunnel under quantum-tunneling circumstance", async () => {
+      it("should quantum tunnel under quantum-tunneling circumstance", () => {
         const game = getGame();
 
         // Any non-active player will do.

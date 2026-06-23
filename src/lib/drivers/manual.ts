@@ -1,7 +1,7 @@
-import type { Driver, Scratchpad } from "../Player";
-import type { CurrentGameState, PlayerState } from "../Hadronize";
-import sl, { type slChunk } from "../cli/styledLog";
-import { getNbrInputFunc } from "../cli/input";
+import type { Driver, Scratchpad } from "../Player.ts";
+import type { CurrentGameState, PlayerState } from "../Hadronize.ts";
+import sl, { type slChunk } from "../cli/styledLog.ts";
+import { getNbrInputFunc } from "../cli/input.ts";
 
 async function getUserInput(state: CurrentGameState): Promise<string> {
   const isBrowser =

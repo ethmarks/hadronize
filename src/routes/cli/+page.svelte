@@ -1,11 +1,12 @@
 <script lang="ts">
-    import { MAX_PLAYERS, MIN_PLAYERS } from "$lib/Hadronize";
-    import { validatePlayerInits, type PlayerInit } from "$lib/Player";
-    import { prngDriver, manualDriver } from "$lib/drivers";
+    import { MAX_PLAYERS, MIN_PLAYERS } from "../../lib/Hadronize.ts";
+    import { validatePlayerInits, type PlayerInit } from "../../lib/Player.ts";
+    import { prngDriver } from "../../lib/drivers/prng.ts";
+    import { manualDriver } from "../../lib/drivers/manual.ts";
 
-    import { main } from "$lib/cli/main";
-    import sl from "$lib/cli/styledLog";
-    import { getValidatedUserInput } from "$lib/cli/input";
+    import { main } from "../../lib/cli/main.ts";
+    import sl from "../../lib/cli/styledLog.ts";
+    import { getValidatedUserInput } from "../../lib/cli/input.ts";
 
     import { base } from "$app/paths";
     import { onMount } from "svelte";

@@ -2,10 +2,8 @@ import {
   Chamber,
   Player,
   validatePlayerInits,
-  type Driver,
   type PlayerInit,
-  type Scratchpad,
-} from "./Player";
+} from "./Player.ts";
 import {
   prngFlavor,
   type Flavor,
@@ -13,8 +11,7 @@ import {
   Hadron,
   type Superposition,
   SUPERPOSITION_SIZE,
-} from "./Quark";
-import { prngDriver } from "./drivers";
+} from "./Quark.ts";
 
 /**
  * The maximum number of turns before the game is declared a draw. Also used to determine how many quarks to pregenerate.
