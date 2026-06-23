@@ -75,9 +75,7 @@ export class Quark {
    */
   public get superposedInfo(): SuperposedQuarkInfo {
     if (this.isCollapsed) {
-      throw new Error(
-        "Tried to access collapsed info of a non-collapsed quark!",
-      );
+      throw new Error("Tried to access superposed info of a collapsed quark!");
     }
 
     return {
