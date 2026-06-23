@@ -260,7 +260,7 @@ export class Hadronize {
   }
 
   /**
-   * Tunnels quarks all non-hadronized quarks of a specified flavor from one
+   * Tunnels all non-hadronized quarks of a specified flavor from one
    * chamber to another.
    *
    * @param flavor The flavor of quarks to tunnel.
@@ -434,24 +434,6 @@ export class Hadronize {
 
     this.state = newState;
     return newState;
-  }
-
-  printState() {
-    console.log(`It is turn #${this.turn}`);
-
-    this.players.forEach((player) => {
-      console.log(
-        `${player.name} has ${player.chamber.indices.map((index) => this.quarks[index].flavor[0].toLowerCase())} in their chamber and ${player.score} hadronized quarks.`,
-      );
-    });
-
-    if (this.activeQuark === undefined) {
-      console.log("The next quark hasn't been produced yet.");
-    } else {
-      console.log(
-        `The next quark is '${this.quarks[this.activeQuark].flavor}'`,
-      );
-    }
   }
 
   /**
