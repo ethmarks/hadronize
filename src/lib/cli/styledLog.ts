@@ -3,10 +3,7 @@
  * Bun, and browsers.
  */
 
-import pc from "../deps/picocolors.ts";
-
-// https://github.com/alexeyraspopov/picocolors/blob/main/types.d.ts#L1
-type Formatter = (input: string | number | null | undefined) => string;
+import pc, { type Formatter } from "../deps/picocolors.ts";
 
 const STYLE_MAPPING = {
   red: { ansi: pc.red, css: "color: #ef657a;" },

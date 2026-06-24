@@ -10,17 +10,23 @@ Hadronize is still under very heavy development, and right now the only usable p
 
 The easiest way to play Hadronize CLI is to visit <https://ethmarks.github.io/hadronize/cli>, where you can play it entirely in your browser console (yes, really!).
 
-### Deno
+### Terminal
 
-To play Hadronize CLI in [Deno](https://deno.com/), you can just use the command below. No repo cloning needed!
+To play Hadronize CLI in your terminal, you can just use the command below. No installation or repo cloning needed!
 
 ```sh
 deno run -A http://ethmarks.github.io/hadronize/cli.ts
 ```
 
-### Node/Bun
+If you don't have [Deno](https://deno.com/) installed, you can also run it using any of the other JS package managers via the [Deno binary on NPM](https://www.npmjs.com/package/deno):
 
-To play Hadronize CLI in [Node](https://nodejs.org/) or [Bun](https://bun.sh/), you'll need to clone the repo and run the `cli` script.
+```sh
+npx deno run -A http://ethmarks.github.io/hadronize/cli.ts
+pnpm dlx deno run -A http://ethmarks.github.io/hadronize/cli.ts
+bunx deno run -A http://ethmarks.github.io/hadronize/cli.ts
+```
+
+If you want to run it natively in Node without going through Deno, you can just clone the repo and run the `cli` script:
 
 ```sh
 # Clone the repo
@@ -30,6 +36,9 @@ cd hadronize
 # Run with Node (via npm or pnpm)
 npm install
 npm run cli
+
+# Run with Deno
+deno task cli
 
 # Run with Bun
 bun install

@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-let { default: pc } =
+const { default: pc } =
   "Deno" in globalThis
     ? await import(/* @vite-ignore */ "npm:picocolors")
     : await import("picocolors");

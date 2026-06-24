@@ -1,3 +1,5 @@
-import demo from "./src/lib/cli/demo.ts";
+/**
+ * For Deno
+ */
 
-export default demo;
+export { demo } from "./src/lib/cli/demo.ts";
