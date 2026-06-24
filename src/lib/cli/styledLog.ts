@@ -89,4 +89,19 @@ export function sl(
   }
 }
 
+export function chunksToString(chunks: slChunk[]): string {
+  let str: string = "";
+
+  chunks.forEach((chunk) => {
+    if (Array.isArray(chunk)) {
+      const text = chunk[0];
+      str += text;
+    } else {
+      str += chunk;
+    }
+  });
+
+  return str;
+}
+
 export default sl;

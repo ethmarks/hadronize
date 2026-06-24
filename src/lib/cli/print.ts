@@ -123,7 +123,7 @@ function getPlayerChunks(
   return chunks;
 }
 
-function getObservationChunks(
+export function getObservationChunks(
   active: PlayerState,
   observer: PlayerState,
   observation: Observation,
@@ -293,15 +293,6 @@ export function getEndgameChunks(
   opt: CliOptions,
 ): slChunk[] {
   const chunks: slChunk[] = [];
-
-  // Log final obseravtion
-  const observation = game.mostRecentObservation!;
-  const active = game.state!.players[game.state!.activePlayer];
-  const observer = game.state!.players[observation.observer];
-  chunks.push(...getObservationChunks(active, observer, observation, opt));
-  chunks.push("\n\n---\n\n");
-
-  // Log game summary
   if (result === "too many turns") {
     chunks.push(["Too many turns!", "red"]);
     chunks.push(

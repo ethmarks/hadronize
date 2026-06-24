@@ -1,11 +1,18 @@
 <script lang="ts">
-    import { MAX_PLAYERS, MIN_PLAYERS } from "../../lib/Hadronize.ts";
+    import {
+        MAX_PLAYERS,
+        MIN_PLAYERS,
+        type Result,
+    } from "../../lib/Hadronize.ts";
     import { validatePlayerInits, type PlayerInit } from "../../lib/Player.ts";
     import { prngDriver } from "../../lib/drivers/prng.ts";
     import { manualDriver } from "../../lib/drivers/manual.ts";
 
     import { main } from "../../lib/cli/main.ts";
-    import sl from "../../lib/cli/styledLog.ts";
+    import sl, {
+        chunksToString,
+        type slChunk,
+    } from "../../lib/cli/styledLog.ts";
     import { getValidatedUserInputWithAbort } from "../../lib/cli/input.ts";
 
     import { base } from "$app/paths";
@@ -46,6 +53,10 @@
 
     const consoleSetupAborter = new AbortController();
 
+    let status: "not started" | Result = $state("not started");
+
+    let endgameChunks: slChunk[] = $state([]);
+
     async function startMain() {
         consoleSetupAborter.abort();
         errorMsg = "";
@@ -70,7 +81,9 @@
         sl([["Have fun!", "green"]]);
         sl([""]);
 
-        await main(
+        status = undefined;
+
+        endgameChunks = await main(
             {
                 abbreviate: false,
                 showEmpty: false,
@@ -78,6 +91,7 @@
                 showPreviousObservation: true,
             },
             [seed, playerInits],
+            (result: Result) => (status = result),
         );
     }
 
@@ -335,60 +349,93 @@
         players. You can either do this using the form below or in the browser
         console.
     </li>
-    <fieldset>
-        <legend>Hadronize Setup</legend>
 
-        <label for="seed">Seed (defaults to a random value)</label>
-        <input type="number" id="seed" min="0" step="1" bind:value={seed} />
+    <form>
+        <fieldset>
+            <legend>Hadronize Setup</legend>
 
-        <label for="playerCount"
-            >Player count (min is {MIN_PLAYERS}, max is {MAX_PLAYERS})</label
-        >
-        <input
-            type="number"
-            id="playerCount"
-            min={MIN_PLAYERS}
-            max={MAX_PLAYERS}
-            step="1"
-            bind:value={playerCount}
-        />
+            <label for="seed">Seed (defaults to a random value)</label>
+            <input
+                type="number"
+                id="seed"
+                min="0"
+                step="1"
+                bind:value={seed}
+                disabled={status !== "not started"}
+            />
 
-        <div id="players">
-            {#each playerInputs.slice(0, playerCount) as player, index}
-                <div class="player" id={`player${index}`}>
-                    <div class="player-input">
-                        <label for={`player${index}-name`}
-                            >Player {index}'s name</label
-                        >
-                        <input
-                            type="text"
-                            id={`player${index}-name`}
-                            bind:value={player.name}
-                        />
+            <label for="playerCount"
+                >Player count (min is {MIN_PLAYERS}, max is {MAX_PLAYERS})</label
+            >
+            <input
+                type="number"
+                id="playerCount"
+                min={MIN_PLAYERS}
+                max={MAX_PLAYERS}
+                step="1"
+                bind:value={playerCount}
+                disabled={status !== "not started"}
+            />
+
+            <div
+                id="players"
+                class={status !== "not started" ? "disabled" : ""}
+            >
+                {#each playerInputs.slice(0, playerCount) as player, index}
+                    <div class="player" id={`player${index}`}>
+                        <div class="player-input">
+                            <label for={`player${index}-name`}
+                                >Player {index}'s name</label
+                            >
+                            <input
+                                type="text"
+                                id={`player${index}-name`}
+                                bind:value={player.name}
+                                disabled={status !== "not started"}
+                            />
+                        </div>
+
+                        <div class="player-input">
+                            <label for={`player${index}-type`}
+                                >{player.name}'s type</label
+                            >
+                            <select
+                                id={`player${index}-type`}
+                                bind:value={player.type}
+                                disabled={status !== "not started"}
+                            >
+                                <option value="Human">Human</option>
+                                <option value="Bot">Bot</option>
+                            </select>
+                        </div>
                     </div>
+                {/each}
+            </div>
 
-                    <div class="player-input">
-                        <label for={`player${index}-type`}
-                            >{player.name}'s type</label
+            <button onclick={startMain} disabled={status !== "not started"}
+                >Start Hadronize</button
+            >
+
+            <div class="msg">
+                {#if errorMsg !== ""}
+                    <p class="errorMsg">{errorMsg}</p>
+                {:else if status === undefined}
+                    <p>
+                        Hadronize is running! Open your browser console with <kbd
+                            >F12</kbd
                         >
-                        <select
-                            id={`player${index}-type`}
-                            bind:value={player.type}
-                        >
-                            <option value="Human">Human</option>
-                            <option value="Bot">Bot</option>
-                        </select>
-                    </div>
-                </div>
-            {/each}
-        </div>
-
-        <button onclick={startMain}>Start Hadronize</button>
-
-        {#if errorMsg !== ""}
-            <p class="errorMsg">{errorMsg}</p>
-        {/if}
-    </fieldset>
+                    </p>
+                {:else if status !== "not started"}
+                    <p>
+                        {@html chunksToString(endgameChunks).replaceAll(
+                            "\n",
+                            "<br>",
+                        )}
+                    </p>
+                {/if}
+            </div>
+        </fieldset>
+    </form>
     <li>
         Open your browser console with <kbd>F12</kbd> to start playing Hadronize.
     </li>
@@ -416,6 +463,12 @@
         display: flex;
         flex-direction: column;
         gap: 0.2rem;
+
+        &:has([disabled]) {
+            label {
+                opacity: 0.5;
+            }
+        }
     }
 
     #players {
