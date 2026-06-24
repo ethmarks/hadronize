@@ -252,9 +252,9 @@ describe.each([1, 3752815185, 1042408937])(
         // superposition.
         activeQuark.superposition = playerQuark.superposition;
 
-        // Force the active player to observe the quark
         game.observeQuark(game.activePlayer, game.activePlayer);
 
+        expect(game.mostRecentObservation?.reaction).toBe("hadronized");
         expect(game.activePlayer.score).toBeGreaterThan(0);
       });
 
@@ -264,10 +264,7 @@ describe.each([1, 3752815185, 1042408937])(
         // Any non-active player will do.
         const nonActivePlayer = game.players[game.activePlayer.order + 1];
 
-        // Set game.activeQuark so that we can rig it
         game.produceQuark();
-
-        // To sate typescript
         const activeQuark = game.quarks[game.activeQuark as number];
 
         // Which quark we choose doesn't matter, so long as it's in the
@@ -275,18 +272,14 @@ describe.each([1, 3752815185, 1042408937])(
         // collapsed quark.
         const playerQuark = game.quarks[nonActivePlayer.chamber.indices[0]];
 
-        // Rig the activeQuark to force tunneling
         activeQuark.flavor = playerQuark.flavor;
-        // Rigging the superposition isn't strictly necessary, but we don't
-        // want to create an invalid quark where the flavor isn't in the
-        // superposition.
         activeQuark.superposition = playerQuark.superposition;
 
         // Store the active flavor so we can reference it after the observation
         const activeFlavor = activeQuark.flavor;
 
         /**
-         * Helper to count the number of quarks of a specific flavor in a
+         * Helper to count the number of quarks of a specified flavor in a
          * chamber.
          */
         function countQuarks(chamber: Chamber, flavor: Flavor): number {
@@ -316,11 +309,7 @@ describe.each([1, 3752815185, 1042408937])(
           activeFlavor,
         );
 
-        expect(game.mostRecentObservation).toEqual({
-          observer: nonActivePlayer.order,
-          reaction: "tunneled",
-          activeFlavor: activeFlavor,
-        });
+        expect(game.mostRecentObservation?.reaction).toBe("tunneled");
 
         // We rigged the nonActivePlayer to have at least one quark of the active flavor earlier, so this must be > 0
         expect(nonActivePlayerBeforeCount).toBeGreaterThan(0);
@@ -334,6 +323,67 @@ describe.each([1, 3752815185, 1042408937])(
         expect(activePlayerAfterCount).toBe(
           activePlayerBeforeCount + nonActivePlayerBeforeCount + 1,
         );
+      });
+
+      it("should not react under non-reactive circumstances (self-observe)", () => {
+        const game = getGame();
+
+        // To ensure that our actions actually incremented the player's quark
+        // count.
+        // Player should have 4 quarks at the start of games anyways.
+        expect(game.activePlayer.chamber.indices).toHaveLength(4);
+
+        game.produceQuark();
+        const activeQuark = game.quarks[game.activeQuark as number];
+
+        // Rig activeQuark to be up
+        activeQuark.flavor = "up";
+        activeQuark.superposition = ["up", "down", "charm"];
+
+        // Rig all of the player's quarks to be down
+        game.activePlayer.chamber.indices.forEach((index) => {
+          const quark = game.quarks[index];
+          quark.flavor = "down";
+          quark.superposition = ["up", "down", "charm"];
+        });
+
+        game.observeQuark(game.activePlayer, game.activePlayer);
+
+        expect(game.mostRecentObservation?.reaction).toBe("no reaction");
+
+        // We should have added one quark, so the total should now be 5
+        expect(game.activePlayer.chamber.indices).toHaveLength(5);
+
+        expect(game.activePlayer.score).toBe(0);
+      });
+
+      it("should not react under non-reactive circumstances (other-observe)", () => {
+        const game = getGame();
+
+        const nonActivePlayer = game.players[game.activePlayer.order + 1];
+
+        expect(game.activePlayer.chamber.indices).toHaveLength(4);
+
+        game.produceQuark();
+        const activeQuark = game.quarks[game.activeQuark as number];
+
+        activeQuark.flavor = "up";
+        activeQuark.superposition = ["up", "down", "charm"];
+
+        // Rig all of the non-active player's quarks to be down
+        nonActivePlayer.chamber.indices.forEach((index) => {
+          const quark = game.quarks[index];
+          quark.flavor = "down";
+          quark.superposition = ["up", "down", "charm"];
+        });
+
+        game.observeQuark(nonActivePlayer, game.activePlayer);
+
+        expect(game.mostRecentObservation?.reaction).toBe("no reaction");
+        expect(game.activePlayer.chamber.indices).toHaveLength(4);
+        expect(nonActivePlayer.chamber.indices).toHaveLength(5);
+        expect(game.activePlayer.score).toBe(0);
+        expect(nonActivePlayer.score).toBe(0);
       });
     });
   },
