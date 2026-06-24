@@ -6,7 +6,7 @@
 
     import { main } from "../../lib/cli/main.ts";
     import sl from "../../lib/cli/styledLog.ts";
-    import { getValidatedUserInput } from "../../lib/cli/input.ts";
+    import { getValidatedUserInputWithAbort } from "../../lib/cli/input.ts";
 
     import { base } from "$app/paths";
     import { onMount } from "svelte";
@@ -44,7 +44,10 @@
     const specialValueString: string =
         "string that no user will enter that can be used as a special value but that is still a string type.";
 
+    const consoleSetupAborter = new AbortController();
+
     async function startMain() {
+        consoleSetupAborter.abort();
         errorMsg = "";
 
         if (typeof resumeExecution !== "undefined") resumeExecution();
@@ -131,25 +134,28 @@
      */
     async function setupViaConsole(): Promise<void> {
         // Seed
-        const seedInput: string = await getValidatedUserInput(
-            browserConsoleInput,
-            [
-                "What seed to use?",
-                [" (enter an integer or leave blank for random)", "gray"],
-            ],
-            [
-                ["Invalid seed!", "red"],
-                " Enter a positive integer to use as the seed or leave blank for a random seed.",
-            ],
-            (input: string): boolean => {
-                if (input === specialValueString) return false;
-                if (input === "") return true;
-                const num = Number(input);
-                if (Number.isNaN(num)) return false;
-                if (num < 1) return false;
-                return true;
-            },
-        );
+        const seedInput: string | undefined =
+            await getValidatedUserInputWithAbort(
+                browserConsoleInput,
+                [
+                    "What seed to use?",
+                    [" (enter an integer or leave blank for random)", "gray"],
+                ],
+                [
+                    ["Invalid seed!", "red"],
+                    " Enter a positive integer to use as the seed or leave blank for a random seed.",
+                ],
+                (input: string): boolean => {
+                    if (input === specialValueString) return false;
+                    if (input === "") return true;
+                    const num = Number(input);
+                    if (Number.isNaN(num)) return false;
+                    if (num < 1) return false;
+                    return true;
+                },
+                consoleSetupAborter.signal,
+            );
+        if (seedInput === undefined) return;
         if (seedInput !== "") {
             seed = Number(seedInput);
         }
@@ -160,76 +166,86 @@
         ]);
 
         // Player Count
-        const playerCountInput: string = await getValidatedUserInput(
-            browserConsoleInput,
-            [
-                "How many players?",
+        const playerCountInput: string | undefined =
+            await getValidatedUserInputWithAbort(
+                browserConsoleInput,
                 [
-                    ` (enter an integer between ${MIN_PLAYERS} and ${MAX_PLAYERS})`,
-                    "gray",
+                    "How many players?",
+                    [
+                        ` (enter an integer between ${MIN_PLAYERS} and ${MAX_PLAYERS})`,
+                        "gray",
+                    ],
                 ],
-            ],
-            [
-                ["Invalid player count!", "red"],
-                ` Enter an integer between ${MIN_PLAYERS} and ${MAX_PLAYERS})`,
-            ],
-            (input: string): boolean => {
-                if (input === specialValueString) return false;
-                const num = Number(input);
-                if (Number.isNaN(num)) return false;
-                if (num < MIN_PLAYERS) return false;
-                if (num > MAX_PLAYERS) return false;
-                return true;
-            },
-        );
+                [
+                    ["Invalid player count!", "red"],
+                    ` Enter an integer between ${MIN_PLAYERS} and ${MAX_PLAYERS})`,
+                ],
+                (input: string): boolean => {
+                    if (input === specialValueString) return false;
+                    const num = Number(input);
+                    if (Number.isNaN(num)) return false;
+                    if (num < MIN_PLAYERS) return false;
+                    if (num > MAX_PLAYERS) return false;
+                    return true;
+                },
+                consoleSetupAborter.signal,
+            );
+        if (playerCountInput === undefined) return;
         playerCount = Number(playerCountInput);
 
         // Player Inits
         for (let i: number = 0; i < playerCount; i++) {
-            const playerName: string = await getValidatedUserInput(
-                browserConsoleInput,
-                [
-                    `What is the name of `,
-                    [`player ${i}`, "magenta"],
-                    "?",
-                    [` (enter an string)`, "gray"],
-                ],
-                [
-                    ["Invalid player name!", "red"],
-                    ` Try only using letters, and ensure that there isn't already a player with that name.`,
-                ],
-                (input: string): boolean => {
-                    if (input === specialValueString) return false;
-                    if (
-                        playerInputs.some(
-                            (p, index) => p.name === input && index !== i,
+            const playerName: string | undefined =
+                await getValidatedUserInputWithAbort(
+                    browserConsoleInput,
+                    [
+                        `What is the name of `,
+                        [`player ${i}`, "magenta"],
+                        "?",
+                        [` (enter an string)`, "gray"],
+                    ],
+                    [
+                        ["Invalid player name!", "red"],
+                        ` Try only using letters, and ensure that there isn't already a player with that name.`,
+                    ],
+                    (input: string): boolean => {
+                        if (input === specialValueString) return false;
+                        if (
+                            playerInputs.some(
+                                (p, index) => p.name === input && index !== i,
+                            )
                         )
-                    )
-                        return false;
-                    return true;
-                },
-            );
+                            return false;
+                        return true;
+                    },
+                    consoleSetupAborter.signal,
+                );
+            if (playerName === undefined) return;
             playerInputs[i].name = playerName;
             playerInputs = playerInputs;
-            const playerType: string = await getValidatedUserInput(
-                browserConsoleInput,
-                [
-                    `What player type is `,
-                    [playerName, "magenta"],
-                    "?",
-                    [` (enter either "Human" or "Bot")`, "gray"],
-                ],
-                [
-                    ["Invalid player type!", "red"],
-                    ` Enter either "Human" or "Bot".`,
-                ],
-                (input: string): boolean => {
-                    if (input === specialValueString) return false;
-                    if (input.toLowerCase() === "human") return true;
-                    if (input.toLowerCase() === "bot") return true;
-                    return false;
-                },
-            );
+
+            const playerType: string | undefined =
+                await getValidatedUserInputWithAbort(
+                    browserConsoleInput,
+                    [
+                        `What player type is `,
+                        [playerName, "magenta"],
+                        "?",
+                        [` (enter either "Human" or "Bot")`, "gray"],
+                    ],
+                    [
+                        ["Invalid player type!", "red"],
+                        ` Enter either "Human" or "Bot".`,
+                    ],
+                    (input: string): boolean => {
+                        if (input === specialValueString) return false;
+                        if (input.toLowerCase() === "human") return true;
+                        if (input.toLowerCase() === "bot") return true;
+                        return false;
+                    },
+                    consoleSetupAborter.signal,
+                );
+            if (playerType === undefined) return;
             playerInputs[i].type =
                 playerType.toLowerCase() === "human" ? "Human" : "Bot";
             playerInputs = playerInputs;
