@@ -27,8 +27,6 @@ export type slChunk = [string, Style] | string;
 const isBrowser =
   typeof window !== "undefined" && typeof window.document !== "undefined";
 
-const outputType: "ansi" | "css" | "none" = isBrowser ? "css" : "ansi";
-
 /**
  * **S**tyled **L**og.
  *
@@ -37,69 +35,86 @@ const outputType: "ansi" | "css" | "none" = isBrowser ? "css" : "ansi";
  *
  * @param chunks All chunks are concatenated together after the styles are
  * applied.
- * @param outputType "ansi" for ANSI escape codes that work in Node and
- * "css" for %c substitions that work in the browser.
+ * @param medium Controls how styles are rendered. Defaults to either "console"
+ * or "terminal" depending on whether its running in a browser.
+ * * "terminal": styles use ANSI escape codes that work in terminal emulators.
+ * * "console": styles use %c substitions that work in browser consoles.
+ * * "html": styles use inline style attributes that work when injected into a
+ * webpage.
+ * * "plain": ignores styles and only concatenates plain text.
+ * @param output Whether to output the result using console.log(). Defaults to true.
  */
 export function sl(
   chunks: slChunk[],
-  outputFunc: (...data: any[]) => void = console.log,
-) {
-  if (outputType === "ansi") {
-    // We make the styles using ANSII escape codes
+  medium: "terminal" | "console" | "html" | "plain" = isBrowser
+    ? "console"
+    : "terminal",
+  output: boolean = true,
+): string {
+  let str: string = "";
 
-    const string = chunks.reduce((acc, chunk) => {
+  if (medium === "terminal") {
+    // We make the styles using ANSI escape codes
+
+    chunks.forEach((chunk) => {
       if (Array.isArray(chunk)) {
         const text = chunk[0];
         const style = chunk[1];
 
-        return (acc += STYLE_MAPPING[style].ansi(text));
+        str += STYLE_MAPPING[style].ansi(text);
       } else {
-        return (acc += chunk);
+        str += chunk;
       }
-    }, "");
+    });
 
-    outputFunc(string);
-  } else if (outputType === "css") {
+    if (output) console.log(str);
+  } else if (medium === "console") {
     // We make the styles using %c placeholders and an array of styles
 
     const styles: string[] = [];
 
-    const string = chunks.reduce((acc, chunk) => {
+    chunks.forEach((chunk) => {
       if (Array.isArray(chunk)) {
         const text = chunk[0];
         const style = chunk[1];
 
         styles.push(STYLE_MAPPING[style].css);
-        return (acc += `%c${text}`);
+        str += `%c${text}`;
       } else {
         // Reset
         styles.push("");
-        return (acc += `%c${chunk}`);
+        str += `%c${chunk}`;
       }
-    }, "");
+    });
 
-    outputFunc(string, ...styles);
-  } else {
-    outputFunc(
-      chunks.reduce(
-        (acc, chunk) => (acc += Array.isArray(chunk) ? chunk[0] : chunk),
-        "",
-      ),
-    );
+    if (output) console.log(str, ...styles);
+  } else if (medium === "html") {
+    // We make the styles using inline `style` attributes
+
+    chunks.forEach((chunk) => {
+      if (Array.isArray(chunk)) {
+        const text = chunk[0].replaceAll("\n", "<br>");
+        const style = chunk[1];
+
+        str += `<span style="${STYLE_MAPPING[style].css}">${text}</span>`;
+      } else {
+        str += chunk;
+      }
+    });
+
+    // There's really no reason to output the HTML and output should always be
+    // false if html mode is selected, but for consistency we still make it an
+    // option.
+    if (output) console.log(str);
+  } else if (medium === "plain") {
+    // We disregard the styles
+
+    chunks.forEach((chunk) => {
+      str += Array.isArray(chunk) ? chunk[0] : chunk;
+    });
+
+    if (output) console.log(str);
   }
-}
-
-export function chunksToString(chunks: slChunk[]): string {
-  let str: string = "";
-
-  chunks.forEach((chunk) => {
-    if (Array.isArray(chunk)) {
-      const text = chunk[0];
-      str += text;
-    } else {
-      str += chunk;
-    }
-  });
 
   return str;
 }

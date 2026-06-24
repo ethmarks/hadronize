@@ -15,7 +15,9 @@ export async function main(
 ): Promise<slChunk[]> {
   const game = new Hadronize(...gameParams);
 
-  const preDriverFunc = async () => sl(getStateChunks(game.state!, opt));
+  const preDriverFunc = async () => {
+    sl(getStateChunks(game.state!, opt));
+  };
 
   let result: Result = undefined;
 

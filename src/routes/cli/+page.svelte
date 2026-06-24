@@ -9,10 +9,7 @@
     import { manualDriver } from "../../lib/drivers/manual.ts";
 
     import { main } from "../../lib/cli/main.ts";
-    import sl, {
-        chunksToString,
-        type slChunk,
-    } from "../../lib/cli/styledLog.ts";
+    import sl, { type slChunk } from "../../lib/cli/styledLog.ts";
     import { getValidatedUserInputWithAbort } from "../../lib/cli/input.ts";
 
     import { base } from "$app/paths";
@@ -345,9 +342,9 @@
         >.
     </li>
     <li>
-        Complete out the setup, such as choosing a seed and specifying the
-        players. You can either do this using the form below or in the browser
-        console.
+        Complete the setup, such as choosing a seed and specifying the player
+        names and types. You can either do this using the form below or in the
+        browser console.
     </li>
 
     <form>
@@ -427,10 +424,7 @@
                     </p>
                 {:else if status !== "not started"}
                     <p>
-                        {@html chunksToString(endgameChunks).replaceAll(
-                            "\n",
-                            "<br>",
-                        )}
+                        {@html sl(endgameChunks, "html", false)}
                     </p>
                 {/if}
             </div>
