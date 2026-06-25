@@ -311,6 +311,7 @@
 
 <svelte:head>
     <title>Hadronize CLI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/holiday.css" />
 </svelte:head>
 
 <h1>Hadronize CLI</h1>
