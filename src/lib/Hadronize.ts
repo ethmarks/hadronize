@@ -1,3 +1,4 @@
+import { prngDriver } from "./drivers/prng.ts";
 import {
   Chamber,
   Player,
@@ -59,7 +60,7 @@ export interface Observation {
   reaction: Reaction;
 
   /**
-   * What flavor the activeQuark collapsed into.
+   * What flavor the superposedQuark collapsed into.
    */
   activeFlavor: Flavor;
 }
@@ -104,7 +105,7 @@ interface BaseGameState {
   /**
    * Only the flavors of the superposition are public information.
    */
-  activeQuark: Superposition;
+  superposedQuark: Superposition;
 
   players: PlayerState[];
 }
@@ -148,7 +149,7 @@ export class Hadronize {
   /**
    * The index of the quark currently in superposition, if any.
    */
-  public activeQuark: number | undefined;
+  public superposedIndex: number | undefined;
 
   /**
    * * 0 while the game is being initialized.
@@ -218,9 +219,17 @@ export class Hadronize {
 
       // Add starting quarks to chamber
       Array.from({ length: STARTING_QUARK_COUNT }).forEach(() => {
-        const quark = this.nextQuarkIndex();
-        this.quarks[quark].collapse();
-        player.chamber.indices.push(quark);
+        // Produce a new quark.
+        const quarkIndex = this.produceQuark();
+
+        // Collapse the quark.
+        this.quarks[quarkIndex].collapse();
+
+        // Add the quark to the player's chamber.
+        player.chamber.indices.push(quarkIndex);
+
+        // Reset the quark now that we've moved it to a chamber.
+        this.superposedIndex = undefined;
       });
 
       return player;
@@ -239,21 +248,28 @@ export class Hadronize {
   }
 
   /**
-   * Produces a new superposed quark (a.k.a. activeQuark).
+   * Produces a new superposed quark (a.k.a. superposedQuark).
    */
-  produceQuark(): void {
-    if (this.activeQuark !== undefined) {
+  produceQuark(): number {
+    if (this.superposedIndex !== undefined) {
       throw new Error(
-        "produceQuark() was called, but this.activeQuark already exists!",
+        "produceQuark() was called, but this.superposedQuark already exists!",
       );
     }
 
-    const nextIndex = this.nextQuarkIndex();
+    const nextIndex = this.usedQuarks;
 
+    // To avoid errors from trying to access an index out of bounds
     if (nextIndex > this.quarks.length) {
       throw new Error("Ran out of quarks!");
     }
-    this.activeQuark = nextIndex;
+
+    this.quarks[nextIndex].produce();
+
+    this.superposedIndex = nextIndex;
+    this.usedQuarks++;
+
+    return nextIndex;
   }
 
   /**
@@ -302,7 +318,7 @@ export class Hadronize {
   }
 
   /**
-   * Collapses the current active quark into the observing player's chamber and
+   * Collapses the superposed quark into the observing player's chamber and
    * simulates subsequent reactions, if any.
    *
    * @param observingPlayer
@@ -310,14 +326,14 @@ export class Hadronize {
    * @returns
    */
   observeQuark(observingPlayer: Player, activePlayer: Player): Observation {
-    if (this.activeQuark === undefined) {
+    if (this.superposedIndex === undefined) {
       throw new Error("Cannot observe when there is no active quark!");
     }
 
-    const activeFlavor = this.quarks[this.activeQuark].flavor;
+    const activeFlavor = this.quarks[this.superposedIndex].flavor;
 
     // Determine whether or not the observer's chamber has a quark
-    // with the same flavor as the active quark.
+    // with the same flavor as the superposed quark.
     //
     // This step must happen _before_ we move the quark to the observing
     // player's chamber.
@@ -325,14 +341,14 @@ export class Hadronize {
       (index) => this.quarks[index].flavor === activeFlavor,
     );
 
-    // Move active quark to observing player's chamber.
-    observingPlayer.chamber.indices.push(this.activeQuark);
+    // Move superposed quark to observing player's chamber.
+    observingPlayer.chamber.indices.push(this.superposedIndex);
 
-    // Collapse the active quark.
-    this.quarks[this.activeQuark].collapse();
+    // Collapse the superposed quark.
+    this.quarks[this.superposedIndex].collapse();
 
-    // Reset the active quark now that it's been moved.
-    this.activeQuark = undefined;
+    // Reset the superposed quark now that it's been moved.
+    this.superposedIndex = undefined;
 
     let reaction: Reaction;
 
@@ -371,7 +387,7 @@ export class Hadronize {
   /**
    *
    * This should only be run at the beginning of a turn, after the turn has been
-   * incremented and the new activeQuark has been set.
+   * incremented and the new superposedQuark has been set.
    *
    * @returns
    */
@@ -384,9 +400,9 @@ export class Hadronize {
         "updateState() should not be called when the game is being set up.",
       );
     }
-    if (this.activeQuark === undefined) {
+    if (this.superposedIndex === undefined) {
       throw new Error(
-        "updateState() was called when activeQuark was undefined.",
+        "updateState() was called when superposedQuark was undefined.",
       );
     }
     if (currentState?.timeline?.some((state) => state.turn === this.turn)) {
@@ -398,7 +414,7 @@ export class Hadronize {
     const newState: CurrentGameState = {
       turn: this.turn,
       activePlayer: this.activePlayer.order,
-      activeQuark: this.quarks[this.activeQuark].superposition,
+      superposedQuark: this.quarks[this.superposedIndex].superposition,
       players: this.players.map((player) => {
         return {
           order: player.order,
@@ -475,10 +491,10 @@ export class Hadronize {
   }
 }
 
-// const game = new Hadronize(83, [
-//   { name: "alice", driver: prngDriver },
-//   { name: "bob", driver: prngDriver },
-// ]);
+const game = new Hadronize(83, [
+  { name: "alice", driver: prngDriver },
+  { name: "bob", driver: prngDriver },
+]);
 
 // let i = 0;
 // while ((await game.executeTurn()) === undefined) {

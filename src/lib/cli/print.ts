@@ -250,7 +250,7 @@ export function getStateChunks(
 
   // Log the current superposition
   chunks.push([": ", "gray"]);
-  state.activeQuark.forEach((flavor, index, superposition) => {
+  state.superposedQuark.forEach((flavor, index, superposition) => {
     const flavorString = opt.abbreviate ? flavor.slice(0, 1) : flavor;
     chunks.push([flavorString, QUARK_MAPPING[flavor]]);
 

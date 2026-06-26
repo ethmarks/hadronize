@@ -51,9 +51,10 @@ export function prngFlavor(seed: number): Flavor {
   return FLAVORS[int];
 }
 
+export type QuarkStatus = "latent" | "superposed" | "collapsed" | "hadronized";
+
 export class Quark {
-  public isCollapsed: boolean = false;
-  public isHadronized: boolean = false;
+  public status: QuarkStatus = "latent";
 
   constructor(
     /** The quarks's index in the game's quark list. */
@@ -62,43 +63,40 @@ export class Quark {
     public superposition: Superposition,
   ) {}
 
+  public get isProduced(): boolean {
+    return this.status !== "latent";
+  }
+
+  public get isCollapsed(): boolean {
+    return this.status === "collapsed" || this.status === "hadronized";
+  }
+
+  public get isHadronized(): boolean {
+    return this.status === "hadronized";
+  }
+
+  produce() {
+    if (this.status !== "latent")
+      throw new Error(
+        `tried to collapse a ${this.status} quark! Only latent quarks can be produced.`,
+      );
+    this.status = "superposed";
+  }
+
   collapse() {
-    this.isCollapsed = true;
+    if (this.status !== "superposed")
+      throw new Error(
+        `tried to collapse a ${this.status} quark! Only superposed quarks can be collapsed.`,
+      );
+    this.status = "collapsed";
   }
 
   hadronize() {
-    this.isHadronized = true;
-  }
-
-  /**
-   * Gets the publicly-available information about the quark. Throws an error if the quark is not superposed.
-   */
-  public get superposedInfo(): SuperposedQuarkInfo {
-    if (this.isCollapsed) {
-      throw new Error("Tried to access superposed info of a collapsed quark!");
-    }
-
-    return {
-      id: this.index,
-      superposition: this.superposition,
-    };
-  }
-
-  /**
-   * Gets the publicly-available information about the quark. Throws an error if the quark is not collapsed.
-   */
-  public get collapsedInfo(): CollapsedQuarkInfo {
-    if (!this.isCollapsed) {
+    if (this.status !== "collapsed")
       throw new Error(
-        "Tried to access collapsed info of a non-collapsed quark!",
+        `tried to collapse a ${this.status} quark! Only collapsed quarks can be hadronized.`,
       );
-    }
-
-    return {
-      id: this.index,
-      flavor: this.flavor,
-      isHadronized: this.isHadronized,
-    };
+    this.status = "hadronized";
   }
 }
 /**

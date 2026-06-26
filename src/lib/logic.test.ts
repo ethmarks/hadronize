@@ -46,17 +46,11 @@ describe.each([1, 3752815185, 1042408937])(
 
           const quark = game.quarks[index];
           expect(quark.index).toEqual(index);
+          expect(quark.isProduced).toEqual(false);
           expect(quark.isCollapsed).toEqual(false);
           expect(quark.isHadronized).toEqual(false);
           expect(quark.flavor).toBeOneOf(FLAVORS);
           expect(quark.superposition).toContainEqual(expect.toBeOneOf(FLAVORS));
-          expect(quark.superposedInfo).toEqual({
-            id: quark.index,
-            superposition: quark.superposition,
-          });
-          expect(() => quark.collapsedInfo).toThrow(
-            "Tried to access collapsed info of a non-collapsed quark!",
-          );
         },
       );
 
@@ -67,18 +61,11 @@ describe.each([1, 3752815185, 1042408937])(
 
           const quark = game.quarks[index];
           expect(quark.index).toEqual(index);
+          expect(quark.isProduced).toEqual(true);
           expect(quark.isCollapsed).toEqual(true);
           expect(quark.isHadronized).toEqual(false);
           expect(quark.flavor).toBeOneOf(FLAVORS);
           expect(quark.superposition).toContainEqual(expect.toBeOneOf(FLAVORS));
-          expect(() => quark.superposedInfo).toThrow(
-            "Tried to access superposed info of a collapsed quark!",
-          );
-          expect(quark.collapsedInfo).toEqual({
-            id: quark.index,
-            flavor: quark.flavor,
-            isHadronized: quark.isHadronized,
-          });
         },
       );
 
@@ -190,9 +177,10 @@ describe.each([1, 3752815185, 1042408937])(
             Array.from({
               length: 10,
             }).map(() => {
-              const quark = game.quarks[game.nextQuarkIndex()];
+              const quark = game.quarks[game.produceQuark()];
               quark.collapse();
               quark.hadronize();
+              game.superposedIndex = undefined;
               return quark.index;
             }),
           );
@@ -234,23 +222,23 @@ describe.each([1, 3752815185, 1042408937])(
         // Player should have zeroed scores at the start of games anyways.
         expect(game.activePlayer.score).toBe(0);
 
-        // Set game.activeQuark so that we can rig it
+        // Set game.superposedQuark so that we can rig it
         game.produceQuark();
 
         // To sate typescript
-        const activeQuark = game.quarks[game.activeQuark as number];
+        const superposedQuark = game.quarks[game.superposedIndex as number];
 
         // Which quark we choose doesn't matter, so long as it's in the
         // activePlayer's chamber and therefore able to react with the
         // collapsed quark.
         const playerQuark = game.quarks[game.activePlayer.chamber.indices[0]];
 
-        // Rig the activeQuark to force hadronization
-        activeQuark.flavor = playerQuark.flavor;
+        // Rig the superposedQuark to force hadronization
+        superposedQuark.flavor = playerQuark.flavor;
         // Rigging the superposition isn't strictly necessary, but we don't
         // want to create an invalid quark where the flavor isn't in the
         // superposition.
-        activeQuark.superposition = playerQuark.superposition;
+        superposedQuark.superposition = playerQuark.superposition;
 
         game.observeQuark(game.activePlayer, game.activePlayer);
 
@@ -265,18 +253,18 @@ describe.each([1, 3752815185, 1042408937])(
         const nonActivePlayer = game.players[game.activePlayer.order + 1];
 
         game.produceQuark();
-        const activeQuark = game.quarks[game.activeQuark as number];
+        const superposedQuark = game.quarks[game.superposedIndex as number];
 
         // Which quark we choose doesn't matter, so long as it's in the
         // nonActivePlayer's chamber and therefore able to react with the
         // collapsed quark.
         const playerQuark = game.quarks[nonActivePlayer.chamber.indices[0]];
 
-        activeQuark.flavor = playerQuark.flavor;
-        activeQuark.superposition = playerQuark.superposition;
+        superposedQuark.flavor = playerQuark.flavor;
+        superposedQuark.superposition = playerQuark.superposition;
 
         // Store the active flavor so we can reference it after the observation
-        const activeFlavor = activeQuark.flavor;
+        const activeFlavor = superposedQuark.flavor;
 
         /**
          * Helper to count the number of quarks of a specified flavor in a
@@ -334,11 +322,11 @@ describe.each([1, 3752815185, 1042408937])(
         expect(game.activePlayer.chamber.indices).toHaveLength(4);
 
         game.produceQuark();
-        const activeQuark = game.quarks[game.activeQuark as number];
+        const superposedQuark = game.quarks[game.superposedIndex as number];
 
-        // Rig activeQuark to be up
-        activeQuark.flavor = "up";
-        activeQuark.superposition = ["up", "down", "charm"];
+        // Rig superposedQuark to be up
+        superposedQuark.flavor = "up";
+        superposedQuark.superposition = ["up", "down", "charm"];
 
         // Rig all of the player's quarks to be down
         game.activePlayer.chamber.indices.forEach((index) => {
@@ -365,10 +353,10 @@ describe.each([1, 3752815185, 1042408937])(
         expect(game.activePlayer.chamber.indices).toHaveLength(4);
 
         game.produceQuark();
-        const activeQuark = game.quarks[game.activeQuark as number];
+        const superposedQuark = game.quarks[game.superposedIndex as number];
 
-        activeQuark.flavor = "up";
-        activeQuark.superposition = ["up", "down", "charm"];
+        superposedQuark.flavor = "up";
+        superposedQuark.superposition = ["up", "down", "charm"];
 
         // Rig all of the non-active player's quarks to be down
         nonActivePlayer.chamber.indices.forEach((index) => {
