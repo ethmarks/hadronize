@@ -10,7 +10,7 @@ import type {
   PlayerState,
   Result,
 } from "../Hadronize.ts";
-import { FLAVORS, type Flavor } from "../Quark.ts";
+import { FLAVORS, getHadronTerm, type Flavor } from "../Quark.ts";
 
 import { type Style, type slChunk } from "./styledLog.ts";
 
@@ -135,7 +135,7 @@ export function getObservationChunks(
 
   if (observation.reaction === "hadronized") {
     // bob [1] 2s -> h
-    // bob [1]'s 2 strange quarks hadronized!
+    // bob [1]'s 2 strange quarks hadronized into a meson!
 
     chunks.push(...getPlayerNameChunks(observer, opt, true));
     chunks.push([opt.abbreviate ? " " : "'s ", "gray"]);
@@ -157,6 +157,8 @@ export function getObservationChunks(
     } else {
       chunks.push([" quarks ", "gray"]);
       chunks.push(["hadronized", "bold"]);
+      chunks.push([" into a ", "gray"]);
+      chunks.push([getHadronTerm(count), "bold"]);
       chunks.push(["!", "gray"]);
     }
   } else if (observation.reaction === "tunneled") {

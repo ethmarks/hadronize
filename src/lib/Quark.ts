@@ -136,6 +136,14 @@ const HADRON_TERMS: Record<number, string> = {
  */
 const DEFAULT_QUARK_TERM: string = "hadronic condensate";
 
+export function getHadronTerm(size: number): string {
+  if (Object.hasOwn(HADRON_TERMS, size)) {
+    return HADRON_TERMS[size];
+  } else {
+    return DEFAULT_QUARK_TERM;
+  }
+}
+
 export class Hadron {
   /**
    * The indices of the quarks in the hadron
@@ -153,11 +161,6 @@ export class Hadron {
    * The term for this type of hadron in English.
    */
   get term(): string {
-    const count = this.indices.length;
-    if (Object.hasOwn(HADRON_TERMS, count)) {
-      return HADRON_TERMS[count];
-    } else {
-      return DEFAULT_QUARK_TERM;
-    }
+    return getHadronTerm(this.indices.length);
   }
 }
