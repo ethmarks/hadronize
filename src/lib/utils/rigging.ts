@@ -14,13 +14,16 @@ export function getRigging(game: Hadronize) {
   };
   const superposition: { good: Superposition; bad: Superposition } = {
     good: ["up", "charm", "strange"],
-    bad: ["down", "charm", "strange"],
+    bad: ["down", "top", "bottom"],
   };
 
-  if (superposition.good.includes(flavor.bad))
-    throw new Error("good superposition shouldn't contain bad flavor!");
-  if (superposition.bad.includes(flavor.good))
-    throw new Error("bad superposition shouldn't contain good flavor!");
+  if (!superposition.good.includes(flavor.good))
+    throw new Error("good superposition must contain good flavor!");
+  if (!superposition.bad.includes(flavor.bad))
+    throw new Error("bad superposition must contain bad flavor!");
+
+  if (superposition.good.some((f) => superposition.bad.includes(f)))
+    throw new Error("superpositions cannot overlap!");
 
   const quark = {
     good: (quark: Quark) => {
@@ -43,6 +46,25 @@ export function getRigging(game: Hadronize) {
         quark.bad(game.quarks[index]);
       });
     },
+    count: (player: Player, count: number) => {
+      let currentCount = player.chamber.indices.length;
+
+      if (currentCount === count) return;
+
+      while (currentCount > count) {
+        player.chamber.indices.pop();
+        currentCount--;
+      }
+
+      while (currentCount < count) {
+        const quarkIndex = game.superposedIndex ?? game.produceQuark();
+        game.quarks[quarkIndex].collapse();
+        player.chamber.indices.push(quarkIndex);
+        game.superposedIndex = undefined;
+        game.produceQuark();
+        currentCount++;
+      }
+    },
   };
   const all = {
     players: {
@@ -54,6 +76,11 @@ export function getRigging(game: Hadronize) {
       bad: () => {
         game.players.forEach((p) => {
           player.bad(p);
+        });
+      },
+      count: (count: number) => {
+        game.players.forEach((p) => {
+          player.count(p, count);
         });
       },
     },
