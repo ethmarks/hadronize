@@ -11,6 +11,8 @@
     ]);
 
     let quarks = $state(game.quarks);
+
+    game.produceQuark();
 </script>
 
 <svelte:head>
@@ -29,8 +31,4 @@
 <p>This page is for playing Hadronize</p>
 
 <style lang="scss">
-    #quarks {
-        display: flex;
-        flex-direction: row;
-    }
 </style>

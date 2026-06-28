@@ -17,37 +17,75 @@
     };
 
     let flavorColor: string = $derived(COLOR_MAP[quark.flavor]);
-    const visibleClass: string = $derived(quark.isProduced ? "visible" : "");
 
-    const letter = $derived(quark.flavor.slice(0, 1));
+    let superpos1: string = $derived(COLOR_MAP[quark.superposition[0]]);
+    let superpos2: string = $derived(COLOR_MAP[quark.superposition[1]]);
+    let superpos3: string = $derived(COLOR_MAP[quark.superposition[2]]);
+
+    let letter = $derived(quark.flavor.slice(0, 1));
 </script>
 
-<span
-    id="quark-{quark.index}"
-    style:--flavor-color={flavorColor}
-    class={["quark", visibleClass].join(" ")}
->
+<span id="quark-{quark.index}" class="quark" data-status={quark.status}>
+    <span
+        class="bg"
+        style:--flavor-color={flavorColor}
+        style:--superpos1={superpos1}
+        style:--superpos2={superpos2}
+        style:--superpos3={superpos3}
+    ></span>
     <span class="letter">{letter}</span>
 </span>
 
 <style lang="scss">
     .quark {
+        position: relative;
         display: flex;
+
         width: 50px;
         height: 50px;
 
-        background-color: var(--flavor-color);
-        border-radius: 50%;
-
-        &:not(.visible) {
+        &[data-status="latent"] {
             display: none;
         }
 
+        &[data-status="superposed"] {
+            .bg {
+                /* This looks much nicer, but IMO it's more difficult to distinguish between colors and is less useful for UX. */
+                /* background: conic-gradient(
+                    var(--superpos1),
+                    var(--superpos2),
+                    var(--superpos3),
+                    var(--superpos1)
+                ); */
+
+                background: conic-gradient(
+                    var(--superpos1) 0deg 120deg,
+                    var(--superpos2) 120deg 240deg,
+                    var(--superpos3) 240deg 360deg
+                );
+                filter: blur(3px);
+            }
+        }
+
+        .bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            border-radius: 50%;
+            background-color: var(--flavor-color);
+        }
+
         .letter {
+            position: relative;
+            z-index: 2;
             width: 100%;
             text-align: center;
             color: white;
             font-size: 2rem;
+            text-shadow: 1px 1px slategray;
         }
     }
 </style>
