@@ -6,6 +6,7 @@ import type { Chamber, PlayerInit } from "./Player.ts";
 
 // To sate typescript's strictness
 import { FLAVORS as _STRICT_FLAVORS, Hadron, type Flavor } from "./Quark.ts";
+import { getRigging } from "./utils/rigging.ts";
 const FLAVORS = _STRICT_FLAVORS.map((f) => f);
 
 /**
@@ -315,6 +316,7 @@ describe.each([1, 3752815185, 1042408937])(
 
       it("should not react under non-reactive circumstances (self-observe)", () => {
         const game = getGame();
+        const rig = getRigging(game);
 
         // To ensure that our actions actually incremented the player's quark
         // count.
@@ -322,18 +324,10 @@ describe.each([1, 3752815185, 1042408937])(
         expect(game.activePlayer.chamber.indices).toHaveLength(4);
 
         game.produceQuark();
-        const superposedQuark = game.quarks[game.superposedIndex as number];
+        const superposedQuark = game.quarks[game.superposedIndex!];
 
-        // Rig superposedQuark to be up
-        superposedQuark.flavor = "up";
-        superposedQuark.superposition = ["up", "down", "charm"];
-
-        // Rig all of the player's quarks to be down
-        game.activePlayer.chamber.indices.forEach((index) => {
-          const quark = game.quarks[index];
-          quark.flavor = "down";
-          quark.superposition = ["up", "down", "charm"];
-        });
+        rig.quark.good(superposedQuark);
+        rig.player.bad(game.activePlayer);
 
         game.observeQuark(game.activePlayer, game.activePlayer);
 
@@ -347,6 +341,7 @@ describe.each([1, 3752815185, 1042408937])(
 
       it("should not react under non-reactive circumstances (other-observe)", () => {
         const game = getGame();
+        const rig = getRigging(game);
 
         const nonActivePlayer = game.players[game.activePlayer.order + 1];
 
@@ -355,15 +350,8 @@ describe.each([1, 3752815185, 1042408937])(
         game.produceQuark();
         const superposedQuark = game.quarks[game.superposedIndex as number];
 
-        superposedQuark.flavor = "up";
-        superposedQuark.superposition = ["up", "down", "charm"];
-
-        // Rig all of the non-active player's quarks to be down
-        nonActivePlayer.chamber.indices.forEach((index) => {
-          const quark = game.quarks[index];
-          quark.flavor = "down";
-          quark.superposition = ["up", "down", "charm"];
-        });
+        rig.quark.good(superposedQuark);
+        rig.player.bad(nonActivePlayer);
 
         game.observeQuark(nonActivePlayer, game.activePlayer);
 

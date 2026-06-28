@@ -3,7 +3,7 @@ import { Hadronize } from "../Hadronize.ts";
 import { evDriver } from "./ev.ts";
 import { dogpileDriver } from "./dogpile.ts";
 import type { PlayerInit } from "../Player.ts";
-import { spoofSuperposition } from "../Quark.ts";
+import { getRigging } from "../utils/rigging.ts";
 
 const getPlayers: (count: number) => PlayerInit[] = (count: number) =>
   Array.from({ length: count }).map((_, index) => {
@@ -63,33 +63,16 @@ describe("EV Driver", () => {
     "should try to hadronize when clearly beneficial with seed $0",
     async (seed: number) => {
       const game = getGame(seed);
+      const rig = getRigging(game);
 
       game.produceQuark();
       const superposedQuark = game.quarks[game.superposedIndex!];
 
-      // Rig superposedQuark to be up
-      superposedQuark.flavor = "up";
-      superposedQuark.superposition = spoofSuperposition("up");
-
-      // Rig all of the active player's quarks to be up
-      game.activePlayer.chamber.indices.forEach((index) => {
-        const quark = game.quarks[index];
-        quark.flavor = "up";
-        quark.superposition = spoofSuperposition("up");
-      });
-
-      // Rig all of the other players' quarks to be down
-      game.players.slice(1).forEach((player) => {
-        player.chamber.indices.forEach((index) => {
-          const quark = game.quarks[index];
-          quark.flavor = "down";
-          quark.superposition = spoofSuperposition("down");
-        });
-      });
+      rig.quark.good(superposedQuark);
+      rig.all.players.bad();
+      rig.player.good(game.activePlayer);
 
       const state = game.updateState();
-
-      console.log(JSON.stringify(state, null, 2));
 
       const result = await game.activePlayer.driver(
         state,
