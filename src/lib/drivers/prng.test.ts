@@ -1,5 +1,5 @@
 import { expect, describe, it } from "vitest";
-import { Hadronize, STARTING_QUARK_COUNT, type Result } from "../Hadronize.ts";
+import { Hadronize } from "../Hadronize.ts";
 import { prngDriver } from "./prng.ts";
 import { dogpileDriver } from "./dogpile.ts";
 

@@ -51,6 +51,26 @@ export function prngFlavor(seed: number): Flavor {
   return FLAVORS[int];
 }
 
+/**
+ * Gets a plausible valid superposition.
+ */
+export function spoofSuperposition(flavor: Flavor): Superposition {
+  const superposition: Flavor[] = [flavor];
+
+  let i = 0;
+  while (superposition.length < SUPERPOSITION_SIZE) {
+    let newFlavor = FLAVORS[i % FLAVORS.length];
+    while (superposition.includes(newFlavor)) {
+      i++;
+      newFlavor = FLAVORS[i % FLAVORS.length];
+    }
+    superposition.push(newFlavor);
+    i++;
+  }
+
+  return superposition as Superposition;
+}
+
 export type QuarkStatus = "latent" | "superposed" | "collapsed" | "hadronized";
 
 export class Quark {

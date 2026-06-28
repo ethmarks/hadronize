@@ -317,6 +317,13 @@ export class Hadronize {
     chamber.hadrons.push(new Hadron(hadronizedQuarks));
   }
 
+  setChamberFlavor(chamber: Chamber, flavor: Flavor): void {
+    chamber.indices.forEach((index) => {
+      const quark = this.quarks[index];
+      quark.flavor = flavor;
+    });
+  }
+
   /**
    * Collapses the superposed quark into the observing player's chamber and
    * simulates subsequent reactions, if any.
