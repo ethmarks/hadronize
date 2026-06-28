@@ -49,37 +49,134 @@ describe("EV Driver", () => {
     expect(runEVDriver).not.toThrow();
   });
 
-  it.each([1, 639172, 538191])(
-    "should behave deterministically with seed $0",
-    async (seed: number) => {
-      const result1 = await runEVDriver(seed);
-      const result2 = await runEVDriver(seed);
+  describe.each([1, 639172, 538191])(
+    "Behavior with seed $0",
+    (seed: number) => {
+      it("should behave deterministically", async () => {
+        const result1 = await runEVDriver(seed);
+        const result2 = await runEVDriver(seed);
 
-      expect(result1).toBe(result2);
-    },
-  );
+        expect(result1).toBe(result2);
+      });
 
-  it.each([1, 72891, 9183])(
-    "should try to hadronize when clearly beneficial with seed $0",
-    async (seed: number) => {
-      const game = getGame(seed);
-      const rig = getRigging(game);
+      it("should try to hadronize when clearly beneficial", async () => {
+        const game = getGame(seed);
+        const rig = getRigging(game);
 
-      game.produceQuark();
-      const superposedQuark = game.quarks[game.superposedIndex!];
+        game.produceQuark();
+        const superposedQuark = game.quarks[game.superposedIndex!];
 
-      rig.quark.good(superposedQuark);
-      rig.all.players.bad();
-      rig.player.good(game.activePlayer);
+        rig.quark.good(superposedQuark);
+        rig.all.players.bad();
+        rig.player.good(game.activePlayer);
 
-      const state = game.updateState();
+        const state = game.updateState();
 
-      const result = await game.activePlayer.driver(
-        state,
-        game.activePlayer.scratchpad,
-      );
+        const result = await game.activePlayer.driver(
+          state,
+          game.activePlayer.scratchpad,
+        );
 
-      expect(result).toBe(game.activePlayer.order);
+        expect(result).toBe(game.activePlayer.order);
+      });
+
+      it("should try to tunnel when clearly beneficial", async () => {
+        const game = getGame(seed);
+        const rig = getRigging(game);
+
+        game.produceQuark();
+        const superposedQuark = game.quarks[game.superposedIndex!];
+
+        const nonActivePlayer = game.players[1];
+        if (nonActivePlayer.order === game.activePlayer.order)
+          throw new Error("nonActivePlayer shouldn't be the active player!");
+
+        rig.quark.good(superposedQuark);
+        rig.all.players.bad();
+        rig.player.good(nonActivePlayer);
+
+        const state = game.updateState();
+
+        const result = await game.activePlayer.driver(
+          state,
+          game.activePlayer.scratchpad,
+        );
+
+        expect(result).toBe(nonActivePlayer.order);
+      });
+
+      it("should prefer hadronizing over tunneling", async () => {
+        const game = getGame(seed);
+        const rig = getRigging(game);
+
+        game.produceQuark();
+        const superposedQuark = game.quarks[game.superposedIndex!];
+
+        rig.quark.good(superposedQuark);
+        rig.all.players.good();
+
+        const state = game.updateState();
+
+        const result = await game.activePlayer.driver(
+          state,
+          game.activePlayer.scratchpad,
+        );
+
+        expect(result).toBe(game.activePlayer.order);
+      });
+
+      it("should prefer self over others when no reactions possible", async () => {
+        const game = getGame(seed);
+        const rig = getRigging(game);
+
+        game.produceQuark();
+        const superposedQuark = game.quarks[game.superposedIndex!];
+
+        rig.quark.good(superposedQuark);
+        rig.all.players.bad();
+
+        const state = game.updateState();
+
+        const result = await game.activePlayer.driver(
+          state,
+          game.activePlayer.scratchpad,
+        );
+
+        expect(result).toBe(game.activePlayer.order);
+      });
+
+      it("should prefer high-volume tunneling over low-volume hadronizing", async () => {
+        const game = getGame(seed);
+        const rig = getRigging(game);
+
+        const LOW_VOL = 1;
+        const HIGH_VOL = 10;
+
+        const nonActivePlayer = game.players[1];
+
+        rig.player.count(game.activePlayer, LOW_VOL);
+        rig.player.count(nonActivePlayer, HIGH_VOL);
+
+        const superposedQuark =
+          game.quarks[game.superposedIndex ?? game.produceQuark()];
+
+        rig.quark.good(superposedQuark);
+        rig.all.players.bad();
+        rig.player.good(game.activePlayer);
+        rig.player.good(nonActivePlayer);
+
+        expect(game.activePlayer.chamber.indices.length).toBe(LOW_VOL);
+        expect(nonActivePlayer.chamber.indices.length).toBe(HIGH_VOL);
+
+        const state = game.updateState();
+
+        const result = await game.activePlayer.driver(
+          state,
+          game.activePlayer.scratchpad,
+        );
+
+        expect(result).toBe(nonActivePlayer.order);
+      });
     },
   );
 });
