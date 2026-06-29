@@ -1,11 +1,15 @@
 <script lang="ts">
     import type { Flavor, Quark } from "../Quark.ts";
+    import { spring } from "svelte/motion";
 
     interface Props {
         quark: Quark;
+        x: number;
+        y: number;
+        onmousedown?: () => void;
     }
 
-    let { quark }: Props = $props();
+    let { quark, x, y, onmousedown }: Props = $props();
 
     const COLOR_MAP: Record<Flavor, string> = {
         up: "#5dafef", // blue
@@ -23,9 +27,24 @@
     let superpos3: string = $derived(COLOR_MAP[quark.superposition[2]]);
 
     let letter = $derived(quark.flavor.slice(0, 1));
+
+    let pos = spring({ x: 0, y: 0 }, { stiffness: 0.08, damping: 0.6 });
+
+    $effect(() => {
+        pos.set({ x, y });
+    });
 </script>
 
-<span id="quark-{quark.index}" class="quark" data-status={quark.status}>
+<span
+    id="quark-{quark.index}"
+    class="quark"
+    data-status={quark.status}
+    style:left="{$pos.x - 25}px"
+    style:top="{$pos.y - 25}px"
+    {onmousedown}
+    role="button"
+    tabindex="0"
+>
     <span
         class="bg"
         style:--flavor-color={flavorColor}
@@ -38,7 +57,7 @@
 
 <style lang="scss">
     .quark {
-        position: relative;
+        position: absolute;
         display: flex;
 
         width: 50px;
@@ -63,7 +82,7 @@
                     var(--superpos2) 120deg 240deg,
                     var(--superpos3) 240deg 360deg
                 );
-                filter: blur(3px);
+                filter: blur(2px);
             }
         }
 
@@ -79,13 +98,18 @@
         }
 
         .letter {
-            position: relative;
-            z-index: 2;
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            text-align: center;
+            height: 100%;
+            z-index: 2;
+
             color: white;
             font-size: 2rem;
+            text-align: center;
             text-shadow: 1px 1px slategray;
+            user-select: none;
         }
     }
 </style>
