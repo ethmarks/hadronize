@@ -1,6 +1,7 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import type { Flavor, Quark } from "../Quark.ts";
-    import { spring } from "svelte/motion";
+    import { Spring } from "svelte/motion";
 
     interface Props {
         quark: Quark;
@@ -28,10 +29,14 @@
 
     let letter = $derived(quark.flavor.slice(0, 1));
 
-    let pos = spring({ x: 0, y: 0 }, { stiffness: 0.08, damping: 0.6 });
+    let pos = new Spring({ x: 0, y: 0 }, { stiffness: 0.08, damping: 0.6 });
 
     $effect(() => {
         pos.set({ x, y });
+    });
+
+    onMount(() => {
+        pos.set({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
     });
 </script>
 
@@ -39,8 +44,8 @@
     id="quark-{quark.index}"
     class="quark"
     data-status={quark.status}
-    style:left="{$pos.x - 25}px"
-    style:top="{$pos.y - 25}px"
+    style:left="{pos.current.x - 25}px"
+    style:top="{pos.current.y - 25}px"
     {onmousedown}
     role="button"
     tabindex="0"

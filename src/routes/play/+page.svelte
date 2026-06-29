@@ -4,35 +4,33 @@
 
     import { Hadronize } from "../../lib/Hadronize.ts";
     import { prngDriver } from "../../lib/drivers/prng.ts";
-    import { onMount } from "svelte";
 
     const game = new Hadronize(1, [
         { name: "p1", driver: prngDriver },
         { name: "p2", driver: prngDriver },
     ]);
 
+    let quarks = $state(
+        game.quarks.map((q) => {
+            return { quark: q, x: 0, y: 0 };
+        }),
+    );
+
     game.produceQuark();
 
-    let superposedQuark = $derived(game.quarks[game.superposedIndex!]);
+    let superposed = $derived(quarks[game.superposedIndex!]);
 
     let superposedQuarkPressed: boolean = $state(false);
     let mouse: { x: number; y: number } = $state({ x: 0, y: 0 });
-    let superposed: { x: number; y: number } = $state({ x: 0, y: 0 });
 
     function handleMouseMove(event: MouseEvent) {
         mouse = { x: event.clientX, y: event.clientY };
 
         if (superposedQuarkPressed) {
-            superposed = { x: mouse.x, y: mouse.y };
+            superposed.x = mouse.x;
+            superposed.y = mouse.y;
         }
     }
-
-    onMount(() => {
-        superposed = {
-            x: window.innerWidth / 2,
-            y: window.innerHeight / 2,
-        };
-    });
 </script>
 
 <svelte:head>
@@ -46,15 +44,18 @@
 
 <Reset />
 
-<div id="superposed">
-    <Quark
-        quark={superposedQuark}
-        x={superposed.x}
-        y={superposed.y}
-        onmousedown={() => {
-            superposedQuarkPressed = true;
-        }}
-    />
+<div id="quarks">
+    {#each quarks as q, index}
+        <Quark
+            quark={q.quark}
+            x={q.x}
+            y={q.y}
+            onmousedown={() => {
+                if (index === game.superposedIndex!)
+                    superposedQuarkPressed = true;
+            }}
+        />
+    {/each}
 </div>
 
 <h1>Play Hadronize</h1>
