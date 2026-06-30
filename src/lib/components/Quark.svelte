@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import type { Flavor, Quark, QuarkStatus } from "../Quark.ts";
     import { Spring } from "svelte/motion";
 
@@ -47,13 +46,14 @@
     role="button"
     tabindex="0"
 >
+    <span class="bg" style:--flavor-color={flavorColor}></span>
     <span
-        class="bg"
-        style:--flavor-color={flavorColor}
+        class="superposed-bg"
         style:--superpos1={superpos1}
         style:--superpos2={superpos2}
         style:--superpos3={superpos3}
-    ></span>
+    >
+    </span>
     <span class="letter">{letter}</span>
 </span>
 
@@ -84,34 +84,57 @@
             opacity: 0;
         }
 
-        &[data-status="superposed"] {
-            .bg {
-                /* This looks much nicer, but IMO it's more difficult to distinguish between colors and is less useful for UX. */
-                /* background: conic-gradient(
-                    var(--superpos1),
-                    var(--superpos2),
-                    var(--superpos3),
-                    var(--superpos1)
-                ); */
-
-                background: conic-gradient(
-                    var(--superpos1) 0deg 120deg,
-                    var(--superpos2) 120deg 240deg,
-                    var(--superpos3) 240deg 360deg
-                );
-                filter: blur(2px);
-            }
-        }
-
-        .bg {
+        .bg,
+        .superposed-bg {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1;
             border-radius: 50%;
-            background-color: var(--flavor-color);
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bg {
+            opacity: 0;
+            z-index: 1;
+            background: var(--flavor-color);
+            transition-property: background, opacity, border;
+        }
+
+        .superposed-bg {
+            z-index: 2;
+
+            /* This looks much nicer, but IMO it's more difficult to distinguish between colors and is less useful for UX. */
+            /* background: conic-gradient(
+                var(--superpos1),
+                var(--superpos2),
+                var(--superpos3),
+                var(--superpos1)
+            ); */
+            background: conic-gradient(
+                var(--superpos1) 0deg 120deg,
+                var(--superpos2) 120deg 240deg,
+                var(--superpos3) 240deg 360deg
+            );
+            filter: blur(2px);
+        }
+
+        &[data-status="collapsed"],
+        &[data-status="hadronized"] {
+            .bg {
+                opacity: 1;
+            }
+            .superposed-bg {
+                opacity: 0;
+            }
+        }
+
+        &[data-status="hadronized"] {
+            .bg {
+                background: #dbd9d9;
+                border: 2px dashed #595757;
+            }
         }
 
         .letter {
