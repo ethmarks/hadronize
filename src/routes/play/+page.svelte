@@ -212,13 +212,16 @@
 
                 let spacing: number = getVertexDistance(sides, c.quarkRadius);
 
-                while (spacing < 60) {
-                    c.quarkRadius += 1;
-                    spacing = getVertexDistance(sides, c.quarkRadius);
-                }
-                while (spacing > 80) {
-                    c.quarkRadius -= 1;
-                    spacing = getVertexDistance(sides, c.quarkRadius);
+                // Will cause an infinite loop if run with 1 or fewer sides
+                if (sides > 1) {
+                    while (spacing < 60) {
+                        c.quarkRadius += 1;
+                        spacing = getVertexDistance(sides, c.quarkRadius);
+                    }
+                    while (spacing > 80) {
+                        c.quarkRadius -= 1;
+                        spacing = getVertexDistance(sides, c.quarkRadius);
+                    }
                 }
 
                 flatIndicies.forEach((quarkIndex, i) => {
@@ -250,13 +253,16 @@
 
                 let spacing: number = getVertexDistance(sides, c.quarkRadius);
 
-                while (spacing < 100) {
-                    c.quarkRadius += 1;
-                    spacing = getVertexDistance(sides, c.quarkRadius);
-                }
-                while (spacing > 120) {
-                    c.quarkRadius -= 1;
-                    spacing = getVertexDistance(sides, c.quarkRadius);
+                // Will cause an infinite loop if run with 1 or fewer sides
+                if (sides > 1) {
+                    while (spacing < 100) {
+                        c.quarkRadius += 1;
+                        spacing = getVertexDistance(sides, c.quarkRadius);
+                    }
+                    while (spacing > 120) {
+                        c.quarkRadius -= 1;
+                        spacing = getVertexDistance(sides, c.quarkRadius);
+                    }
                 }
 
                 nonEmptyByFlavor.forEach(([flavor, indices], i) => {
