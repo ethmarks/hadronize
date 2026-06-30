@@ -14,6 +14,7 @@
         tooLarge: boolean;
         x: number;
         y: number;
+        label: LabelProps;
         quarksByFlavor: Record<Flavor | "hadron", number[]>;
         quarkRadius: number;
     }
@@ -24,6 +25,7 @@
     import DropIndicator, {
         type DropIndicatorDTO,
     } from "./DropIndicator.svelte";
+    import Label, { type LabelProps } from "./Label.svelte";
 
     import {
         Hadronize,
@@ -48,9 +50,10 @@
 
     let { gameParams }: Props = $props();
 
-    // It's a const so it's fine if we only capture the initial value.
+    // Game params will never change after component mounting so it's fine if
+    // we only capture the initial value.
     // svelte-ignore state_referenced_locally
-    const game = new Hadronize(...gameParams);
+    let game = $state(new Hadronize(...gameParams));
 
     let result: Result = $state(undefined);
 
@@ -73,6 +76,9 @@
             };
         }),
     );
+
+    const LABEL_DEFAULT_COLOR = "black";
+    const LABEL_ACTIVE_COLOR = "#f2b74b";
 
     let chambers: ChamberDatum[] = $state(
         game.players.map((p, index) => {
@@ -98,6 +104,13 @@
                 y: -9999,
                 quarksByFlavor,
                 quarkRadius: 75,
+                label: {
+                    x: 0,
+                    y: 0,
+                    text: game.players[p.order].name,
+                    color: LABEL_DEFAULT_COLOR,
+                    fontSizeRem: 2,
+                },
             };
         }),
     );
@@ -196,7 +209,7 @@
 
     let centerX = $state(0);
     let centerY = $state(0);
-    let chamberRadius = $derived(Math.min(centerX, centerY) * 0.7);
+    let chamberRadius = $derived(Math.min(centerX, centerY) * 0.5);
 
     function updateChamberContent(c: ChamberDatum) {
         if (c.showCount === false && c.tooLarge === false) {
@@ -291,9 +304,20 @@
         }
     }
 
+    function updateChamberLabel(c: ChamberDatum) {
+        c.label.x = c.x;
+        c.label.y = c.y - c.quarkRadius - 50;
+        c.label.color =
+            game.activePlayer.order === c.order
+                ? LABEL_ACTIVE_COLOR
+                : LABEL_DEFAULT_COLOR;
+    }
+
     let chamberSpacing: number = $derived(
         getVertexDistance(chambers.length, chamberRadius),
     );
+
+    const SHUFFLE_CHAMBERS = false;
 
     function update() {
         centerX = window.innerWidth / 2;
@@ -306,12 +330,15 @@
                 chambers.length,
                 c.order,
                 chamberRadius,
-                ((game.turn - 1) / chambers.length) * -1 - 0.25,
+                SHUFFLE_CHAMBERS
+                    ? ((game.turn - 1) / chambers.length) * -1 - 0.25
+                    : -0.25,
             );
             c.x = chamberPos.x;
             c.y = chamberPos.y;
 
             updateChamberContent(c);
+            updateChamberLabel(c);
         });
 
         quarks.forEach((q) => {
@@ -419,13 +446,14 @@
             }
 
             game.turn++;
+            chambers.forEach((c) => updateChamberLabel(c));
         }
         return result;
     }
 
     onMount(async () => {
         window.addEventListener("resize", (_) => {
-            update();
+            if (result === undefined) update();
         });
 
         update();
@@ -462,9 +490,11 @@
 
             flatIndicies.forEach((quarkIndex) => {
                 const quark = quarks[quarkIndex];
-                quark.x = Math.round(Math.random()) * (centerX * 2 - 50);
-                quark.y = Math.random() * centerY * 2;
+                quark.x = Math.round(Math.random()) * (centerX * 2 + 100) - 50;
+                quark.y = centerY * 2;
             });
+
+            c.label.color = "transparent";
         });
 
         if (typeof result === "number") {
@@ -474,6 +504,9 @@
             winningChamber.showCount = false;
             winningChamber.tooLarge = false;
             updateChamberContent(winningChamber);
+            updateChamberLabel(winningChamber);
+            winningChamber.label.color = "#98c379";
+            winningChamber.label.text += " Wins!";
         }
     });
 </script>
@@ -500,6 +533,12 @@
                         superposedQuarkPressed = true;
                 }}
             />
+        {/each}
+    </div>
+
+    <div class="chamberLabels">
+        {#each chambers as chamber}
+            <Label {...chamber.label} />
         {/each}
     </div>
 

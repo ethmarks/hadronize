@@ -10,9 +10,9 @@
 
     const SEED: number = 1;
     const PLAYERS: PlayerInit[] = [
-        { name: "p1", driver: manualDriver },
-        { name: "p2", driver: evDriver },
-        { name: "p3", driver: manualDriver },
+        { name: "Alice", driver: manualDriver },
+        { name: "Bot", driver: prngDriver },
+        { name: "Charlie", driver: manualDriver },
     ];
 </script>
 
