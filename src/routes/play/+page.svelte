@@ -111,13 +111,22 @@
     });
 
     function detectDrop() {
+        let isSuperposedOverHovered = false;
         for (const chamber of chambers) {
-            const distance = Math.sqrt(
+            const mouseDistance = Math.sqrt(
+                Math.abs(chamber.x - mouse.x) ** 2 +
+                    Math.abs(chamber.y - mouse.y) ** 2,
+            );
+            const superposedDistance = Math.sqrt(
                 Math.abs(chamber.x - superposed.x) ** 2 +
                     Math.abs(chamber.y - superposed.y) ** 2,
             );
 
-            if (distance < chamber.quarkRadius + DROP_PADDING) {
+            if (superposedDistance < chamber.quarkRadius + DROP_PADDING) {
+                isSuperposedOverHovered = true;
+            }
+
+            if (mouseDistance < chamber.quarkRadius + DROP_PADDING) {
                 hoveredChamber = chamber;
 
                 // Multiple chambers can't be hovered over simultaneously, so we
@@ -129,7 +138,14 @@
             dropIndicator.active = false;
         }
 
-        if (hoveredChamber !== undefined) {
+        if (hoveredChamber === undefined) {
+            chambers.forEach((c) => {
+                if (c.showCount === true) {
+                    c.showCount = false;
+                    update();
+                }
+            });
+        } else {
             if (superposedQuarkPressed) {
                 dropIndicator.active = true;
                 dropIndicator.radius =
@@ -137,11 +153,18 @@
                 dropIndicator.x = hoveredChamber.x;
                 dropIndicator.y = hoveredChamber.y;
             } else {
-                // Collapse the quark into the selected chamber
-                const turnEvent = new CustomEvent("takeTurn", {
-                    detail: { playerOrder: hoveredChamber.order },
-                });
-                window.dispatchEvent(turnEvent);
+                if (isSuperposedOverHovered) {
+                    // Collapse the quark into the selected chamber
+                    const turnEvent = new CustomEvent("takeTurn", {
+                        detail: { playerOrder: hoveredChamber.order },
+                    });
+                    window.dispatchEvent(turnEvent);
+                } else {
+                    if (hoveredChamber.showCount === false) {
+                        hoveredChamber.showCount = true;
+                        update();
+                    }
+                }
             }
         }
     }
@@ -204,6 +227,43 @@
                     );
                     quarks[quarkIndex].x = quarkPos.x - 25;
                     quarks[quarkIndex].y = quarkPos.y - 25;
+                });
+            } else {
+                const nonEmptyByFlavor = Object.entries(
+                    c.quarksByFlavor,
+                ).filter(([_, indices]) => indices.length > 0) as [
+                    Flavor | "hadron",
+                    number[],
+                ][];
+
+                const hasHadrons = nonEmptyByFlavor.some(
+                    ([flavor, _]) => flavor === "hadron",
+                );
+
+                const sides = hasHadrons
+                    ? nonEmptyByFlavor.length - 1
+                    : nonEmptyByFlavor.length;
+
+                let spacing: number = getVertexDistance(sides, c.quarkRadius);
+
+                while (spacing < 100) {
+                    c.quarkRadius += 1;
+                    spacing = getVertexDistance(sides, c.quarkRadius);
+                }
+                while (spacing > 120) {
+                    c.quarkRadius -= 1;
+                    spacing = getVertexDistance(sides, c.quarkRadius);
+                }
+
+                nonEmptyByFlavor.forEach(([flavor, indices], i) => {
+                    const quarkPos =
+                        flavor === "hadron"
+                            ? { x: c.x, y: c.y }
+                            : getVertexPos(c.x, c.y, sides, i, c.quarkRadius);
+                    indices.forEach((quarkIndex) => {
+                        quarks[quarkIndex].x = quarkPos.x - 25;
+                        quarks[quarkIndex].y = quarkPos.y - 25;
+                    });
                 });
             }
         });
