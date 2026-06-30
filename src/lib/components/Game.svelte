@@ -553,6 +553,16 @@
 <style lang="scss">
     main {
         min-height: 100vh;
+
+        /* Cool dot grid background */
+        --bg-color: #fffff8;
+        background-color: var(--bg-color);
+        background-image:
+            radial-gradient(circle, transparent 10%, var(--bg-color) 80%),
+            radial-gradient(rgba(0, 0, 0, 0.4) 1px, transparent 1px);
+        background-size:
+            100% 100%,
+            30px 30px;
     }
     .grabbing {
         cursor: grabbing !important;
