@@ -30,12 +30,12 @@
     import { manualDriver } from "../../lib/drivers/manual.ts";
 
     const game = new Hadronize(1, [
-        { name: "p1", driver: manualDriver },
-        { name: "p2", driver: evDriver },
-        { name: "p3", driver: evDriver },
-        { name: "p4", driver: evDriver },
-        { name: "p5", driver: evDriver },
-        { name: "p6", driver: evDriver },
+        { name: "p1", driver: prngDriver },
+        { name: "p2", driver: prngDriver },
+        { name: "p3", driver: prngDriver },
+        { name: "p4", driver: prngDriver },
+        { name: "p5", driver: prngDriver },
+        { name: "p6", driver: prngDriver },
     ]);
 
     interface QuarkDatum {
@@ -69,6 +69,7 @@
     interface ChamberDatum {
         order: number;
         showCount: boolean;
+        nearScreenEdge: boolean;
         x: number;
         y: number;
         quarksByFlavor: Record<Flavor | "hadron", number[]>;
@@ -94,6 +95,7 @@
                 order: p.order,
                 count: 0,
                 showCount: false,
+                nearScreenEdge: false,
                 x: -9999,
                 y: -9999,
                 quarksByFlavor,
@@ -211,7 +213,7 @@
             c.x = chamberPos.x;
             c.y = chamberPos.y;
 
-            if (c.showCount === false) {
+            if (c.showCount === false && c.nearScreenEdge === false) {
                 const flatIndicies: number[] = Object.values(
                     c.quarksByFlavor,
                 ).flat();
@@ -240,6 +242,15 @@
                         i,
                         c.quarkRadius,
                     );
+
+                    if (
+                        quarkPos.x > centerX * 2 - 25 ||
+                        quarkPos.x < 0 + 25 ||
+                        quarkPos.y > centerY * 2 - 25 ||
+                        quarkPos.y < 0 + 25
+                    ) {
+                        c.nearScreenEdge = true;
+                    }
 
                     const UIquark = quarks[quarkIndex];
                     const gameQuark = game.quarks[quarkIndex];
@@ -365,6 +376,8 @@
                                 observation.activeFlavor,
                         );
                 });
+
+                chambers[observerOrder].nearScreenEdge = false;
             } else if (observation.reaction === "hadronized") {
                 const hadronIndices =
                     chambers[observerOrder].quarksByFlavor[
