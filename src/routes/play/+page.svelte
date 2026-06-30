@@ -144,6 +144,8 @@
                 game.produceQuark();
                 game.superposedIndex = game.superposedIndex;
                 superposed = quarks[game.superposedIndex!];
+                superposed.x = window.innerWidth / 2 - 25;
+                superposed.y = window.innerHeight / 2 - 25;
                 update();
             }
         }
@@ -213,6 +215,11 @@
 
         quarks.forEach((q) => {
             q.status = game.quarks[q.index].status;
+
+            if (q.status === "latent" || q.status === "superposed") {
+                q.x = window.innerWidth / 2 - 25;
+                q.y = window.innerHeight / 2 - 25;
+            }
         });
     }
 

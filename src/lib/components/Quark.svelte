@@ -35,13 +35,6 @@
     $effect(() => {
         pos.set({ x, y });
     });
-
-    onMount(() => {
-        pos.set({
-            x: window.innerWidth / 2 - 25,
-            y: window.innerHeight / 2 - 25,
-        });
-    });
 </script>
 
 <span
@@ -80,8 +73,15 @@
         width: 50px;
         height: 50px;
 
+        transform: scale(1);
+        opacity: 1;
+        transition-duration: 0.3s;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-property: transform, opacity;
+
         &[data-status="latent"] {
-            display: none;
+            transform: scale(0);
+            opacity: 0;
         }
 
         &[data-status="superposed"] {
