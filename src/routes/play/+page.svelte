@@ -11,7 +11,6 @@
         WINNING_HADRON_COUNT,
         type Result,
     } from "../../lib/Hadronize.ts";
-    import { prngDriver } from "../../lib/drivers/prng.ts";
     import { onMount } from "svelte";
     import type { Flavor, QuarkStatus } from "../../lib/Quark.ts";
     import {
@@ -25,13 +24,18 @@
         getStateChunks,
         type CliOptions,
     } from "../../lib/cli/print.ts";
+
+    import { prngDriver } from "../../lib/drivers/prng.ts";
+    import { evDriver } from "../../lib/drivers/ev.ts";
     import { manualDriver } from "../../lib/drivers/manual.ts";
 
     const game = new Hadronize(1, [
         { name: "p1", driver: manualDriver },
-        { name: "p2", driver: prngDriver },
-        { name: "p3", driver: prngDriver },
-        { name: "p4", driver: prngDriver },
+        { name: "p2", driver: evDriver },
+        { name: "p3", driver: evDriver },
+        { name: "p4", driver: evDriver },
+        { name: "p5", driver: evDriver },
+        { name: "p6", driver: evDriver },
     ]);
 
     interface QuarkDatum {

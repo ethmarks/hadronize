@@ -99,6 +99,7 @@
             opacity: 0;
             z-index: 1;
             background: var(--flavor-color);
+            border: 2px solid color-mix(var(--flavor-color) 90%, black);
             transition-property: background, opacity, border;
         }
 
