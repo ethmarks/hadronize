@@ -5,12 +5,13 @@
     interface Props {
         quark: Quark;
         status: QuarkStatus;
+        text: string;
         x: number;
         y: number;
         onmousedown?: () => void;
     }
 
-    let { quark, status, x, y, onmousedown }: Props = $props();
+    let { quark, status, text, x, y, onmousedown }: Props = $props();
 
     const COLOR_MAP: Record<Flavor, string> = {
         up: "#5dafef", // blue
@@ -26,8 +27,6 @@
     let superpos1: string = $derived(COLOR_MAP[quark.superposition[0]]);
     let superpos2: string = $derived(COLOR_MAP[quark.superposition[1]]);
     let superpos3: string = $derived(COLOR_MAP[quark.superposition[2]]);
-
-    let letter = $derived(quark.flavor.slice(0, 1));
 
     let pos = new Spring({ x: 0, y: 0 }, { stiffness: 0.08, damping: 0.6 });
 
@@ -54,7 +53,7 @@
         style:--superpos3={superpos3}
     >
     </span>
-    <span class="letter">{letter}</span>
+    <span class="letter">{text}</span>
 </span>
 
 <style lang="scss">

@@ -43,6 +43,7 @@
         y: number;
         index: number;
         status: QuarkStatus;
+        text: string;
         owner: number | undefined;
     }
 
@@ -54,7 +55,14 @@
                     if (index === q.index) owner = player.order;
                 });
             });
-            return { index: q.index, status: q.status, x: 0, y: 0, owner };
+            return {
+                index: q.index,
+                status: q.status,
+                text: "",
+                x: 0,
+                y: 0,
+                owner,
+            };
         }),
     );
 
@@ -232,8 +240,15 @@
                         i,
                         c.quarkRadius,
                     );
-                    quarks[quarkIndex].x = quarkPos.x - 25;
-                    quarks[quarkIndex].y = quarkPos.y - 25;
+
+                    const UIquark = quarks[quarkIndex];
+                    const gameQuark = game.quarks[quarkIndex];
+                    UIquark.x = quarkPos.x - 25;
+                    UIquark.y = quarkPos.y - 25;
+
+                    UIquark.text = gameQuark.isHadronized
+                        ? "h"
+                        : gameQuark.flavor.slice(0, 1);
                 });
             } else {
                 const nonEmptyByFlavor = Object.entries(
@@ -271,8 +286,10 @@
                             ? { x: c.x, y: c.y }
                             : getVertexPos(c.x, c.y, sides, i, c.quarkRadius);
                     indices.forEach((quarkIndex) => {
-                        quarks[quarkIndex].x = quarkPos.x - 25;
-                        quarks[quarkIndex].y = quarkPos.y - 25;
+                        const UIquark = quarks[quarkIndex];
+                        UIquark.x = quarkPos.x - 25;
+                        UIquark.y = quarkPos.y - 25;
+                        UIquark.text = indices.length.toString();
                     });
                 });
             }
@@ -282,6 +299,7 @@
             q.status = game.quarks[q.index].status;
 
             if (q.status === "latent" || q.status === "superposed") {
+                q.text = "?";
                 q.x = window.innerWidth / 2 - 25;
                 q.y = window.innerHeight / 2 - 25;
             }
@@ -417,6 +435,7 @@
             <Quark
                 quark={game.quarks[q.index]}
                 status={q.status}
+                text={q.text}
                 x={q.x}
                 y={q.y}
                 onmousedown={() => {
