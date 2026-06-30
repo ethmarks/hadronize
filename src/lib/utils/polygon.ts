@@ -6,6 +6,7 @@
  * @param sides Number of sides/vertices in the polygon
  * @param vertex Specific vertex to calculate, 0-indexed
  * @param radius Radius of the polygon in pixels
+ * @param rotation Rotation of the polygon. Must be between 0 and 1. (default: 0)
  */
 export function getVertexPos(
   centerX: number,
@@ -13,6 +14,7 @@ export function getVertexPos(
   sides: number,
   vertex: number,
   radius: number,
+  rotation: number = 0,
 ): { x: number; y: number } {
   // Validate
   if (!Number.isInteger(sides) || sides < 1)
@@ -25,11 +27,11 @@ export function getVertexPos(
     // point instead.
     return { x: centerX, y: centerY };
   } else {
-    // x = r * cos(2 * pi * k / n)
-    // y = r * sin(2 * pi * k / n)
+    const radians = rotation * Math.PI * 2;
+    const angle = (2 * Math.PI * vertex) / sides + radians;
 
-    const offsetX = radius * Math.cos((2 * Math.PI * vertex) / sides);
-    const offsetY = radius * Math.sin((2 * Math.PI * vertex) / sides);
+    const offsetX = radius * Math.cos(angle);
+    const offsetY = radius * Math.sin(angle);
 
     return {
       x: centerX + offsetX,

@@ -30,12 +30,11 @@
     import { manualDriver } from "../../lib/drivers/manual.ts";
 
     const game = new Hadronize(1, [
-        { name: "p1", driver: prngDriver },
+        { name: "p1", driver: evDriver },
         { name: "p2", driver: prngDriver },
         { name: "p3", driver: prngDriver },
         { name: "p4", driver: prngDriver },
         { name: "p5", driver: prngDriver },
-        { name: "p6", driver: prngDriver },
     ]);
 
     interface QuarkDatum {
@@ -209,6 +208,7 @@
                 chambers.length,
                 chamberIndex,
                 chamberRadius,
+                (game.turn - 1) / chambers.length - 0.25,
             );
             c.x = chamberPos.x;
             c.y = chamberPos.y;
@@ -241,6 +241,7 @@
                         sides,
                         i,
                         c.quarkRadius,
+                        chamberIndex / chambers.length,
                     );
 
                     if (
@@ -364,7 +365,7 @@
             game.superposedIndex = undefined;
             update();
 
-            await new Promise((resolve) => setTimeout(resolve, 300));
+            await new Promise((resolve) => setTimeout(resolve, 250));
 
             if (observation.reaction === "tunneled") {
                 // Sync chambers
@@ -392,6 +393,10 @@
                     observation.activeFlavor
                 ] = [];
             }
+
+            update();
+
+            await new Promise((resolve) => setTimeout(resolve, 150));
 
             // Check for winners _before_ we check if the turn limit has been exceeded.
             for (const player of game.players) {
