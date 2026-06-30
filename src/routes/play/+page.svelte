@@ -5,7 +5,12 @@
         type DropIndicatorDTO,
     } from "../../lib/components/DropIndicator.svelte";
 
-    import { Hadronize } from "../../lib/Hadronize.ts";
+    import {
+        Hadronize,
+        TURN_LIMIT,
+        WINNING_HADRON_COUNT,
+        type Result,
+    } from "../../lib/Hadronize.ts";
     import { prngDriver } from "../../lib/drivers/prng.ts";
     import { onMount } from "svelte";
     import type { Flavor, QuarkStatus } from "../../lib/Quark.ts";
@@ -13,9 +18,17 @@
         getVertexPos,
         getVertexDistance,
     } from "../../lib/utils/polygon.ts";
+    import sl from "../../lib/cli/styledLog.ts";
+    import {
+        getEndgameChunks,
+        getObservationChunks,
+        getStateChunks,
+        type CliOptions,
+    } from "../../lib/cli/print.ts";
+    import { manualDriver } from "../../lib/drivers/manual.ts";
 
     const game = new Hadronize(1, [
-        { name: "p1", driver: prngDriver },
+        { name: "p1", driver: manualDriver },
         { name: "p2", driver: prngDriver },
         { name: "p3", driver: prngDriver },
         { name: "p4", driver: prngDriver },
@@ -125,28 +138,10 @@
                 dropIndicator.y = hoveredChamber.y;
             } else {
                 // Collapse the quark into the selected chamber
-
-                // Update game state
-                const gameQuark = game.quarks[superposed.index];
-                gameQuark.collapse();
-                game.players[hoveredChamber.order].chamber.indices.push(
-                    gameQuark.index,
-                );
-
-                // Update UI state
-                hoveredChamber.quarksByFlavor[gameQuark.flavor].push(
-                    superposed.index,
-                );
-                superposed.owner = hoveredChamber.order;
-
-                // Make new superposed quark
-                game.superposedIndex = undefined;
-                game.produceQuark();
-                game.superposedIndex = game.superposedIndex;
-                superposed = quarks[game.superposedIndex!];
-                superposed.x = window.innerWidth / 2 - 25;
-                superposed.y = window.innerHeight / 2 - 25;
-                update();
+                const turnEvent = new CustomEvent("takeTurn", {
+                    detail: { playerOrder: hoveredChamber.order },
+                });
+                window.dispatchEvent(turnEvent);
             }
         }
     }
@@ -223,12 +218,99 @@
         });
     }
 
-    onMount(() => {
-        update();
-
+    onMount(async () => {
         window.addEventListener("resize", (_) => {
             update();
         });
+        update();
+
+        const opt: CliOptions = {
+            abbreviate: false,
+            showEmpty: false,
+            showPlayerOrder: true,
+            showPreviousObservation: true,
+        };
+
+        let result: Result = undefined;
+
+        while (result === undefined) {
+            const superposedIndex = game.superposedIndex ?? game.produceQuark();
+            superposed = quarks[superposedIndex];
+            superposed.x = window.innerWidth / 2 - 25;
+            superposed.y = window.innerHeight / 2 - 25;
+            update();
+
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            const state = game.updateState();
+
+            sl(getStateChunks(state, opt));
+
+            const observerOrder = await game.activePlayer.driver(
+                state,
+                game.activePlayer.scratchpad,
+            );
+
+            game.observeQuark(game.players[observerOrder], game.activePlayer);
+
+            const observation = game.mostRecentObservation;
+
+            if (observation === undefined) throw new Error();
+
+            const chamber = chambers[observerOrder];
+            chamber.quarksByFlavor[observation.activeFlavor].push(
+                superposed.index,
+            );
+            superposed.owner = chamber.order;
+            game.superposedIndex = undefined;
+            update();
+
+            await new Promise((resolve) => setTimeout(resolve, 300));
+
+            if (observation.reaction === "tunneled") {
+                // Sync chambers
+                [observerOrder, game.activePlayer.order].forEach((order) => {
+                    chambers[order].quarksByFlavor[observation.activeFlavor] =
+                        game.players[order].chamber.indices.filter(
+                            (i) =>
+                                game.quarks[i].flavor ===
+                                observation.activeFlavor,
+                        );
+                });
+            }
+
+            // Check for winners _before_ we check if the turn limit has been exceeded.
+            for (const player of game.players) {
+                if (player.score >= WINNING_HADRON_COUNT) {
+                    result = player.order;
+                    break;
+                }
+            }
+
+            // Check if the turn limit has been exceeded.
+            if (
+                game.turn >= TURN_LIMIT ||
+                game.usedQuarks >= game.quarks.length
+            ) {
+                result = "too many turns";
+                break;
+            }
+
+            game.turn++;
+        }
+
+        // Log final observation
+        const observation = game.mostRecentObservation!;
+        const active = game.state!.players[game.state!.activePlayer];
+        const observer = game.state!.players[observation.observer];
+        sl(getObservationChunks(active, observer, observation, opt));
+        sl(["\n---\n"]);
+
+        // Log endgame chunks
+        const endgameChunks = getEndgameChunks(game, result, opt);
+        sl(endgameChunks);
+
+        return endgameChunks;
     });
 </script>
 

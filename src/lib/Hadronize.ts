@@ -467,9 +467,7 @@ export class Hadronize {
     const state = this.updateState();
 
     // Call the preDriverFunc, if it was provided.
-    if (preDriverFunc) {
-      await preDriverFunc();
-    }
+    if (preDriverFunc) await preDriverFunc();
 
     const observerOrder = await this.activePlayer.driver(
       state,
