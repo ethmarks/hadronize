@@ -30,7 +30,7 @@
     import { manualDriver } from "../../lib/drivers/manual.ts";
 
     const game = new Hadronize(1, [
-        { name: "p1", driver: evDriver },
+        { name: "p1", driver: prngDriver },
         { name: "p2", driver: prngDriver },
         { name: "p3", driver: prngDriver },
         { name: "p4", driver: prngDriver },
@@ -197,114 +197,115 @@
     let centerY = $state(0);
     let chamberRadius = $derived(Math.min(centerX, centerY) * 0.7);
 
+    function updateChamberContent(c: ChamberDatum) {
+        if (c.showCount === false && c.nearScreenEdge === false) {
+            const flatIndicies: number[] = Object.values(
+                c.quarksByFlavor,
+            ).flat();
+
+            const sides = flatIndicies.length;
+
+            let spacing: number = getVertexDistance(sides, c.quarkRadius);
+
+            // Will cause an infinite loop if run with 1 or fewer sides
+            if (sides > 1) {
+                while (spacing < 60) {
+                    c.quarkRadius += 1;
+                    spacing = getVertexDistance(sides, c.quarkRadius);
+                }
+                while (spacing > 80) {
+                    c.quarkRadius -= 1;
+                    spacing = getVertexDistance(sides, c.quarkRadius);
+                }
+            }
+
+            flatIndicies.forEach((quarkIndex, i) => {
+                const quarkPos = getVertexPos(
+                    c.x,
+                    c.y,
+                    sides,
+                    i,
+                    c.quarkRadius,
+                    c.order / chambers.length,
+                );
+
+                if (
+                    quarkPos.x > centerX * 2 - 25 ||
+                    quarkPos.x < 0 + 25 ||
+                    quarkPos.y > centerY * 2 - 25 ||
+                    quarkPos.y < 0 + 25
+                ) {
+                    c.nearScreenEdge = true;
+                }
+
+                const UIquark = quarks[quarkIndex];
+                const gameQuark = game.quarks[quarkIndex];
+                UIquark.x = quarkPos.x - 25;
+                UIquark.y = quarkPos.y - 25;
+
+                UIquark.text = gameQuark.isHadronized
+                    ? "h"
+                    : gameQuark.flavor.slice(0, 1);
+            });
+        } else {
+            const nonEmptyByFlavor = Object.entries(c.quarksByFlavor).filter(
+                ([_, indices]) => indices.length > 0,
+            ) as [Flavor | "hadron", number[]][];
+
+            const hasHadrons = nonEmptyByFlavor.some(
+                ([flavor, _]) => flavor === "hadron",
+            );
+
+            const sides = hasHadrons
+                ? nonEmptyByFlavor.length - 1
+                : nonEmptyByFlavor.length;
+
+            let spacing: number = getVertexDistance(sides, c.quarkRadius);
+
+            // Will cause an infinite loop if run with 1 or fewer sides
+            if (sides > 1) {
+                while (spacing < 100) {
+                    c.quarkRadius += 1;
+                    spacing = getVertexDistance(sides, c.quarkRadius);
+                }
+                while (spacing > 120) {
+                    c.quarkRadius -= 1;
+                    spacing = getVertexDistance(sides, c.quarkRadius);
+                }
+            }
+
+            nonEmptyByFlavor.forEach(([flavor, indices], i) => {
+                const quarkPos =
+                    flavor === "hadron"
+                        ? { x: c.x, y: c.y }
+                        : getVertexPos(c.x, c.y, sides, i, c.quarkRadius);
+                indices.forEach((quarkIndex) => {
+                    const UIquark = quarks[quarkIndex];
+                    UIquark.x = quarkPos.x - 25;
+                    UIquark.y = quarkPos.y - 25;
+                    UIquark.text = indices.length.toString();
+                });
+            });
+        }
+    }
+
     function update() {
         centerX = window.innerWidth / 2;
         centerY = window.innerHeight / 2;
 
-        chambers.forEach((c, chamberIndex) => {
+        chambers.forEach((c) => {
             const chamberPos = getVertexPos(
                 centerX,
                 centerY,
                 chambers.length,
-                chamberIndex,
+                c.order,
                 chamberRadius,
                 (game.turn - 1) / chambers.length - 0.25,
             );
             c.x = chamberPos.x;
             c.y = chamberPos.y;
 
-            if (c.showCount === false && c.nearScreenEdge === false) {
-                const flatIndicies: number[] = Object.values(
-                    c.quarksByFlavor,
-                ).flat();
-
-                const sides = flatIndicies.length;
-
-                let spacing: number = getVertexDistance(sides, c.quarkRadius);
-
-                // Will cause an infinite loop if run with 1 or fewer sides
-                if (sides > 1) {
-                    while (spacing < 60) {
-                        c.quarkRadius += 1;
-                        spacing = getVertexDistance(sides, c.quarkRadius);
-                    }
-                    while (spacing > 80) {
-                        c.quarkRadius -= 1;
-                        spacing = getVertexDistance(sides, c.quarkRadius);
-                    }
-                }
-
-                flatIndicies.forEach((quarkIndex, i) => {
-                    const quarkPos = getVertexPos(
-                        c.x,
-                        c.y,
-                        sides,
-                        i,
-                        c.quarkRadius,
-                        chamberIndex / chambers.length,
-                    );
-
-                    if (
-                        quarkPos.x > centerX * 2 - 25 ||
-                        quarkPos.x < 0 + 25 ||
-                        quarkPos.y > centerY * 2 - 25 ||
-                        quarkPos.y < 0 + 25
-                    ) {
-                        c.nearScreenEdge = true;
-                    }
-
-                    const UIquark = quarks[quarkIndex];
-                    const gameQuark = game.quarks[quarkIndex];
-                    UIquark.x = quarkPos.x - 25;
-                    UIquark.y = quarkPos.y - 25;
-
-                    UIquark.text = gameQuark.isHadronized
-                        ? "h"
-                        : gameQuark.flavor.slice(0, 1);
-                });
-            } else {
-                const nonEmptyByFlavor = Object.entries(
-                    c.quarksByFlavor,
-                ).filter(([_, indices]) => indices.length > 0) as [
-                    Flavor | "hadron",
-                    number[],
-                ][];
-
-                const hasHadrons = nonEmptyByFlavor.some(
-                    ([flavor, _]) => flavor === "hadron",
-                );
-
-                const sides = hasHadrons
-                    ? nonEmptyByFlavor.length - 1
-                    : nonEmptyByFlavor.length;
-
-                let spacing: number = getVertexDistance(sides, c.quarkRadius);
-
-                // Will cause an infinite loop if run with 1 or fewer sides
-                if (sides > 1) {
-                    while (spacing < 100) {
-                        c.quarkRadius += 1;
-                        spacing = getVertexDistance(sides, c.quarkRadius);
-                    }
-                    while (spacing > 120) {
-                        c.quarkRadius -= 1;
-                        spacing = getVertexDistance(sides, c.quarkRadius);
-                    }
-                }
-
-                nonEmptyByFlavor.forEach(([flavor, indices], i) => {
-                    const quarkPos =
-                        flavor === "hadron"
-                            ? { x: c.x, y: c.y }
-                            : getVertexPos(c.x, c.y, sides, i, c.quarkRadius);
-                    indices.forEach((quarkIndex) => {
-                        const UIquark = quarks[quarkIndex];
-                        UIquark.x = quarkPos.x - 25;
-                        UIquark.y = quarkPos.y - 25;
-                        UIquark.text = indices.length.toString();
-                    });
-                });
-            }
+            updateChamberContent(c);
         });
 
         quarks.forEach((q) => {
@@ -435,7 +436,31 @@
         const endgameChunks = getEndgameChunks(game, result, opt);
         sl(endgameChunks);
 
-        return endgameChunks;
+        const chambersToExplode =
+            typeof result === "number"
+                ? chambers.filter((c) => c.order !== result)
+                : chambers;
+
+        chambersToExplode.forEach((c) => {
+            const flatIndicies: number[] = Object.values(
+                c.quarksByFlavor,
+            ).flat();
+
+            flatIndicies.forEach((quarkIndex) => {
+                const quark = quarks[quarkIndex];
+                quark.x = Math.round(Math.random()) * (centerX * 2 - 50);
+                quark.y = Math.random() * centerY * 2;
+            });
+        });
+
+        if (typeof result === "number") {
+            const winningChamber = chambers[result];
+            winningChamber.x = centerX;
+            winningChamber.y = centerY;
+            winningChamber.showCount = false;
+            winningChamber.nearScreenEdge = false;
+            updateChamberContent(winningChamber);
+        }
     });
 </script>
 
