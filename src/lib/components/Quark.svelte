@@ -65,14 +65,20 @@
 </span>
 
 <style lang="scss">
+    * {
+        user-select: none;
+    }
+
+    :global(main:not(.grabbing) .quark[data-status="superposed"]:hover) {
+        cursor: grab;
+    }
+
     .quark {
         position: absolute;
         display: flex;
 
         width: 50px;
         height: 50px;
-
-        user-select: none;
 
         &[data-status="latent"] {
             display: none;

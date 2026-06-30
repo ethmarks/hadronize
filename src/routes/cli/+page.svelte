@@ -314,137 +314,140 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/holiday.css" />
 </svelte:head>
 
-<h1>Hadronize CLI</h1>
-<a href="{base}/">Go home</a>
-<p>
-    Hadronize CLI is a tool that lets you play Hadronize entirely in your
-    browser console!
-</p>
-
-<blockquote class="finehide">
+<main>
+    <h1>Hadronize CLI</h1>
+    <a href="{base}/">Go home</a>
     <p>
-        NOTE: Your device appears to lack a mouse pointer, which suggests that
-        you're using a mobile browser. Most mobile browsers do not allow you to
-        open the console, which at this stage is required to use Hadronize CLI.
+        Hadronize CLI is a tool that lets you play Hadronize entirely in your
+        browser console!
     </p>
-    <p>
-        I'm sorry if this is inconvenient, but please remember that Hadronize is
-        still under heavy development and mobile support is not a priority for
-        me right now.
-    </p>
-</blockquote>
 
-<h2>Instructions</h2>
-<ol>
-    <li>
-        Learn the Hadronize rules. These are not explained in the CLI, so you'll
-        want to check out the <a
-            href="https://github.com/ethmarks/hadronize#rules">README</a
-        >.
-    </li>
-    <li>
-        Complete the setup, such as choosing a seed and specifying the player
-        names and types. You can either do this using the form below or in the
-        browser console.
-    </li>
+    <blockquote class="finehide">
+        <p>
+            NOTE: Your device appears to lack a mouse pointer, which suggests
+            that you're using a mobile browser. Most mobile browsers do not
+            allow you to open the console, which at this stage is required to
+            use Hadronize CLI.
+        </p>
+        <p>
+            I'm sorry if this is inconvenient, but please remember that
+            Hadronize is still under heavy development and mobile support is not
+            a priority for me right now.
+        </p>
+    </blockquote>
 
-    <form>
-        <fieldset>
-            <legend>Hadronize Setup</legend>
+    <h2>Instructions</h2>
+    <ol>
+        <li>
+            Learn the Hadronize rules. These are not explained in the CLI, so
+            you'll want to check out the <a
+                href="https://github.com/ethmarks/hadronize#rules">README</a
+            >.
+        </li>
+        <li>
+            Complete the setup, such as choosing a seed and specifying the
+            player names and types. You can either do this using the form below
+            or in the browser console.
+        </li>
 
-            <label for="seed">Seed (defaults to a random value)</label>
-            <input
-                type="number"
-                id="seed"
-                min="0"
-                step="1"
-                bind:value={seed}
-                disabled={status !== "not started"}
-            />
+        <form>
+            <fieldset>
+                <legend>Hadronize Setup</legend>
 
-            <label for="playerCount"
-                >Player count (min is {MIN_PLAYERS}, max is {MAX_PLAYERS})</label
-            >
-            <input
-                type="number"
-                id="playerCount"
-                min={MIN_PLAYERS}
-                max={MAX_PLAYERS}
-                step="1"
-                bind:value={playerCount}
-                disabled={status !== "not started"}
-            />
+                <label for="seed">Seed (defaults to a random value)</label>
+                <input
+                    type="number"
+                    id="seed"
+                    min="0"
+                    step="1"
+                    bind:value={seed}
+                    disabled={status !== "not started"}
+                />
 
-            <div
-                id="players"
-                class={status !== "not started" ? "disabled" : ""}
-            >
-                {#each playerInputs.slice(0, playerCount) as player, index}
-                    <div class="player" id={`player${index}`}>
-                        <div class="player-input">
-                            <label for={`player${index}-name`}
-                                >Player {index}'s name</label
-                            >
-                            <input
-                                type="text"
-                                id={`player${index}-name`}
-                                bind:value={player.name}
-                                disabled={status !== "not started"}
-                            />
+                <label for="playerCount"
+                    >Player count (min is {MIN_PLAYERS}, max is {MAX_PLAYERS})</label
+                >
+                <input
+                    type="number"
+                    id="playerCount"
+                    min={MIN_PLAYERS}
+                    max={MAX_PLAYERS}
+                    step="1"
+                    bind:value={playerCount}
+                    disabled={status !== "not started"}
+                />
+
+                <div
+                    id="players"
+                    class={status !== "not started" ? "disabled" : ""}
+                >
+                    {#each playerInputs.slice(0, playerCount) as player, index}
+                        <div class="player" id={`player${index}`}>
+                            <div class="player-input">
+                                <label for={`player${index}-name`}
+                                    >Player {index}'s name</label
+                                >
+                                <input
+                                    type="text"
+                                    id={`player${index}-name`}
+                                    bind:value={player.name}
+                                    disabled={status !== "not started"}
+                                />
+                            </div>
+
+                            <div class="player-input">
+                                <label for={`player${index}-type`}
+                                    >{player.name}'s type</label
+                                >
+                                <select
+                                    id={`player${index}-type`}
+                                    bind:value={player.type}
+                                    disabled={status !== "not started"}
+                                >
+                                    <option value="Human">Human</option>
+                                    <option value="Bot">Bot</option>
+                                </select>
+                            </div>
                         </div>
+                    {/each}
+                </div>
 
-                        <div class="player-input">
-                            <label for={`player${index}-type`}
-                                >{player.name}'s type</label
+                <button onclick={startMain} disabled={status !== "not started"}
+                    >Start Hadronize</button
+                >
+
+                <div class="msg">
+                    {#if errorMsg !== ""}
+                        <p class="errorMsg">{errorMsg}</p>
+                    {:else if status === undefined}
+                        <p>
+                            Hadronize is running! Open your browser console with <kbd
+                                >F12</kbd
                             >
-                            <select
-                                id={`player${index}-type`}
-                                bind:value={player.type}
-                                disabled={status !== "not started"}
-                            >
-                                <option value="Human">Human</option>
-                                <option value="Bot">Bot</option>
-                            </select>
-                        </div>
-                    </div>
-                {/each}
-            </div>
-
-            <button onclick={startMain} disabled={status !== "not started"}
-                >Start Hadronize</button
-            >
-
-            <div class="msg">
-                {#if errorMsg !== ""}
-                    <p class="errorMsg">{errorMsg}</p>
-                {:else if status === undefined}
-                    <p>
-                        Hadronize is running! Open your browser console with <kbd
-                            >F12</kbd
-                        >
-                    </p>
-                {:else if status !== "not started"}
-                    <p>
-                        {@html sl(endgameChunks, "html", false)}
-                    </p>
-                {/if}
-            </div>
-        </fieldset>
-    </form>
-    <li>
-        Open your browser console with <kbd>F12</kbd> to start playing Hadronize.
-    </li>
-    <li>
-        On each turn, info about the current game state will be logged to the
-        console.
-    </li>
-    <li>
-        To take a turn, just type the name of the player that you want to select
-        to be the observer into the console. It should Just Work™, but keep in
-        mind that it is case-sensitive.
-    </li>
-    <li>Keep taking turns until someone wins.</li>
-</ol>
+                        </p>
+                    {:else if status !== "not started"}
+                        <p>
+                            {@html sl(endgameChunks, "html", false)}
+                        </p>
+                    {/if}
+                </div>
+            </fieldset>
+        </form>
+        <li>
+            Open your browser console with <kbd>F12</kbd> to start playing Hadronize.
+        </li>
+        <li>
+            On each turn, info about the current game state will be logged to
+            the console.
+        </li>
+        <li>
+            To take a turn, just type the name of the player that you want to
+            select to be the observer into the console. It should Just Work™,
+            but keep in mind that it is case-sensitive.
+        </li>
+        <li>Keep taking turns until someone wins.</li>
+    </ol>
+</main>
 
 <style lang="scss">
     /** This is only visible on mobile */

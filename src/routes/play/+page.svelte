@@ -239,24 +239,35 @@
 
 <Reset />
 
-<div id="quarks">
-    {#each quarks as q, index}
-        <Quark
-            quark={game.quarks[q.index]}
-            status={q.status}
-            x={q.x}
-            y={q.y}
-            onmousedown={() => {
-                if (index === game.superposedIndex!)
-                    superposedQuarkPressed = true;
-            }}
-        />
-    {/each}
-</div>
+<main class={superposedQuarkPressed ? "grabbing" : ""}>
+    <div id="quarks">
+        {#each quarks as q, index}
+            <Quark
+                quark={game.quarks[q.index]}
+                status={q.status}
+                x={q.x}
+                y={q.y}
+                onmousedown={() => {
+                    if (index === game.superposedIndex!)
+                        superposedQuarkPressed = true;
+                }}
+            />
+        {/each}
+    </div>
 
-<DropIndicator
-    x={dropIndicator.x}
-    y={dropIndicator.y}
-    radius={dropIndicator.radius}
-    active={dropIndicator.active}
-/>
+    <DropIndicator
+        x={dropIndicator.x}
+        y={dropIndicator.y}
+        radius={dropIndicator.radius}
+        active={dropIndicator.active}
+    />
+</main>
+
+<style lang="scss">
+    main {
+        min-height: 100vh;
+    }
+    .grabbing {
+        cursor: grabbing !important;
+    }
+</style>
