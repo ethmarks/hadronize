@@ -306,7 +306,7 @@
                 chambers.length,
                 c.order,
                 chamberRadius,
-                (game.turn - 1) / chambers.length - 0.25,
+                ((game.turn - 1) / chambers.length) * -1 - 0.25,
             );
             c.x = chamberPos.x;
             c.y = chamberPos.y;
