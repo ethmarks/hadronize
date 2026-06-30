@@ -277,6 +277,19 @@
                                 observation.activeFlavor,
                         );
                 });
+            } else if (observation.reaction === "hadronized") {
+                const hadronIndices =
+                    chambers[observerOrder].quarksByFlavor[
+                        observation.activeFlavor
+                    ];
+                chambers[observerOrder].quarksByFlavor["hadron"].push(
+                    ...hadronIndices,
+                );
+
+                // Clear quarks from original flavor array
+                chambers[observerOrder].quarksByFlavor[
+                    observation.activeFlavor
+                ] = [];
             }
 
             // Check for winners _before_ we check if the turn limit has been exceeded.
