@@ -318,6 +318,12 @@
         });
     }
 
+    let speed: number = $state(1);
+
+    async function sleep(ms: number) {
+        await new Promise((resolve) => setTimeout(resolve, ms / speed));
+    }
+
     onMount(async () => {
         window.addEventListener("resize", (_) => {
             update();
@@ -340,7 +346,7 @@
             superposed.y = window.innerHeight / 2 - 25;
             update();
 
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            await sleep(500);
 
             const state = game.updateState();
 
@@ -365,7 +371,7 @@
             game.superposedIndex = undefined;
             update();
 
-            await new Promise((resolve) => setTimeout(resolve, 250));
+            await sleep(250);
 
             if (observation.reaction === "tunneled") {
                 // Sync chambers
@@ -396,7 +402,7 @@
 
             update();
 
-            await new Promise((resolve) => setTimeout(resolve, 150));
+            await sleep(150);
 
             // Check for winners _before_ we check if the turn limit has been exceeded.
             for (const player of game.players) {
