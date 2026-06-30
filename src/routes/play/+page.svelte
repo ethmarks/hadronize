@@ -68,7 +68,7 @@
     interface ChamberDatum {
         order: number;
         showCount: boolean;
-        nearScreenEdge: boolean;
+        tooLarge: boolean;
         x: number;
         y: number;
         quarksByFlavor: Record<Flavor | "hadron", number[]>;
@@ -94,7 +94,7 @@
                 order: p.order,
                 count: 0,
                 showCount: false,
-                nearScreenEdge: false,
+                tooLarge: false,
                 x: -9999,
                 y: -9999,
                 quarksByFlavor,
@@ -183,14 +183,16 @@
     }
 
     function handleMouseMove(event: MouseEvent) {
-        mouse = { x: event.clientX, y: event.clientY };
+        if (result === undefined) {
+            mouse = { x: event.clientX, y: event.clientY };
 
-        if (superposedQuarkPressed) {
-            superposed.x = mouse.x - 25;
-            superposed.y = mouse.y - 25;
+            if (superposedQuarkPressed) {
+                superposed.x = mouse.x - 25;
+                superposed.y = mouse.y - 25;
+            }
+
+            detectDrop();
         }
-
-        detectDrop();
     }
 
     let centerX = $state(0);
@@ -198,7 +200,7 @@
     let chamberRadius = $derived(Math.min(centerX, centerY) * 0.7);
 
     function updateChamberContent(c: ChamberDatum) {
-        if (c.showCount === false && c.nearScreenEdge === false) {
+        if (c.showCount === false && c.tooLarge === false) {
             const flatIndicies: number[] = Object.values(
                 c.quarksByFlavor,
             ).flat();
@@ -230,12 +232,13 @@
                 );
 
                 if (
+                    c.quarkRadius >= chamberSpacing / 2 ||
                     quarkPos.x > centerX * 2 - 25 ||
                     quarkPos.x < 0 + 25 ||
                     quarkPos.y > centerY * 2 - 25 ||
                     quarkPos.y < 0 + 25
                 ) {
-                    c.nearScreenEdge = true;
+                    c.tooLarge = true;
                 }
 
                 const UIquark = quarks[quarkIndex];
@@ -289,6 +292,10 @@
         }
     }
 
+    let chamberSpacing: number = $derived(
+        getVertexDistance(chambers.length, chamberRadius),
+    );
+
     function update() {
         centerX = window.innerWidth / 2;
         centerY = window.innerHeight / 2;
@@ -325,6 +332,8 @@
         await new Promise((resolve) => setTimeout(resolve, ms / speed));
     }
 
+    let result: Result = $state(undefined);
+
     onMount(async () => {
         window.addEventListener("resize", (_) => {
             update();
@@ -337,8 +346,6 @@
             showPlayerOrder: true,
             showPreviousObservation: true,
         };
-
-        let result: Result = undefined;
 
         while (result === undefined) {
             const superposedIndex = game.superposedIndex ?? game.produceQuark();
@@ -385,7 +392,7 @@
                         );
                 });
 
-                chambers[observerOrder].nearScreenEdge = false;
+                chambers[observerOrder].tooLarge = false;
             } else if (observation.reaction === "hadronized") {
                 const hadronIndices =
                     chambers[observerOrder].quarksByFlavor[
@@ -458,7 +465,7 @@
             winningChamber.x = centerX;
             winningChamber.y = centerY;
             winningChamber.showCount = false;
-            winningChamber.nearScreenEdge = false;
+            winningChamber.tooLarge = false;
             updateChamberContent(winningChamber);
         }
     });
