@@ -179,6 +179,7 @@
                 dropIndicator.y = hoveredChamber.y;
             } else {
                 if (isSuperposedOverHovered) {
+                    dropIndicator.active = false;
                     // Collapse the quark into the selected chamber
                     const turnEvent = new CustomEvent("takeTurn", {
                         detail: { playerOrder: hoveredChamber.order },
@@ -480,6 +481,8 @@
         // Log endgame chunks
         const endgameChunks = getEndgameChunks(game, result, opt);
         sl(endgameChunks);
+
+        dropIndicator.active = false;
 
         const chambersToExplode =
             typeof result === "number"
