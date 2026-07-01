@@ -22,22 +22,16 @@ export function getVertexPos(
   if (!Number.isInteger(vertex) || vertex < 0 || vertex >= sides)
     throw new Error("vertex must be a nonnegative integer less than sides");
 
-  if (sides === 1) {
-    // The default formula yields monogons for sides=1, but we want a centered
-    // point instead.
-    return { x: centerX, y: centerY };
-  } else {
-    const radians = rotation * Math.PI * 2;
-    const angle = (2 * Math.PI * vertex) / sides + radians;
+  const radians = rotation * Math.PI * 2;
+  const angle = (2 * Math.PI * vertex) / sides + radians;
 
-    const offsetX = radius * Math.cos(angle);
-    const offsetY = radius * Math.sin(angle);
+  const offsetX = radius * Math.cos(angle);
+  const offsetY = radius * Math.sin(angle);
 
-    return {
-      x: centerX + offsetX,
-      y: centerY + offsetY,
-    };
-  }
+  return {
+    x: centerX + offsetX,
+    y: centerY + offsetY,
+  };
 }
 
 /**

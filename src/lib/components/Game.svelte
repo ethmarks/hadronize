@@ -234,14 +234,17 @@
             }
 
             flatIndicies.forEach((quarkIndex, i) => {
-                const quarkPos = getVertexPos(
-                    c.x,
-                    c.y,
-                    sides,
-                    i,
-                    c.quarkRadius,
-                    c.order / chambers.length,
-                );
+                const quarkPos =
+                    sides === 1
+                        ? { x: c.x, y: c.y }
+                        : getVertexPos(
+                              c.x,
+                              c.y,
+                              sides,
+                              i,
+                              c.quarkRadius,
+                              c.order / chambers.length,
+                          );
 
                 if (
                     c.quarkRadius >= chamberSpacing / 2 ||
