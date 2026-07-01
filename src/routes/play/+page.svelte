@@ -8,11 +8,11 @@
     import { evDriver } from "../../lib/drivers/ev.ts";
     import { manualDriver } from "../../lib/drivers/manual.ts";
 
-    const SEED: number = 1;
+    const SEED: number = 42;
     const PLAYERS: PlayerInit[] = [
-        { name: "Alice", driver: manualDriver },
-        { name: "Bot", driver: prngDriver },
-        { name: "Charlie", driver: manualDriver },
+        { name: "Arthur", driver: manualDriver },
+        { name: "Ford", driver: manualDriver },
+        { name: "Marvin", driver: evDriver },
     ];
 </script>
 
