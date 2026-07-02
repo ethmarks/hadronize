@@ -130,6 +130,18 @@ export interface HookContext {
   observation: Observation;
 }
 
+export interface TurnHooks {
+  pre?: (ctx: Omit<HookContext, "observer" | "observation">) => Promise<void>;
+  preDriver?: (
+    ctx: Omit<HookContext, "observer" | "observation">,
+  ) => Promise<void>;
+  preObservation?: (ctx: Omit<HookContext, "observation">) => Promise<void>;
+  preReaction?: (ctx: HookContext) => Promise<void>;
+  preChecks?: (ctx: HookContext) => Promise<void>;
+  preTurnIncrement?: (ctx: HookContext) => Promise<void>;
+  post?: (ctx: HookContext) => Promise<void>;
+}
+
 /**
  * The main game class.
  */
@@ -483,21 +495,7 @@ export class Hadronize {
    *
    * @returns
    */
-  async executeTurn(
-    hooks?: Partial<{
-      pre: (
-        ctx: Omit<HookContext, "observer" | "observation">,
-      ) => Promise<void>;
-      preDriver: (
-        ctx: Omit<HookContext, "observer" | "observation">,
-      ) => Promise<void>;
-      preObservation: (ctx: Omit<HookContext, "observation">) => Promise<void>;
-      preReaction: (ctx: HookContext) => Promise<void>;
-      preChecks: (ctx: HookContext) => Promise<void>;
-      preTurnIncrement: (ctx: HookContext) => Promise<void>;
-      post: (ctx: HookContext) => Promise<void>;
-    }>,
-  ): Promise<Result> {
+  async executeTurn(hooks?: TurnHooks): Promise<Result> {
     if (this.superposedIndex === undefined) this.produceQuark();
 
     await hooks?.pre?.({ game: this });

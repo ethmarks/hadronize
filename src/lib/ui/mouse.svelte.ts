@@ -31,10 +31,6 @@ export class MouseManager {
     return this.getSuperposed();
   }
 
-  public get result(): Result {
-    return this.getResult();
-  }
-
   detectDrop() {
     let isSuperposedOverHovered = false;
     for (const chamber of this.chambers) {
@@ -96,7 +92,7 @@ export class MouseManager {
   }
 
   handleMouseMove(event: MouseEvent) {
-    if (this.result === undefined) {
+    if (this.getResult() === undefined) {
       this.mousePos = { x: event.clientX, y: event.clientY };
 
       if (this.superposedQuarkPressed) {

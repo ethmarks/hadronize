@@ -1,5 +1,5 @@
 import type { Player } from "../Player.ts";
-import type { Hadronize } from "../Hadronize.ts";
+import type { Hadronize, Result } from "../Hadronize.ts";
 import {
   FLAVORS,
   Quark,
@@ -37,6 +37,8 @@ export class StoreManager {
   public quarks: UIQuark[];
   public chambers: UIChamber[];
   public superposed: UIQuark;
+
+  public result: Result = $state(undefined);
 
   constructor(
     public game: Hadronize,
