@@ -5,9 +5,9 @@ import { getVertexPos, getVertexDistance } from "../utils/polygon.ts";
 
 const SHUFFLE_CHAMBERS = false;
 
-export let center = $state({ x: 0, y: 0 });
-
 export class LayoutManager {
+  center = $state({ x: 0, y: 0 });
+
   constructor(
     public game: Hadronize,
     public quarks: QuarkDatum[],
@@ -18,7 +18,7 @@ export class LayoutManager {
   ) {}
 
   public get chamberRadius(): number {
-    return Math.min(center.x, center.y) * 0.5;
+    return Math.min(this.center.x, this.center.y) * 0.5;
   }
 
   public get chamberSpacing(): number {
@@ -70,9 +70,9 @@ export class LayoutManager {
 
         if (
           c.quarkRadius >= this.chamberSpacing / 2 ||
-          quarkPos.x > center.x * 2 - 25 ||
+          quarkPos.x > this.center.x * 2 - 25 ||
           quarkPos.x < 0 + 25 ||
-          quarkPos.y > center.y * 2 - 25 ||
+          quarkPos.y > this.center.y * 2 - 25 ||
           quarkPos.y < 0 + 25
         ) {
           c.tooLarge = true;
@@ -139,13 +139,13 @@ export class LayoutManager {
   }
 
   update() {
-    center.x = window.innerWidth / 2;
-    center.y = window.innerHeight / 2;
+    this.center.x = window.innerWidth / 2;
+    this.center.y = window.innerHeight / 2;
 
     this.chambers.forEach((c) => {
       const chamberPos = getVertexPos(
-        center.x,
-        center.y,
+        this.center.x,
+        this.center.y,
         this.chambers.length,
         c.order,
         this.chamberRadius,

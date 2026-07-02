@@ -26,7 +26,7 @@
         type DropIndicatorDTO,
     } from "./DropIndicator.svelte";
     import Label, { type LabelProps } from "./Label.svelte";
-    import { LayoutManager, center } from "../ui/layout.svelte.ts";
+    import { LayoutManager } from "../ui/layout.svelte.ts";
 
     import {
         Hadronize,
@@ -354,8 +354,10 @@
 
             flatIndicies.forEach((quarkIndex) => {
                 const quark = quarks[quarkIndex];
-                quark.x = Math.round(Math.random()) * (center.x * 2 + 100) - 50;
-                quark.y = center.y * 2;
+                quark.x =
+                    Math.round(Math.random()) * (layout.center.x * 2 + 100) -
+                    50;
+                quark.y = layout.center.y * 2;
             });
 
             c.label.color = "transparent";
