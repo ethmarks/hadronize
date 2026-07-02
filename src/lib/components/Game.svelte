@@ -93,7 +93,10 @@
                 game.activePlayer.scratchpad,
             );
 
-            game.observeQuark(game.players[observerOrder], game.activePlayer);
+            game.executeObservation(
+                game.players[observerOrder],
+                game.activePlayer,
+            );
 
             const observation = game.mostRecentObservation;
 

@@ -241,9 +241,13 @@ describe.each([1, 3752815185, 1042408937])(
         // superposition.
         superposedQuark.superposition = playerQuark.superposition;
 
-        game.observeQuark(game.activePlayer, game.activePlayer);
+        const observation = game.executeObservation(
+          game.activePlayer,
+          game.activePlayer,
+        );
+        game.executeReaction(observation, game.activePlayer);
 
-        expect(game.mostRecentObservation?.reaction).toBe("hadronized");
+        expect(observation.reaction).toBe("hadronized");
         expect(game.activePlayer.score).toBeGreaterThan(0);
       });
 
@@ -287,7 +291,11 @@ describe.each([1, 3752815185, 1042408937])(
         );
 
         // Force the non-active player to observe the quark
-        game.observeQuark(nonActivePlayer, game.activePlayer);
+        const observation = game.executeObservation(
+          nonActivePlayer,
+          game.activePlayer,
+        );
+        game.executeReaction(observation, game.activePlayer);
 
         const activePlayerAfterCount = countQuarks(
           game.activePlayer.chamber,
@@ -298,7 +306,7 @@ describe.each([1, 3752815185, 1042408937])(
           activeFlavor,
         );
 
-        expect(game.mostRecentObservation?.reaction).toBe("tunneled");
+        expect(observation.reaction).toBe("tunneled");
 
         // We rigged the nonActivePlayer to have at least one quark of the active flavor earlier, so this must be > 0
         expect(nonActivePlayerBeforeCount).toBeGreaterThan(0);
@@ -329,9 +337,13 @@ describe.each([1, 3752815185, 1042408937])(
         rig.quark.good(superposedQuark);
         rig.player.bad(game.activePlayer);
 
-        game.observeQuark(game.activePlayer, game.activePlayer);
+        const observation = game.executeObservation(
+          game.activePlayer,
+          game.activePlayer,
+        );
+        game.executeReaction(observation, game.activePlayer);
 
-        expect(game.mostRecentObservation?.reaction).toBe("no reaction");
+        expect(observation.reaction).toBe("no reaction");
 
         // We should have added one quark, so the total should now be 5
         expect(game.activePlayer.chamber.indices).toHaveLength(5);
@@ -353,9 +365,13 @@ describe.each([1, 3752815185, 1042408937])(
         rig.quark.good(superposedQuark);
         rig.player.bad(nonActivePlayer);
 
-        game.observeQuark(nonActivePlayer, game.activePlayer);
+        const observation = game.executeObservation(
+          nonActivePlayer,
+          game.activePlayer,
+        );
+        game.executeReaction(observation, game.activePlayer);
 
-        expect(game.mostRecentObservation?.reaction).toBe("no reaction");
+        expect(observation.reaction).toBe("no reaction");
         expect(game.activePlayer.chamber.indices).toHaveLength(4);
         expect(nonActivePlayer.chamber.indices).toHaveLength(5);
         expect(game.activePlayer.score).toBe(0);

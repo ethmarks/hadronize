@@ -325,14 +325,34 @@ export class Hadronize {
   }
 
   /**
-   * Collapses the superposed quark into the observing player's chamber and
-   * simulates subsequent reactions, if any.
+   * Executes any reactions specified by an observation.
+   *
+   * @param observation The observation returned by executeObservation().
+   * @param activePlayer The player whose turn it is.
+   */
+  executeReaction(observation: Observation, activePlayer: Player): void {
+    if (observation.reaction === "hadronized") {
+      this.hadronizeQuarks(observation.activeFlavor, activePlayer.chamber);
+    } else if (observation.reaction === "tunneled") {
+      this.tunnelQuarks(
+        observation.activeFlavor,
+        this.players[observation.observer].chamber,
+        activePlayer.chamber,
+      );
+    }
+  }
+
+  /**
+   * Collapses the superposed quark into the observing player's chamber.
    *
    * @param observingPlayer
    * @param activePlayer
    * @returns
    */
-  observeQuark(observingPlayer: Player, activePlayer: Player): Observation {
+  executeObservation(
+    observingPlayer: Player,
+    activePlayer: Player,
+  ): Observation {
     if (this.superposedIndex === undefined) {
       throw new Error("Cannot observe when there is no active quark!");
     }
@@ -359,18 +379,11 @@ export class Hadronize {
 
     let reaction: Reaction;
 
-    // If no reaction, return early.
+    // Determine which kind of reaction will occur.
     if (willReact) {
-      // Determine which kind of reaction will occur.
       if (observingPlayer.order === activePlayer.order) {
-        this.hadronizeQuarks(activeFlavor, activePlayer.chamber);
         reaction = "hadronized";
       } else {
-        this.tunnelQuarks(
-          activeFlavor,
-          observingPlayer.chamber,
-          activePlayer.chamber,
-        );
         reaction = "tunneled";
       }
     } else {
@@ -476,7 +489,8 @@ export class Hadronize {
 
     const observer = this.players[observerOrder];
 
-    this.observeQuark(observer, this.activePlayer);
+    const observation = this.executeObservation(observer, this.activePlayer);
+    this.executeReaction(observation, this.activePlayer);
 
     // Check for winners _before_ we check if the turn limit has been exceeded.
     for (const player of this.players) {
@@ -496,10 +510,10 @@ export class Hadronize {
   }
 }
 
-const game = new Hadronize(83, [
-  { name: "alice", driver: prngDriver },
-  { name: "bob", driver: prngDriver },
-]);
+// const game = new Hadronize(83, [
+//   { name: "alice", driver: prngDriver },
+//   { name: "bob", driver: prngDriver },
+// ]);
 
 // let i = 0;
 // while ((await game.executeTurn()) === undefined) {
