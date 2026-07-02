@@ -16,16 +16,20 @@ import type { StoreManager } from "./store.svelte.ts";
 
 export class LoopManager {
   constructor(
-    public speed: number,
     public game: Hadronize,
     public store: StoreManager,
     public layout: LayoutManager,
     public mouse: MouseManager,
+    public getSpeed: () => number,
     public opt: CliOptions,
   ) {}
 
   private async sleep(ms: number) {
-    await new Promise((resolve) => setTimeout(resolve, ms / this.speed));
+    const speed = this.getSpeed();
+
+    if (speed === 0) return;
+
+    await new Promise((resolve) => setTimeout(resolve, ms / speed));
   }
 
   private async turn(): Promise<Result> {

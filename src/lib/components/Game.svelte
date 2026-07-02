@@ -15,24 +15,30 @@
 
     interface Props {
         gameParams: ConstructorParameters<typeof Hadronize>;
+        speed: number;
     }
 
-    let { gameParams }: Props = $props();
+    let { gameParams, speed }: Props = $props();
 
     const LABEL_DEFAULT_COLOR = "black";
     const LABEL_ACTIVE_COLOR = "#f2b74b";
 
     const CLI_OPT: CliOptions = {
-        abbreviate: false,
+        abbreviate: true,
         showEmpty: false,
         showPlayerOrder: true,
         showPreviousObservation: true,
     };
 
-    // Game params will never change after component mounting so it's fine if
-    // we only capture the initial value.
+    // Game params will never change after component mounting so it's fine
+    // if we only capture the initial value.
+    //
     // svelte-ignore state_referenced_locally
-    let game = $state(new Hadronize(...gameParams));
+    let game = new Hadronize(...gameParams);
+
+    // We produce a superposed quark immediately because some of the
+    // managers use a non-null assertion operator on game.superposedIndex.
+    game.produceQuark();
 
     const store = new StoreManager(game, LABEL_DEFAULT_COLOR);
 
@@ -46,8 +52,6 @@
         LABEL_ACTIVE_COLOR,
     );
 
-    game.produceQuark();
-
     const mouse = new MouseManager(
         store.chambers,
         () => store.superposed,
@@ -55,9 +59,14 @@
         () => store.result,
     );
 
-    let speed = 1;
-
-    const loop = new LoopManager(speed, game, store, layout, mouse, CLI_OPT);
+    const loop = new LoopManager(
+        game,
+        store,
+        layout,
+        mouse,
+        () => speed,
+        CLI_OPT,
+    );
 
     onMount(async () => {
         layout.init();

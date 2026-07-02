@@ -14,6 +14,8 @@
         { name: "Ford", driver: manualDriver },
         { name: "Marvin", driver: evDriver },
     ];
+
+    const speed: number = 1;
 </script>
 
 <svelte:head>
@@ -22,4 +24,4 @@
 
 <Reset />
 
-<Game gameParams={[SEED, PLAYERS]} />
+<Game gameParams={[SEED, PLAYERS]} {speed} />
