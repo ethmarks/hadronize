@@ -1,6 +1,6 @@
 import type { Hadronize, Result } from "../Hadronize.ts";
 import type { Flavor } from "../Quark.ts";
-import type { ChamberDatum, QuarkDatum } from "./store.svelte.ts";
+import type { UIChamber, UIQuark } from "./store.svelte.ts";
 import { getVertexPos, getVertexDistance } from "../utils/polygon.ts";
 
 const SHUFFLE_CHAMBERS = false;
@@ -10,8 +10,8 @@ export class LayoutManager {
 
   constructor(
     public game: Hadronize,
-    public quarks: QuarkDatum[],
-    public chambers: ChamberDatum[],
+    public quarks: UIQuark[],
+    public chambers: UIChamber[],
     public syncQuarks: () => void,
     public getResult: () => Result,
     public labelDefaultColor: string,
@@ -36,9 +36,9 @@ export class LayoutManager {
     this.update();
   }
 
-  updateChamberContent(c: ChamberDatum) {
+  updateChamberContent(c: UIChamber) {
     if (c.showCount === false && c.tooLarge === false) {
-      const flatIndicies: number[] = Object.values(c.quarksByFlavor).flat();
+      const flatIndicies: number[] = Object.values(c.quarkMap).flat();
 
       const sides = flatIndicies.length;
 
@@ -87,7 +87,7 @@ export class LayoutManager {
           quark.status === "hadronized" ? "h" : quark.flavor.slice(0, 1);
       });
     } else {
-      const nonEmptyByFlavor = Object.entries(c.quarksByFlavor).filter(
+      const nonEmptyByFlavor = Object.entries(c.quarkMap).filter(
         ([_, indices]) => indices.length > 0,
       ) as [Flavor | "hadron", number[]][];
 
@@ -128,7 +128,7 @@ export class LayoutManager {
     }
   }
 
-  updateChamberLabel(c: ChamberDatum) {
+  updateChamberLabel(c: UIChamber) {
     c.label.x = c.x;
     c.label.y = c.y - c.quarkRadius - 50;
     c.label.color =
@@ -169,8 +169,8 @@ export class LayoutManager {
     });
   }
 
-  explodeChamber(c: ChamberDatum) {
-    const flatIndicies: number[] = Object.values(c.quarksByFlavor).flat();
+  explodeChamber(c: UIChamber) {
+    const flatIndicies: number[] = Object.values(c.quarkMap).flat();
 
     flatIndicies.forEach((quarkIndex) => {
       const quark = this.quarks[quarkIndex];

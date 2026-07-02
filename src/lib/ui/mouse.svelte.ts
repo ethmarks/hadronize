@@ -1,4 +1,4 @@
-import type { ChamberDatum, QuarkDatum } from "./store.svelte.ts";
+import type { UIChamber, UIQuark } from "./store.svelte.ts";
 import { type DropIndicatorDTO } from "../components/DropIndicator.svelte";
 import type { LayoutManager } from "./layout.svelte.ts";
 import type { Result } from "../Hadronize.ts";
@@ -12,7 +12,7 @@ const DROP_PADDING = 50;
 export class MouseManager {
   superposedQuarkPressed: boolean = $state(false);
   mousePos: { x: number; y: number } = $state({ x: 0, y: 0 });
-  hoveredChamber: ChamberDatum | undefined = $state(undefined);
+  hoveredChamber: UIChamber | undefined = $state(undefined);
   dropIndicator: DropIndicatorDTO = $state({
     active: false,
     radius: 0,
@@ -21,13 +21,13 @@ export class MouseManager {
   });
 
   constructor(
-    public chambers: ChamberDatum[],
-    public getSuperposed: () => QuarkDatum,
+    public chambers: UIChamber[],
+    public getSuperposed: () => UIQuark,
     public layout: LayoutManager,
     public getResult: () => Result,
   ) {}
 
-  public get superposed(): QuarkDatum {
+  public get superposed(): UIQuark {
     return this.getSuperposed();
   }
 

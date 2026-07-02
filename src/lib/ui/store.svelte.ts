@@ -1,13 +1,15 @@
+import type { Player } from "../Player.ts";
 import type { Hadronize } from "../Hadronize.ts";
 import {
   FLAVORS,
+  Quark,
   type Flavor,
   type QuarkStatus,
   type Superposition,
 } from "../Quark.ts";
 import type { LabelProps } from "../components/Label.svelte";
 
-export interface QuarkDatum {
+export interface UIQuark {
   index: number;
   x: number;
   y: number;
@@ -18,90 +20,94 @@ export interface QuarkDatum {
   owner: number | undefined;
 }
 
-export interface ChamberDatum {
+export type QuarkMap = Record<Flavor | "hadron", number[]>;
+
+export interface UIChamber {
   order: number;
   showCount: boolean;
   tooLarge: boolean;
   x: number;
   y: number;
   label: LabelProps;
-  quarksByFlavor: Record<Flavor | "hadron", number[]>;
+  quarkMap: QuarkMap;
   quarkRadius: number;
 }
 
 export class StoreManager {
-  public quarks: QuarkDatum[];
-  public chambers: ChamberDatum[];
-  public superposed: QuarkDatum;
+  public quarks: UIQuark[];
+  public chambers: UIChamber[];
+  public superposed: UIQuark;
 
   constructor(
     public game: Hadronize,
     public labelDefaultColor: string,
   ) {
-    // Init quarks
-    this.quarks = $state(
-      game.quarks.map((q) => {
-        let owner: number | undefined = undefined;
-        for (const player of game.players) {
-          if (player.chamber.indices.some((index) => index === q.index)) {
-            owner = player.order;
-            break;
-          }
-        }
-        return {
-          index: q.index,
-          status: q.status,
-          flavor: q.flavor,
-          superposition: q.superposition,
-          text: "",
-          x: 0,
-          y: 0,
-          owner,
-        };
-      }),
-    );
+    this.quarks = $state(this.game.quarks.map(this.initQuark));
 
-    // Init chambers
-    this.chambers = $state(
-      game.players.map((p, _) => {
-        const quarksByFlavor: ChamberDatum["quarksByFlavor"] = {
-          up: [],
-          down: [],
-          strange: [],
-          charm: [],
-          top: [],
-          bottom: [],
-          hadron: [],
-        };
-        p.chamber.indices.forEach((i) =>
-          quarksByFlavor[game.quarks[i].flavor].push(i),
-        );
+    this.chambers = $state(this.game.players.map(this.initChamber));
 
-        return {
-          order: p.order,
-          count: 0,
-          showCount: false,
-          tooLarge: false,
-          x: -9999,
-          y: -9999,
-          quarksByFlavor,
-          quarkRadius: 75,
-          label: {
-            x: 0,
-            y: 0,
-            text: game.players[p.order].name,
-            color: labelDefaultColor,
-            fontSizeRem: 2,
-          },
-        };
-      }),
-    );
-
-    // Define superposed
-    this.superposed = $derived(this.quarks[game.superposedIndex!]);
+    this.superposed = $derived(this.quarks[this.game.superposedIndex!]);
   }
 
-  syncQuarks(): void {
+  private getEmptyQuarkMap(): QuarkMap {
+    return {
+      up: [],
+      down: [],
+      strange: [],
+      charm: [],
+      top: [],
+      bottom: [],
+      hadron: [],
+    };
+  }
+
+  private initQuark = (quark: Quark): UIQuark => {
+    let owner: number | undefined = undefined;
+    for (const player of this.game.players) {
+      if (player.chamber.indices.includes(quark.index)) {
+        owner = player.order;
+        break;
+      }
+    }
+    return {
+      index: quark.index,
+      status: quark.status,
+      flavor: quark.flavor,
+      superposition: quark.superposition,
+      text: "",
+      x: 0,
+      y: 0,
+      owner,
+    };
+  };
+
+  private initChamber = (player: Player): UIChamber => {
+    const quarkMap = this.getEmptyQuarkMap();
+    player.chamber.indices.forEach((i) =>
+      quarkMap[this.game.quarks[i].flavor].push(i),
+    );
+
+    const label: LabelProps = {
+      x: 0,
+      y: 0,
+      text: this.game.players[player.order].name,
+      color: this.labelDefaultColor,
+      fontSizeRem: 2,
+    };
+
+    return {
+      order: player.order,
+      showCount: false,
+      tooLarge: false,
+      x: 0,
+      y: 0,
+      quarkMap,
+      quarkRadius: 75,
+      label,
+    };
+  };
+
+  public syncQuarks(): void {
     for (const uiQuark of this.quarks) {
       const gameQuark = this.game.quarks[uiQuark.index];
 
@@ -111,21 +117,22 @@ export class StoreManager {
     }
   }
 
-  syncChambers(): void {
-    this.syncQuarks();
+  public syncChamber = (chamber: UIChamber): void => {
+    const player = this.game.players[chamber.order];
 
-    for (const chamber of this.chambers) {
-      const player = this.game.players[chamber.order];
-
-      for (const flavor of FLAVORS) {
-        chamber.quarksByFlavor[flavor] = player.chamber.indices.filter(
-          (i) => this.quarks[i].flavor === flavor,
-        );
-      }
-
-      chamber.quarksByFlavor["hadron"] = player.chamber.hadrons
-        .map((h) => h.indices)
-        .flat();
+    for (const flavor of FLAVORS) {
+      chamber.quarkMap[flavor] = player.chamber.indices.filter(
+        (i) => this.quarks[i].flavor === flavor,
+      );
     }
+
+    chamber.quarkMap["hadron"] = player.chamber.hadrons
+      .map((h) => h.indices)
+      .flat();
+  };
+
+  public syncChambers(): void {
+    this.syncQuarks();
+    this.chambers.forEach(this.syncChamber);
   }
 }
