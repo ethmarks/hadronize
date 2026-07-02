@@ -168,4 +168,16 @@ export class LayoutManager {
       }
     });
   }
+
+  explodeChamber(c: ChamberDatum) {
+    const flatIndicies: number[] = Object.values(c.quarksByFlavor).flat();
+
+    flatIndicies.forEach((quarkIndex) => {
+      const quark = this.quarks[quarkIndex];
+      quark.x = Math.round(Math.random()) * (this.center.x * 2 + 100) - 50;
+      quark.y = this.center.y * 2;
+    });
+
+    c.label.color = "transparent";
+  }
 }

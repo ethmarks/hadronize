@@ -137,26 +137,10 @@
 
         mouse.dropIndicator.active = false;
 
-        const chambersToExplode =
-            typeof result === "number"
-                ? store.chambers.filter((c) => c.order !== result)
-                : store.chambers;
-
-        chambersToExplode.forEach((c) => {
-            const flatIndicies: number[] = Object.values(
-                c.quarksByFlavor,
-            ).flat();
-
-            flatIndicies.forEach((quarkIndex) => {
-                const quark = store.quarks[quarkIndex];
-                quark.x =
-                    Math.round(Math.random()) * (layout.center.x * 2 + 100) -
-                    50;
-                quark.y = layout.center.y * 2;
-            });
-
-            c.label.color = "transparent";
-        });
+        const chambersToExplode = store.chambers.filter(
+            (c) => c.order !== result,
+        );
+        chambersToExplode.forEach((c) => layout.explodeChamber(c));
 
         if (typeof result === "number") {
             const winningChamber = store.chambers[result];
