@@ -1,4 +1,4 @@
-import type { ChamberDatum, QuarkDatum } from "../components/Game.svelte";
+import type { ChamberDatum, QuarkDatum } from "./store.svelte.ts";
 import { type DropIndicatorDTO } from "../components/DropIndicator.svelte";
 import type { LayoutManager } from "./layout.svelte.ts";
 import type { Result } from "../Hadronize.ts";

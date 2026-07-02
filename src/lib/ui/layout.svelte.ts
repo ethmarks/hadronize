@@ -1,6 +1,6 @@
 import type { Hadronize, Result } from "../Hadronize.ts";
 import type { Flavor } from "../Quark.ts";
-import type { ChamberDatum, QuarkDatum } from "../components/Game.svelte";
+import type { ChamberDatum, QuarkDatum } from "./store.svelte.ts";
 import { getVertexPos, getVertexDistance } from "../utils/polygon.ts";
 
 const SHUFFLE_CHAMBERS = false;
@@ -12,6 +12,7 @@ export class LayoutManager {
     public game: Hadronize,
     public quarks: QuarkDatum[],
     public chambers: ChamberDatum[],
+    public syncQuarks: () => void,
     public getResult: () => Result,
     public labelDefaultColor: string,
     public labelActiveColor: string,
@@ -78,14 +79,12 @@ export class LayoutManager {
           c.tooLarge = true;
         }
 
-        const UIquark = this.quarks[quarkIndex];
-        const gameQuark = this.game.quarks[quarkIndex];
-        UIquark.x = quarkPos.x - 25;
-        UIquark.y = quarkPos.y - 25;
+        const quark = this.quarks[quarkIndex];
+        quark.x = quarkPos.x - 25;
+        quark.y = quarkPos.y - 25;
 
-        UIquark.text = gameQuark.isHadronized
-          ? "h"
-          : gameQuark.flavor.slice(0, 1);
+        quark.text =
+          quark.status === "hadronized" ? "h" : quark.flavor.slice(0, 1);
       });
     } else {
       const nonEmptyByFlavor = Object.entries(c.quarksByFlavor).filter(
@@ -160,13 +159,12 @@ export class LayoutManager {
       this.updateChamberLabel(c);
     });
 
+    this.syncQuarks();
     this.quarks.forEach((q) => {
-      q.status = this.game.quarks[q.index].status;
-
       if (q.status === "latent" || q.status === "superposed") {
         q.text = "?";
-        q.x = window.innerWidth / 2 - 25;
-        q.y = window.innerHeight / 2 - 25;
+        q.x = this.center.x - 25;
+        q.y = this.center.y - 25;
       }
     });
   }

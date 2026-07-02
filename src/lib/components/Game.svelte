@@ -1,31 +1,10 @@
-<script module lang="ts">
-    export interface QuarkDatum {
-        x: number;
-        y: number;
-        index: number;
-        status: QuarkStatus;
-        text: string;
-        owner: number | undefined;
-    }
-
-    export interface ChamberDatum {
-        order: number;
-        showCount: boolean;
-        tooLarge: boolean;
-        x: number;
-        y: number;
-        label: LabelProps;
-        quarksByFlavor: Record<Flavor | "hadron", number[]>;
-        quarkRadius: number;
-    }
-</script>
-
 <script lang="ts">
     import Quark from "./Quark.svelte";
     import DropIndicator from "./DropIndicator.svelte";
     import Label, { type LabelProps } from "./Label.svelte";
     import { LayoutManager } from "../ui/layout.svelte.ts";
     import { MouseManager } from "../ui/mouse.svelte.ts";
+    import { StoreManager } from "../ui/store.svelte.ts";
 
     import {
         Hadronize,
@@ -33,7 +12,7 @@
         WINNING_HADRON_COUNT,
         type Result,
     } from "../Hadronize.ts";
-    import type { Flavor, QuarkStatus } from "../Quark.ts";
+
     import sl from "../cli/styledLog.ts";
     import {
         getEndgameChunks,
@@ -50,76 +29,24 @@
 
     let { gameParams }: Props = $props();
 
+    const LABEL_DEFAULT_COLOR = "black";
+    const LABEL_ACTIVE_COLOR = "#f2b74b";
+
     // Game params will never change after component mounting so it's fine if
     // we only capture the initial value.
     // svelte-ignore state_referenced_locally
     let game = $state(new Hadronize(...gameParams));
 
+    const store = new StoreManager(game, LABEL_DEFAULT_COLOR);
+
     let result: Result = $state(undefined);
     const getResult: () => Result = () => result;
 
-    let quarks: QuarkDatum[] = $state(
-        game.quarks.map((q) => {
-            let owner: number | undefined = undefined;
-            for (const player of game.players) {
-                if (player.chamber.indices.some((index) => index === q.index)) {
-                    owner = player.order;
-                    break;
-                }
-            }
-            return {
-                index: q.index,
-                status: q.status,
-                text: "",
-                x: 0,
-                y: 0,
-                owner,
-            };
-        }),
-    );
-
-    const LABEL_DEFAULT_COLOR = "black";
-    const LABEL_ACTIVE_COLOR = "#f2b74b";
-
-    let chambers: ChamberDatum[] = $state(
-        game.players.map((p, index) => {
-            const quarksByFlavor: ChamberDatum["quarksByFlavor"] = {
-                up: [],
-                down: [],
-                strange: [],
-                charm: [],
-                top: [],
-                bottom: [],
-                hadron: [],
-            };
-            p.chamber.indices.forEach((i) =>
-                quarksByFlavor[game.quarks[i].flavor].push(i),
-            );
-
-            return {
-                order: p.order,
-                count: 0,
-                showCount: false,
-                tooLarge: false,
-                x: -9999,
-                y: -9999,
-                quarksByFlavor,
-                quarkRadius: 75,
-                label: {
-                    x: 0,
-                    y: 0,
-                    text: game.players[p.order].name,
-                    color: LABEL_DEFAULT_COLOR,
-                    fontSizeRem: 2,
-                },
-            };
-        }),
-    );
-
     const layout = new LayoutManager(
         game,
-        quarks,
-        chambers,
+        store.quarks,
+        store.chambers,
+        () => store.syncQuarks(),
         getResult,
         LABEL_DEFAULT_COLOR,
         LABEL_ACTIVE_COLOR,
@@ -127,10 +54,15 @@
 
     game.produceQuark();
 
-    let superposed = $derived(quarks[game.superposedIndex!]);
-    const getSuperposed: () => QuarkDatum = () => superposed;
+    let superposed = $derived(store.quarks[game.superposedIndex!]);
+    const getSuperposed = () => superposed;
 
-    const mouse = new MouseManager(chambers, getSuperposed, layout, getResult);
+    const mouse = new MouseManager(
+        store.chambers,
+        getSuperposed,
+        layout,
+        getResult,
+    );
 
     let speed: number = $state(1);
 
@@ -145,7 +77,7 @@
         let result: Result = undefined;
         while (result === undefined) {
             const superposedIndex = game.superposedIndex ?? game.produceQuark();
-            superposed = quarks[superposedIndex];
+            superposed = store.quarks[superposedIndex];
             superposed.x = window.innerWidth / 2 - 25;
             superposed.y = window.innerHeight / 2 - 25;
             layout.update();
@@ -167,7 +99,7 @@
 
             if (observation === undefined) throw new Error();
 
-            const chamber = chambers[observerOrder];
+            const chamber = store.chambers[observerOrder];
             chamber.quarksByFlavor[observation.activeFlavor].push(
                 superposed.index,
             );
@@ -177,33 +109,7 @@
 
             await sleep(250);
 
-            if (observation.reaction === "tunneled") {
-                // Sync chambers
-                [observerOrder, game.activePlayer.order].forEach((order) => {
-                    chambers[order].quarksByFlavor[observation.activeFlavor] =
-                        game.players[order].chamber.indices.filter(
-                            (i) =>
-                                game.quarks[i].flavor ===
-                                observation.activeFlavor,
-                        );
-                });
-
-                chambers[observerOrder].tooLarge = false;
-            } else if (observation.reaction === "hadronized") {
-                const hadronIndices =
-                    chambers[observerOrder].quarksByFlavor[
-                        observation.activeFlavor
-                    ];
-                chambers[observerOrder].quarksByFlavor["hadron"].push(
-                    ...hadronIndices,
-                );
-
-                // Clear quarks from original flavor array
-                chambers[observerOrder].quarksByFlavor[
-                    observation.activeFlavor
-                ] = [];
-            }
-
+            store.syncChambers();
             layout.update();
 
             await sleep(150);
@@ -226,7 +132,7 @@
             }
 
             game.turn++;
-            chambers.forEach((c) => layout.updateChamberLabel(c));
+            store.chambers.forEach((c) => layout.updateChamberLabel(c));
         }
         return result;
     }
@@ -258,8 +164,8 @@
 
         const chambersToExplode =
             typeof result === "number"
-                ? chambers.filter((c) => c.order !== result)
-                : chambers;
+                ? store.chambers.filter((c) => c.order !== result)
+                : store.chambers;
 
         chambersToExplode.forEach((c) => {
             const flatIndicies: number[] = Object.values(
@@ -267,7 +173,7 @@
             ).flat();
 
             flatIndicies.forEach((quarkIndex) => {
-                const quark = quarks[quarkIndex];
+                const quark = store.quarks[quarkIndex];
                 quark.x =
                     Math.round(Math.random()) * (layout.center.x * 2 + 100) -
                     50;
@@ -278,7 +184,7 @@
         });
 
         if (typeof result === "number") {
-            const winningChamber = chambers[result];
+            const winningChamber = store.chambers[result];
             winningChamber.x = layout.center.x;
             winningChamber.y = layout.center.y;
             winningChamber.showCount = false;
@@ -301,7 +207,7 @@
 
 <main class={mouse.superposedQuarkPressed ? "grabbing" : ""}>
     <div id="quarks">
-        {#each quarks as q, index}
+        {#each store.quarks as q, index}
             <Quark
                 quark={game.quarks[q.index]}
                 status={q.status}
@@ -317,7 +223,7 @@
     </div>
 
     <div class="chamberLabels">
-        {#each chambers as chamber}
+        {#each store.chambers as chamber}
             <Label {...chamber.label} />
         {/each}
     </div>
