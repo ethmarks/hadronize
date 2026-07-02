@@ -1,5 +1,5 @@
 <script module lang="ts">
-    interface QuarkDatum {
+    export interface QuarkDatum {
         x: number;
         y: number;
         index: number;
@@ -8,7 +8,7 @@
         owner: number | undefined;
     }
 
-    interface ChamberDatum {
+    export interface ChamberDatum {
         order: number;
         showCount: boolean;
         tooLarge: boolean;
@@ -26,6 +26,7 @@
         type DropIndicatorDTO,
     } from "./DropIndicator.svelte";
     import Label, { type LabelProps } from "./Label.svelte";
+    import { LayoutManager, center } from "../ui/layout.svelte.ts";
 
     import {
         Hadronize,
@@ -33,9 +34,7 @@
         WINNING_HADRON_COUNT,
         type Result,
     } from "../Hadronize.ts";
-    import { onMount } from "svelte";
     import type { Flavor, QuarkStatus } from "../Quark.ts";
-    import { getVertexPos, getVertexDistance } from "../utils/polygon.ts";
     import sl from "../cli/styledLog.ts";
     import {
         getEndgameChunks,
@@ -43,6 +42,8 @@
         getStateChunks,
         type CliOptions,
     } from "../cli/print.ts";
+
+    import { onMount } from "svelte";
 
     interface Props {
         gameParams: ConstructorParameters<typeof Hadronize>;
@@ -115,6 +116,15 @@
         }),
     );
 
+    const layout = new LayoutManager(
+        game,
+        quarks,
+        chambers,
+        () => result,
+        LABEL_DEFAULT_COLOR,
+        LABEL_ACTIVE_COLOR,
+    );
+
     game.produceQuark();
 
     let superposed = $derived(quarks[game.superposedIndex!]);
@@ -167,7 +177,7 @@
             chambers.forEach((c) => {
                 if (c.showCount === true) {
                     c.showCount = false;
-                    update();
+                    layout.update();
                 }
             });
         } else {
@@ -188,7 +198,7 @@
                 } else {
                     if (hoveredChamber.showCount === false) {
                         hoveredChamber.showCount = true;
-                        update();
+                        layout.update();
                     }
                 }
             }
@@ -208,154 +218,6 @@
         }
     }
 
-    let centerX = $state(0);
-    let centerY = $state(0);
-    let chamberRadius = $derived(Math.min(centerX, centerY) * 0.5);
-
-    function updateChamberContent(c: ChamberDatum) {
-        if (c.showCount === false && c.tooLarge === false) {
-            const flatIndicies: number[] = Object.values(
-                c.quarksByFlavor,
-            ).flat();
-
-            const sides = flatIndicies.length;
-
-            let spacing: number = getVertexDistance(sides, c.quarkRadius);
-
-            // Will cause an infinite loop if run with 1 or fewer sides
-            if (sides > 1) {
-                while (spacing < 60) {
-                    c.quarkRadius += 1;
-                    spacing = getVertexDistance(sides, c.quarkRadius);
-                }
-                while (spacing > 80) {
-                    c.quarkRadius -= 1;
-                    spacing = getVertexDistance(sides, c.quarkRadius);
-                }
-            }
-
-            flatIndicies.forEach((quarkIndex, i) => {
-                const quarkPos =
-                    sides === 1
-                        ? { x: c.x, y: c.y }
-                        : getVertexPos(
-                              c.x,
-                              c.y,
-                              sides,
-                              i,
-                              c.quarkRadius,
-                              c.order / chambers.length,
-                          );
-
-                if (
-                    c.quarkRadius >= chamberSpacing / 2 ||
-                    quarkPos.x > centerX * 2 - 25 ||
-                    quarkPos.x < 0 + 25 ||
-                    quarkPos.y > centerY * 2 - 25 ||
-                    quarkPos.y < 0 + 25
-                ) {
-                    c.tooLarge = true;
-                }
-
-                const UIquark = quarks[quarkIndex];
-                const gameQuark = game.quarks[quarkIndex];
-                UIquark.x = quarkPos.x - 25;
-                UIquark.y = quarkPos.y - 25;
-
-                UIquark.text = gameQuark.isHadronized
-                    ? "h"
-                    : gameQuark.flavor.slice(0, 1);
-            });
-        } else {
-            const nonEmptyByFlavor = Object.entries(c.quarksByFlavor).filter(
-                ([_, indices]) => indices.length > 0,
-            ) as [Flavor | "hadron", number[]][];
-
-            const hasHadrons = nonEmptyByFlavor.some(
-                ([flavor, _]) => flavor === "hadron",
-            );
-
-            const sides = hasHadrons
-                ? nonEmptyByFlavor.length - 1
-                : nonEmptyByFlavor.length;
-
-            let spacing: number = getVertexDistance(sides, c.quarkRadius);
-
-            // Will cause an infinite loop if run with 1 or fewer sides
-            if (sides > 1) {
-                while (spacing < 100) {
-                    c.quarkRadius += 1;
-                    spacing = getVertexDistance(sides, c.quarkRadius);
-                }
-                while (spacing > 120) {
-                    c.quarkRadius -= 1;
-                    spacing = getVertexDistance(sides, c.quarkRadius);
-                }
-            }
-
-            nonEmptyByFlavor.forEach(([flavor, indices], i) => {
-                const quarkPos =
-                    flavor === "hadron"
-                        ? { x: c.x, y: c.y }
-                        : getVertexPos(c.x, c.y, sides, i, c.quarkRadius);
-                indices.forEach((quarkIndex) => {
-                    const UIquark = quarks[quarkIndex];
-                    UIquark.x = quarkPos.x - 25;
-                    UIquark.y = quarkPos.y - 25;
-                    UIquark.text = indices.length.toString();
-                });
-            });
-        }
-    }
-
-    function updateChamberLabel(c: ChamberDatum) {
-        c.label.x = c.x;
-        c.label.y = c.y - c.quarkRadius - 50;
-        c.label.color =
-            game.activePlayer.order === c.order
-                ? LABEL_ACTIVE_COLOR
-                : LABEL_DEFAULT_COLOR;
-    }
-
-    let chamberSpacing: number = $derived(
-        getVertexDistance(chambers.length, chamberRadius),
-    );
-
-    const SHUFFLE_CHAMBERS = false;
-
-    function update() {
-        centerX = window.innerWidth / 2;
-        centerY = window.innerHeight / 2;
-
-        chambers.forEach((c) => {
-            const chamberPos = getVertexPos(
-                centerX,
-                centerY,
-                chambers.length,
-                c.order,
-                chamberRadius,
-                SHUFFLE_CHAMBERS
-                    ? ((game.turn - 1) / chambers.length) * -1 - 0.25
-                    : -0.25,
-            );
-            c.x = chamberPos.x;
-            c.y = chamberPos.y;
-
-            updateChamberContent(c);
-            updateChamberLabel(c);
-        });
-
-        quarks.forEach((q) => {
-            q.status = game.quarks[q.index].status;
-
-            if (q.status === "latent" || q.status === "superposed") {
-                q.text = "?";
-                q.x = window.innerWidth / 2 - 25;
-                q.y = window.innerHeight / 2 - 25;
-            }
-        });
-    }
-
     let speed: number = $state(1);
 
     async function sleep(ms: number) {
@@ -372,7 +234,7 @@
             superposed = quarks[superposedIndex];
             superposed.x = window.innerWidth / 2 - 25;
             superposed.y = window.innerHeight / 2 - 25;
-            update();
+            layout.update();
 
             await sleep(500);
 
@@ -397,7 +259,7 @@
             );
             superposed.owner = chamber.order;
             game.superposedIndex = undefined;
-            update();
+            layout.update();
 
             await sleep(250);
 
@@ -428,7 +290,7 @@
                 ] = [];
             }
 
-            update();
+            layout.update();
 
             await sleep(150);
 
@@ -450,17 +312,13 @@
             }
 
             game.turn++;
-            chambers.forEach((c) => updateChamberLabel(c));
+            chambers.forEach((c) => layout.updateChamberLabel(c));
         }
         return result;
     }
 
     onMount(async () => {
-        window.addEventListener("resize", (_) => {
-            if (result === undefined) update();
-        });
-
-        update();
+        layout.init();
 
         const opt: CliOptions = {
             abbreviate: false,
@@ -496,8 +354,8 @@
 
             flatIndicies.forEach((quarkIndex) => {
                 const quark = quarks[quarkIndex];
-                quark.x = Math.round(Math.random()) * (centerX * 2 + 100) - 50;
-                quark.y = centerY * 2;
+                quark.x = Math.round(Math.random()) * (center.x * 2 + 100) - 50;
+                quark.y = center.y * 2;
             });
 
             c.label.color = "transparent";
@@ -505,12 +363,12 @@
 
         if (typeof result === "number") {
             const winningChamber = chambers[result];
-            winningChamber.x = centerX;
-            winningChamber.y = centerY;
+            winningChamber.x = center.x;
+            winningChamber.y = center.y;
             winningChamber.showCount = false;
             winningChamber.tooLarge = false;
-            updateChamberContent(winningChamber);
-            updateChamberLabel(winningChamber);
+            layout.updateChamberContent(winningChamber);
+            layout.updateChamberLabel(winningChamber);
             winningChamber.label.color = "#98c379";
             winningChamber.label.text += " Wins!";
         }
