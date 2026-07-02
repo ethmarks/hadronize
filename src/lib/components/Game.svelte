@@ -22,11 +22,10 @@
 
 <script lang="ts">
     import Quark from "./Quark.svelte";
-    import DropIndicator, {
-        type DropIndicatorDTO,
-    } from "./DropIndicator.svelte";
+    import DropIndicator from "./DropIndicator.svelte";
     import Label, { type LabelProps } from "./Label.svelte";
     import { LayoutManager } from "../ui/layout.svelte.ts";
+    import { MouseManager } from "../ui/mouse.svelte.ts";
 
     import {
         Hadronize,
@@ -57,6 +56,7 @@
     let game = $state(new Hadronize(...gameParams));
 
     let result: Result = $state(undefined);
+    const getResult: () => Result = () => result;
 
     let quarks: QuarkDatum[] = $state(
         game.quarks.map((q) => {
@@ -120,7 +120,7 @@
         game,
         quarks,
         chambers,
-        () => result,
+        getResult,
         LABEL_DEFAULT_COLOR,
         LABEL_ACTIVE_COLOR,
     );
@@ -128,95 +128,9 @@
     game.produceQuark();
 
     let superposed = $derived(quarks[game.superposedIndex!]);
+    const getSuperposed: () => QuarkDatum = () => superposed;
 
-    let superposedQuarkPressed: boolean = $state(false);
-    let mouse: { x: number; y: number } = $state({ x: 0, y: 0 });
-
-    /**
-     * The pixels
-     */
-    const DROP_PADDING = 50;
-
-    let hoveredChamber: ChamberDatum | undefined = $state(undefined);
-    let dropIndicator: DropIndicatorDTO = $state({
-        active: false,
-        radius: 0,
-        x: 0,
-        y: 0,
-    });
-
-    function detectDrop() {
-        let isSuperposedOverHovered = false;
-        for (const chamber of chambers) {
-            const mouseDistance = Math.sqrt(
-                Math.abs(chamber.x - mouse.x) ** 2 +
-                    Math.abs(chamber.y - mouse.y) ** 2,
-            );
-            const superposedDistance = Math.sqrt(
-                Math.abs(chamber.x - superposed.x) ** 2 +
-                    Math.abs(chamber.y - superposed.y) ** 2,
-            );
-
-            if (superposedDistance < chamber.quarkRadius + DROP_PADDING) {
-                isSuperposedOverHovered = true;
-            }
-
-            if (mouseDistance < chamber.quarkRadius + DROP_PADDING) {
-                hoveredChamber = chamber;
-
-                // Multiple chambers can't be hovered over simultaneously, so we
-                // skip checking the others.
-                break;
-            }
-
-            hoveredChamber = undefined;
-            dropIndicator.active = false;
-        }
-
-        if (hoveredChamber === undefined) {
-            chambers.forEach((c) => {
-                if (c.showCount === true) {
-                    c.showCount = false;
-                    layout.update();
-                }
-            });
-        } else {
-            if (superposedQuarkPressed) {
-                dropIndicator.active = true;
-                dropIndicator.radius =
-                    hoveredChamber.quarkRadius + DROP_PADDING;
-                dropIndicator.x = hoveredChamber.x;
-                dropIndicator.y = hoveredChamber.y;
-            } else {
-                if (isSuperposedOverHovered) {
-                    dropIndicator.active = false;
-                    // Collapse the quark into the selected chamber
-                    const turnEvent = new CustomEvent("takeTurn", {
-                        detail: { playerOrder: hoveredChamber.order },
-                    });
-                    window.dispatchEvent(turnEvent);
-                } else {
-                    if (hoveredChamber.showCount === false) {
-                        hoveredChamber.showCount = true;
-                        layout.update();
-                    }
-                }
-            }
-        }
-    }
-
-    function handleMouseMove(event: MouseEvent) {
-        if (result === undefined) {
-            mouse = { x: event.clientX, y: event.clientY };
-
-            if (superposedQuarkPressed) {
-                superposed.x = mouse.x - 25;
-                superposed.y = mouse.y - 25;
-            }
-
-            detectDrop();
-        }
-    }
+    const mouse = new MouseManager(chambers, getSuperposed, layout, getResult);
 
     let speed: number = $state(1);
 
@@ -340,7 +254,7 @@
         const endgameChunks = getEndgameChunks(game, result, opt);
         sl(endgameChunks);
 
-        dropIndicator.active = false;
+        mouse.dropIndicator.active = false;
 
         const chambersToExplode =
             typeof result === "number"
@@ -365,8 +279,8 @@
 
         if (typeof result === "number") {
             const winningChamber = chambers[result];
-            winningChamber.x = center.x;
-            winningChamber.y = center.y;
+            winningChamber.x = layout.center.x;
+            winningChamber.y = layout.center.y;
             winningChamber.showCount = false;
             winningChamber.tooLarge = false;
             layout.updateChamberContent(winningChamber);
@@ -378,14 +292,14 @@
 </script>
 
 <svelte:window
-    on:mousemove={handleMouseMove}
+    on:mousemove={(e: MouseEvent) => mouse.handleMouseMove(e)}
     onmouseup={() => {
-        superposedQuarkPressed = false;
-        detectDrop();
+        mouse.superposedQuarkPressed = false;
+        mouse.detectDrop();
     }}
 />
 
-<main class={superposedQuarkPressed ? "grabbing" : ""}>
+<main class={mouse.superposedQuarkPressed ? "grabbing" : ""}>
     <div id="quarks">
         {#each quarks as q, index}
             <Quark
@@ -396,7 +310,7 @@
                 y={q.y}
                 onmousedown={() => {
                     if (index === superposed.index)
-                        superposedQuarkPressed = true;
+                        mouse.superposedQuarkPressed = true;
                 }}
             />
         {/each}
@@ -408,12 +322,7 @@
         {/each}
     </div>
 
-    <DropIndicator
-        x={dropIndicator.x}
-        y={dropIndicator.y}
-        radius={dropIndicator.radius}
-        active={dropIndicator.active}
-    />
+    <DropIndicator {...mouse.dropIndicator} />
 </main>
 
 <style lang="scss">
