@@ -1,19 +1,12 @@
 <script lang="ts">
     import Quark from "./Quark.svelte";
     import DropIndicator from "./DropIndicator.svelte";
-    import Label, { type LabelProps } from "./Label.svelte";
+    import Label from "./Label.svelte";
     import { LayoutManager } from "../ui/layout.svelte.ts";
     import { MouseManager } from "../ui/mouse.svelte.ts";
     import { StoreManager } from "../ui/store.svelte.ts";
 
-    import {
-        Hadronize,
-        TURN_LIMIT,
-        WINNING_HADRON_COUNT,
-        type Observation,
-        type Result,
-    } from "../Hadronize.ts";
-    import type { Player } from "../Player.ts";
+    import { Hadronize, type Observation, type Result } from "../Hadronize.ts";
 
     import sl from "../cli/styledLog.ts";
     import {
@@ -62,12 +55,9 @@
 
     game.produceQuark();
 
-    let superposed = $derived(store.quarks[game.superposedIndex!]);
-    const getSuperposed = () => superposed;
-
     const mouse = new MouseManager(
         store.chambers,
-        getSuperposed,
+        () => store.superposed,
         layout,
         getResult,
     );
@@ -88,9 +78,9 @@
             result = await game.executeTurn({
                 pre: async (ctx: { game: Hadronize }) => {
                     superposedIndex = ctx.game.superposedIndex!;
-                    superposed = store.quarks[superposedIndex];
-                    superposed.x = layout.center.x - 25;
-                    superposed.y = layout.center.y - 25;
+                    store.superposed = store.quarks[superposedIndex];
+                    store.superposed.x = layout.center.x - 25;
+                    store.superposed.y = layout.center.y - 25;
                     layout.update();
                     await sleep(500);
                 },
@@ -164,7 +154,7 @@
                 x={q.x}
                 y={q.y}
                 onmousedown={() => {
-                    if (index === superposed.index)
+                    if (index === store.superposed.index)
                         mouse.superposedQuarkPressed = true;
                 }}
             />

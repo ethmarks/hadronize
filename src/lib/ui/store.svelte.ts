@@ -32,6 +32,7 @@ export interface ChamberDatum {
 export class StoreManager {
   public quarks: QuarkDatum[];
   public chambers: ChamberDatum[];
+  public superposed: QuarkDatum;
 
   constructor(
     public game: Hadronize,
@@ -95,6 +96,9 @@ export class StoreManager {
         };
       }),
     );
+
+    // Define superposed
+    this.superposed = $derived(this.quarks[game.superposedIndex!]);
   }
 
   syncQuarks(): void {
