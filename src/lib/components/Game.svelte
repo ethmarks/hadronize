@@ -85,9 +85,10 @@
     ): Promise<Exclude<Result, undefined>> {
         let result: Result = undefined;
         while (result === undefined) {
+            let superposedIndex: number;
             result = await game.executeTurn({
                 pre: async (ctx: { game: Hadronize }) => {
-                    const superposedIndex = ctx.game.superposedIndex!;
+                    superposedIndex = ctx.game.superposedIndex!;
                     superposed = store.quarks[superposedIndex];
                     superposed.x = layout.center.x - 25;
                     superposed.y = layout.center.y - 25;
@@ -97,7 +98,10 @@
                 preDriver: async (ctx: { game: Hadronize }) => {
                     sl(getStateChunks(ctx.game.state!, opt));
                 },
-                preReaction: async () => {
+                preReaction: async (ctx: { observation: Observation }) => {
+                    store.quarks[superposedIndex].owner =
+                        ctx.observation.observer;
+
                     store.syncChambers();
                     layout.update();
                     await sleep(250);
