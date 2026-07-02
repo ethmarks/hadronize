@@ -124,6 +124,16 @@ export interface CurrentGameState extends BaseGameState {
   timeline: PastGameState[];
 }
 
+export interface HookContext {
+  turn: number;
+  state: CurrentGameState;
+  observer: Player;
+  observation: Observation;
+}
+
+/**
+ * The main game class.
+ */
 export class Hadronize {
   /**
    * All extant quarks.
@@ -474,13 +484,28 @@ export class Hadronize {
    *
    * @returns
    */
-  async executeTurn(preDriverFunc?: () => Promise<void>): Promise<Result> {
+  async executeTurn(
+    hooks?: Partial<{
+      pre: (
+        ctx: Omit<HookContext, "state" | "observer" | "observation">,
+      ) => Promise<void>;
+      preDriver: (
+        ctx: Omit<HookContext, "observer" | "observation">,
+      ) => Promise<void>;
+      preObservation: (ctx: Omit<HookContext, "observation">) => Promise<void>;
+      preReaction: (ctx: HookContext) => Promise<void>;
+      preChecks: (ctx: HookContext) => Promise<void>;
+      preTurnIncrement: (ctx: HookContext) => Promise<void>;
+      post: (ctx: HookContext) => Promise<void>;
+    }>,
+  ): Promise<Result> {
+    await hooks?.pre?.({ turn: this.turn });
+
     this.produceQuark();
 
     const state = this.updateState();
 
-    // Call the preDriverFunc, if it was provided.
-    if (preDriverFunc) await preDriverFunc();
+    await hooks?.preDriver?.({ state, turn: this.turn });
 
     const observerOrder = await this.activePlayer.driver(
       state,
@@ -489,8 +514,20 @@ export class Hadronize {
 
     const observer = this.players[observerOrder];
 
+    await hooks?.preObservation?.({ turn: this.turn, state, observer });
+
     const observation = this.executeObservation(observer, this.activePlayer);
+
+    await hooks?.preReaction?.({
+      turn: this.turn,
+      state,
+      observer,
+      observation,
+    });
+
     this.executeReaction(observation, this.activePlayer);
+
+    await hooks?.preChecks?.({ turn: this.turn, state, observer, observation });
 
     // Check for winners _before_ we check if the turn limit has been exceeded.
     for (const player of this.players) {
@@ -506,7 +543,16 @@ export class Hadronize {
       return this.result;
     }
 
+    await hooks?.preTurnIncrement?.({
+      turn: this.turn,
+      state,
+      observer,
+      observation,
+    });
+
     this.turn++;
+
+    await hooks?.post?.({ turn: this.turn, state, observer, observation });
   }
 }
 

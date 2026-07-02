@@ -1,4 +1,4 @@
-import { Hadronize, type Result } from "../Hadronize.ts";
+import { Hadronize, type CurrentGameState, type Result } from "../Hadronize.ts";
 
 import sl, { type slChunk } from "./styledLog.ts";
 import {
@@ -15,14 +15,16 @@ export async function main(
 ): Promise<slChunk[]> {
   const game = new Hadronize(...gameParams);
 
-  const preDriverFunc = async () => {
-    sl(getStateChunks(game.state!, opt));
-  };
+  async function preDriverHook(ctx: {
+    state: CurrentGameState;
+  }): Promise<void> {
+    sl(getStateChunks(ctx.state, opt));
+  }
 
   let result: Result = undefined;
 
   while (result === undefined) {
-    result = await game.executeTurn(preDriverFunc);
+    result = await game.executeTurn({ preDriver: preDriverHook });
     if (typeof storeResult !== "undefined") storeResult(result);
   }
 
