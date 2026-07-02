@@ -12,7 +12,7 @@ import type {
 } from "../Hadronize.ts";
 import { FLAVORS, getHadronTerm, type Flavor } from "../Quark.ts";
 
-import { type Style, type slChunk } from "./styledLog.ts";
+import sl, { type Style, type slChunk } from "./styledLog.ts";
 
 export interface CliOptions {
   abbreviate: boolean;
@@ -292,7 +292,6 @@ export function getStateChunks(
 export function getEndgameChunks(
   game: Hadronize,
   result: Exclude<Result, undefined>,
-  opt: CliOptions,
 ): slChunk[] {
   const chunks: slChunk[] = [];
   if (result === "too many turns") {
@@ -311,4 +310,20 @@ export function getEndgameChunks(
   }
 
   return chunks;
+}
+
+export function logFinalObservation(
+  game: Hadronize,
+  result: Exclude<Result, undefined>,
+  opt: CliOptions,
+): slChunk[] {
+  const observation = game.mostRecentObservation!;
+  const active = game.state!.players[game.state!.activePlayer];
+  const observer = game.state!.players[observation.observer];
+  sl(getObservationChunks(active, observer, observation, opt));
+  sl(["\n---\n"]);
+  const endgameChunks = getEndgameChunks(game, result);
+  sl(endgameChunks);
+
+  return endgameChunks;
 }

@@ -17,9 +17,8 @@
 
     import sl from "../cli/styledLog.ts";
     import {
-        getEndgameChunks,
-        getObservationChunks,
         getStateChunks,
+        logFinalObservation,
         type CliOptions,
     } from "../cli/print.ts";
 
@@ -34,7 +33,7 @@
     const LABEL_DEFAULT_COLOR = "black";
     const LABEL_ACTIVE_COLOR = "#f2b74b";
 
-    const SL_OPT: CliOptions = {
+    const CLI_OPT: CliOptions = {
         abbreviate: false,
         showEmpty: false,
         showPlayerOrder: true,
@@ -122,18 +121,9 @@
     onMount(async () => {
         layout.init();
 
-        result = await mainLoop(game, SL_OPT);
+        result = await mainLoop(game, CLI_OPT);
 
-        // Log final observation
-        const observation = game.mostRecentObservation!;
-        const active = game.state!.players[game.state!.activePlayer];
-        const observer = game.state!.players[observation.observer];
-        sl(getObservationChunks(active, observer, observation, SL_OPT));
-        sl(["\n---\n"]);
-
-        // Log endgame chunks
-        const endgameChunks = getEndgameChunks(game, result, SL_OPT);
-        sl(endgameChunks);
+        logFinalObservation(game, result, CLI_OPT);
 
         mouse.dropIndicator.active = false;
 
