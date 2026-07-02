@@ -10,8 +10,10 @@
         Hadronize,
         TURN_LIMIT,
         WINNING_HADRON_COUNT,
+        type Observation,
         type Result,
     } from "../Hadronize.ts";
+    import type { Player } from "../Player.ts";
 
     import sl from "../cli/styledLog.ts";
     import {
@@ -31,6 +33,13 @@
 
     const LABEL_DEFAULT_COLOR = "black";
     const LABEL_ACTIVE_COLOR = "#f2b74b";
+
+    const SL_OPT: CliOptions = {
+        abbreviate: false,
+        showEmpty: false,
+        showPlayerOrder: true,
+        showPreviousObservation: true,
+    };
 
     // Game params will never change after component mounting so it's fine if
     // we only capture the initial value.
@@ -76,66 +85,32 @@
     ): Promise<Exclude<Result, undefined>> {
         let result: Result = undefined;
         while (result === undefined) {
-            const superposedIndex = game.superposedIndex ?? game.produceQuark();
-            superposed = store.quarks[superposedIndex];
-            superposed.x = window.innerWidth / 2 - 25;
-            superposed.y = window.innerHeight / 2 - 25;
-            layout.update();
-
-            await sleep(500);
-
-            const state = game.updateState();
-
-            sl(getStateChunks(state, opt));
-
-            const observerOrder = await game.activePlayer.driver(
-                state,
-                game.activePlayer.scratchpad,
-            );
-
-            game.executeObservation(
-                game.players[observerOrder],
-                game.activePlayer,
-            );
-
-            const observation = game.mostRecentObservation;
-
-            if (observation === undefined) throw new Error();
-
-            const chamber = store.chambers[observerOrder];
-            chamber.quarksByFlavor[observation.activeFlavor].push(
-                superposed.index,
-            );
-            superposed.owner = chamber.order;
-            game.superposedIndex = undefined;
-            layout.update();
-
-            await sleep(250);
-
-            store.syncChambers();
-            layout.update();
-
-            await sleep(150);
-
-            // Check for winners _before_ we check if the turn limit has been exceeded.
-            for (const player of game.players) {
-                if (player.score >= WINNING_HADRON_COUNT) {
-                    result = player.order;
-                    break;
-                }
-            }
-
-            // Check if the turn limit has been exceeded.
-            if (
-                game.turn >= TURN_LIMIT ||
-                game.usedQuarks >= game.quarks.length
-            ) {
-                result = "too many turns";
-                break;
-            }
-
-            game.turn++;
-            store.chambers.forEach((c) => layout.updateChamberLabel(c));
+            result = await game.executeTurn({
+                pre: async (ctx: { game: Hadronize }) => {
+                    const superposedIndex = ctx.game.superposedIndex!;
+                    superposed = store.quarks[superposedIndex];
+                    superposed.x = layout.center.x - 25;
+                    superposed.y = layout.center.y - 25;
+                    layout.update();
+                    await sleep(500);
+                },
+                preDriver: async (ctx: { game: Hadronize }) => {
+                    sl(getStateChunks(ctx.game.state!, opt));
+                },
+                preReaction: async () => {
+                    store.syncChambers();
+                    layout.update();
+                    await sleep(250);
+                },
+                preChecks: async () => {
+                    store.syncChambers();
+                    layout.update();
+                    await sleep(150);
+                },
+                post: async () => {
+                    store.chambers.forEach((c) => layout.updateChamberLabel(c));
+                },
+            });
         }
         return result;
     }
@@ -143,24 +118,17 @@
     onMount(async () => {
         layout.init();
 
-        const opt: CliOptions = {
-            abbreviate: false,
-            showEmpty: false,
-            showPlayerOrder: true,
-            showPreviousObservation: true,
-        };
-
-        result = await mainLoop(game, opt);
+        result = await mainLoop(game, SL_OPT);
 
         // Log final observation
         const observation = game.mostRecentObservation!;
         const active = game.state!.players[game.state!.activePlayer];
         const observer = game.state!.players[observation.observer];
-        sl(getObservationChunks(active, observer, observation, opt));
+        sl(getObservationChunks(active, observer, observation, SL_OPT));
         sl(["\n---\n"]);
 
         // Log endgame chunks
-        const endgameChunks = getEndgameChunks(game, result, opt);
+        const endgameChunks = getEndgameChunks(game, result, SL_OPT);
         sl(endgameChunks);
 
         mouse.dropIndicator.active = false;

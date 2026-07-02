@@ -125,8 +125,7 @@ export interface CurrentGameState extends BaseGameState {
 }
 
 export interface HookContext {
-  turn: number;
-  state: CurrentGameState;
+  game: Hadronize;
   observer: Player;
   observation: Observation;
 }
@@ -487,7 +486,7 @@ export class Hadronize {
   async executeTurn(
     hooks?: Partial<{
       pre: (
-        ctx: Omit<HookContext, "state" | "observer" | "observation">,
+        ctx: Omit<HookContext, "observer" | "observation">,
       ) => Promise<void>;
       preDriver: (
         ctx: Omit<HookContext, "observer" | "observation">,
@@ -499,13 +498,13 @@ export class Hadronize {
       post: (ctx: HookContext) => Promise<void>;
     }>,
   ): Promise<Result> {
-    await hooks?.pre?.({ turn: this.turn });
+    if (this.superposedIndex === undefined) this.produceQuark();
 
-    this.produceQuark();
+    await hooks?.pre?.({ game: this });
 
     const state = this.updateState();
 
-    await hooks?.preDriver?.({ state, turn: this.turn });
+    await hooks?.preDriver?.({ game: this });
 
     const observerOrder = await this.activePlayer.driver(
       state,
@@ -514,20 +513,15 @@ export class Hadronize {
 
     const observer = this.players[observerOrder];
 
-    await hooks?.preObservation?.({ turn: this.turn, state, observer });
+    await hooks?.preObservation?.({ game: this, observer });
 
     const observation = this.executeObservation(observer, this.activePlayer);
 
-    await hooks?.preReaction?.({
-      turn: this.turn,
-      state,
-      observer,
-      observation,
-    });
+    await hooks?.preReaction?.({ game: this, observer, observation });
 
     this.executeReaction(observation, this.activePlayer);
 
-    await hooks?.preChecks?.({ turn: this.turn, state, observer, observation });
+    await hooks?.preChecks?.({ game: this, observer, observation });
 
     // Check for winners _before_ we check if the turn limit has been exceeded.
     for (const player of this.players) {
@@ -543,16 +537,11 @@ export class Hadronize {
       return this.result;
     }
 
-    await hooks?.preTurnIncrement?.({
-      turn: this.turn,
-      state,
-      observer,
-      observation,
-    });
+    await hooks?.preTurnIncrement?.({ game: this, observer, observation });
 
     this.turn++;
 
-    await hooks?.post?.({ turn: this.turn, state, observer, observation });
+    await hooks?.post?.({ game: this, observer, observation });
   }
 }
 
