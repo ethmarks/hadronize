@@ -36,8 +36,8 @@ export class LoopManager {
     const hooks: TurnHooks = {
       pre: async (ctx: { game: Hadronize }) => {
         this.store.superposed = this.store.quarks[ctx.game.superposedIndex!];
-        this.store.superposed.x = this.layout.center.x - 25;
-        this.store.superposed.y = this.layout.center.y - 25;
+        this.store.superposed.x = this.layout.container.x - 25;
+        this.store.superposed.y = this.layout.container.y - 25;
 
         this.layout.update();
 
@@ -86,8 +86,8 @@ export class LoopManager {
 
     if (typeof this.store.result === "number") {
       const winningChamber = this.store.chambers[this.store.result];
-      winningChamber.x = this.layout.center.x;
-      winningChamber.y = this.layout.center.y;
+      winningChamber.x = this.layout.container.x;
+      winningChamber.y = this.layout.container.y;
       winningChamber.showCount = false;
       winningChamber.tooLarge = false;
       this.layout.updateChamberContent(winningChamber);

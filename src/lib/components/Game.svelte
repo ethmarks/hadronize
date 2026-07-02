@@ -113,7 +113,10 @@
 
 <style lang="scss">
     main {
-        min-height: 100vh;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
 
         /* Cool dot grid background */
         --bg-color: #fffff8;

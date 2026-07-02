@@ -5,8 +5,17 @@ import { getVertexPos, getVertexDistance } from "../utils/polygon.ts";
 
 const SHUFFLE_CHAMBERS = false;
 
+class Container {
+  width: number = $state(0);
+  height: number = $state(0);
+  left: number = $state(0);
+  top: number = $state(0);
+  x: number = $derived(this.width / 2);
+  y: number = $derived(this.height / 2);
+}
+
 export class LayoutManager {
-  center = $state({ x: 0, y: 0 });
+  public container = new Container();
 
   constructor(
     public game: Hadronize,
@@ -19,7 +28,7 @@ export class LayoutManager {
   ) {}
 
   public get chamberRadius(): number {
-    return Math.min(this.center.x, this.center.y) * 0.5;
+    return Math.min(this.container.x, this.container.y) * 0.5;
   }
 
   public get chamberSpacing(): number {
@@ -71,9 +80,9 @@ export class LayoutManager {
 
         if (
           c.quarkRadius >= this.chamberSpacing / 2 ||
-          quarkPos.x > this.center.x * 2 - 25 ||
+          quarkPos.x > this.container.x * 2 - 25 ||
           quarkPos.x < 0 + 25 ||
-          quarkPos.y > this.center.y * 2 - 25 ||
+          quarkPos.y > this.container.y * 2 - 25 ||
           quarkPos.y < 0 + 25
         ) {
           c.tooLarge = true;
@@ -137,14 +146,24 @@ export class LayoutManager {
         : this.labelDefaultColor;
   }
 
+  updateContainer() {
+    const gameContainer = document.getElementById("gameContainer");
+    if (gameContainer) {
+      const rect = gameContainer.getBoundingClientRect();
+      this.container.width = rect.width;
+      this.container.height = rect.height;
+      this.container.left = rect.left;
+      this.container.top = rect.top;
+    }
+  }
+
   update() {
-    this.center.x = window.innerWidth / 2;
-    this.center.y = window.innerHeight / 2;
+    this.updateContainer();
 
     this.chambers.forEach((c) => {
       const chamberPos = getVertexPos(
-        this.center.x,
-        this.center.y,
+        this.container.x,
+        this.container.y,
         this.chambers.length,
         c.order,
         this.chamberRadius,
@@ -160,11 +179,12 @@ export class LayoutManager {
     });
 
     this.syncQuarks();
+
     this.quarks.forEach((q) => {
       if (q.status === "latent" || q.status === "superposed") {
         q.text = "?";
-        q.x = this.center.x - 25;
-        q.y = this.center.y - 25;
+        q.x = this.container.x - 25;
+        q.y = this.container.y - 25;
       }
     });
   }
@@ -174,8 +194,8 @@ export class LayoutManager {
 
     flatIndicies.forEach((quarkIndex) => {
       const quark = this.quarks[quarkIndex];
-      quark.x = Math.round(Math.random()) * (this.center.x * 2 + 100) - 50;
-      quark.y = this.center.y * 2;
+      quark.x = Math.round(Math.random()) * (this.container.x * 2 + 100) - 50;
+      quark.y = this.container.y * 2;
     });
 
     c.label.color = "transparent";

@@ -93,7 +93,10 @@ export class MouseManager {
 
   handleMouseMove(event: MouseEvent) {
     if (this.getResult() === undefined) {
-      this.mousePos = { x: event.clientX, y: event.clientY };
+      this.mousePos = {
+        x: event.clientX - this.layout.container.left,
+        y: event.clientY - this.layout.container.top,
+      };
 
       if (this.superposedQuarkPressed) {
         this.superposed.x = this.mousePos.x - 25;
