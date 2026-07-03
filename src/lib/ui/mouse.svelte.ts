@@ -99,8 +99,8 @@ export class MouseManager {
       };
 
       if (this.superposedQuarkPressed) {
-        this.superposed.x = this.mousePos.x - 25;
-        this.superposed.y = this.mousePos.y - 25;
+        this.superposed.x = this.mousePos.x - this.layout.quarkSize / 2;
+        this.superposed.y = this.mousePos.y - this.layout.quarkSize / 2;
       }
 
       this.detectDrop();

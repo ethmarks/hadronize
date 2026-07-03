@@ -94,6 +94,7 @@
                 text={q.text}
                 x={q.x}
                 y={q.y}
+                size={layout.quarkSize}
                 onmousedown={() => {
                     if (index === store.superposed.index)
                         mouse.superposedQuarkPressed = true;

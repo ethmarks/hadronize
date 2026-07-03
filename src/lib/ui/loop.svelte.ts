@@ -36,8 +36,10 @@ export class LoopManager {
     const hooks: TurnHooks = {
       pre: async (ctx: { game: Hadronize }) => {
         this.store.superposed = this.store.quarks[ctx.game.superposedIndex!];
-        this.store.superposed.x = this.layout.container.x - 25;
-        this.store.superposed.y = this.layout.container.y - 25;
+        this.store.superposed.x =
+          this.layout.container.x - this.layout.quarkSize / 2;
+        this.store.superposed.y =
+          this.layout.container.y - this.layout.quarkSize / 2;
 
         this.layout.update();
 

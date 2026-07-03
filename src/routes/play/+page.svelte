@@ -82,6 +82,10 @@
         left: var(--sides);
         top: var(--top);
 
+        &:not(:has(:global(main))) {
+            pointer-events: none;
+        }
+
         :global(main) {
             border-radius: 2rem;
             animation: gameEntrance 0.9s 0.4s cubic-bezier(0.4, 0, 0.2, 1)

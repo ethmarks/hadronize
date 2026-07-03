@@ -8,10 +8,11 @@
         text: string;
         x: number;
         y: number;
+        size: number;
         onmousedown?: () => void;
     }
 
-    let { quark, status, text, x, y, onmousedown }: Props = $props();
+    let { quark, status, text, x, y, size, onmousedown }: Props = $props();
 
     const COLOR_MAP: Record<Flavor, string> = {
         up: "#5dafef", // blue
@@ -41,6 +42,8 @@
     data-status={status}
     style:left="{pos.current.x}px"
     style:top="{pos.current.y}px"
+    style:width="{size}px"
+    style:height="{size}px"
     {onmousedown}
     role="button"
     tabindex="0"
@@ -53,7 +56,7 @@
         style:--superpos3={superpos3}
     >
     </span>
-    <span class="letter">{text}</span>
+    <span class="letter" style:font-size="{size / 25}rem">{text}</span>
 </span>
 
 <style lang="scss">
@@ -68,9 +71,6 @@
     .quark {
         position: absolute;
         display: flex;
-
-        width: 50px;
-        height: 50px;
 
         transform: scale(1);
         opacity: 1;
@@ -146,7 +146,6 @@
             z-index: 2;
 
             color: white;
-            font-size: 2rem;
             text-align: center;
             text-shadow: 1px 1px slategray;
         }
