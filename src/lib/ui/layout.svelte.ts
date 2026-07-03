@@ -80,9 +80,9 @@ export class LayoutManager {
 
         if (
           c.quarkRadius >= this.chamberSpacing / 2 ||
-          quarkPos.x > this.container.x * 2 - 25 ||
+          quarkPos.x > this.container.width - 25 ||
           quarkPos.x < 0 + 25 ||
-          quarkPos.y > this.container.y * 2 - 25 ||
+          quarkPos.y > this.container.height - 25 ||
           quarkPos.y < 0 + 25
         ) {
           c.tooLarge = true;
@@ -194,8 +194,8 @@ export class LayoutManager {
 
     flatIndicies.forEach((quarkIndex) => {
       const quark = this.quarks[quarkIndex];
-      quark.x = Math.round(Math.random()) * (this.container.x * 2 + 100) - 50;
-      quark.y = this.container.y * 2;
+      quark.x = Math.round(Math.random()) * (this.container.width + 100) - 50;
+      quark.y = this.container.height;
     });
 
     c.label.color = "transparent";

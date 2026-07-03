@@ -136,11 +136,14 @@
     :global(body) {
         overflow: hidden;
         height: 100vh;
+
+        background: rgb(32, 33, 36);
+        color: white;
     }
 
     #gameContainer {
-        --top: 5rem;
-        --bottom: 3rem;
+        --top: 1rem;
+        --bottom: 1rem;
         --sides: 5rem;
         position: absolute;
         width: calc(100% - var(--sides) * 2);
@@ -150,6 +153,17 @@
 
         :global(main) {
             border-radius: 2rem;
+            animation: gameEntrance 0.9s 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+                backwards;
+        }
+    }
+
+    @keyframes gameEntrance {
+        from {
+            clip-path: xywh(50% 50% 0 0 round 1rem);
+        }
+        to {
+            clip-path: xywh(0 0 100% 100% round 1rem);
         }
     }
 </style>
