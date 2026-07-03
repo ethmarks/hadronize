@@ -26,6 +26,14 @@
 
 <Reset />
 
+<header>
+    <nav>
+        <a href="/">Home</a>
+        <a href="https://github.com/ethmarks/hadronize">GitHub</a>
+    </nav>
+    <h1>Hadronize</h1>
+</header>
+
 <InputForm {mountGame} />
 
 <div id="gameContainer" bind:this={gameContainer}></div>
@@ -37,6 +45,31 @@
 
         background: rgb(32, 33, 36);
         color: white;
+    }
+
+    header {
+        --margin-sides: 1rem;
+        margin-inline: var(--margin-sides);
+        width: calc(100% - var(--margin-sides) * 2);
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        height: 2.5rem;
+        position: relative;
+
+        h1 {
+            position: absolute;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 2.5rem;
+            z-index: 0;
+        }
+
+        nav {
+            z-index: 1;
+        }
     }
 
     #gameContainer {
