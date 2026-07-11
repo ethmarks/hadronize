@@ -15,6 +15,7 @@
     const navLinks: [Title, URL][] = [
         ["Home", "/"],
         ["Rules", "/rules"],
+        ["CLI", "/cli"],
         ["Play", "/play"],
     ];
 </script>
