@@ -6,6 +6,7 @@
     import { evDriver } from "../drivers/ev.ts";
     import { manualDriver } from "../drivers/manual.ts";
     import { onMount } from "svelte";
+    import { slide } from "svelte/transition";
 
     interface Props {
         submitForm: (seed: number, inits: PlayerInit[], speed?: number) => void;
@@ -75,8 +76,8 @@
         />
 
         <div id="players" class={disabled ? "disabled" : ""}>
-            {#each playerInputs.slice(0, playerCount) as player, index}
-                <div class="player" id={`player${index}`}>
+            {#each playerInputs.slice(0, playerCount) as player, index (index)}
+                <div transition:slide class="player" id={`player${index}`}>
                     <div class="player-input">
                         <label for={`player${index}-name`}
                             >Player {index}'s name</label
