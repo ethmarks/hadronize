@@ -85,7 +85,7 @@
     }}
 />
 
-<main class={mouse.superposedQuarkPressed ? "grabbing" : ""}>
+<div id="game" class={mouse.superposedQuarkPressed ? "grabbing" : ""}>
     <div id="quarks">
         {#each store.quarks as q, index}
             <Quark
@@ -110,10 +110,10 @@
     </div>
 
     <DropIndicator {...mouse.dropIndicator} />
-</main>
+</div>
 
 <style lang="scss">
-    main {
+    #game {
         position: relative;
         overflow: hidden;
         width: 100%;

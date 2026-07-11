@@ -32,6 +32,7 @@
 
 <style lang="scss">
     .label {
+        margin: 0;
         position: absolute;
         transform: translate(-50%, -50%);
 

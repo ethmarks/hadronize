@@ -1,6 +1,5 @@
 <svelte:head>
     <title>Hadronize</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/holiday.css" />
 </svelte:head>
 
 <main>

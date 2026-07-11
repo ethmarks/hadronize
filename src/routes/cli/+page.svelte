@@ -1,69 +1,29 @@
 <script lang="ts">
-    import {
-        MAX_PLAYERS,
-        MIN_PLAYERS,
-        type Result,
-    } from "../../lib/Hadronize.ts";
+    import { type Result } from "../../lib/Hadronize.ts";
     import { validatePlayerInits, type PlayerInit } from "../../lib/Player.ts";
-    import { prngDriver } from "../../lib/drivers/prng.ts";
-    import { manualDriver } from "../../lib/drivers/manual.ts";
 
     import { main } from "../../lib/cli/main.ts";
     import sl, { type slChunk } from "../../lib/cli/styledLog.ts";
-    import { getValidatedUserInputWithAbort } from "../../lib/cli/input.ts";
 
     import { base } from "$app/paths";
     import { onMount } from "svelte";
-
-    let seed: number = $state(0);
-
-    let playerCount: number = $state(2);
-
-    let playerInputs: { name: string; type: "Human" | "Bot" }[] = $state([
-        { name: "Alice", type: "Human" },
-        { name: "Bob", type: "Bot" },
-        { name: "Charlie", type: "Bot" },
-        { name: "David", type: "Bot" },
-        { name: "Eve", type: "Bot" },
-        { name: "Frank", type: "Bot" },
-    ]);
-
-    let playerInits: PlayerInit[] = $derived(
-        playerInputs.slice(0, playerCount).map((p) => {
-            return {
-                name: p.name,
-                driver: p.type === "Human" ? manualDriver : prngDriver,
-            };
-        }),
-    );
+    import InputForm from "$lib/components/InputForm.svelte";
 
     // For storing error messages from any source to display in the errorMsg
     // text at the Bottom of the fieldset.
     let errorMsg: string = $state("");
 
-    // For storing the resolve function for all Promise<void> tricks.
-    let resumeExecution: () => void;
-
-    // Pretty self-explanatory, yeah?
-    const specialValueString: string =
-        "string that no user will enter that can be used as a special value but that is still a string type.";
-
-    const consoleSetupAborter = new AbortController();
-
     let status: "not started" | Result = $state("not started");
 
     let endgameChunks: slChunk[] = $state([]);
 
-    async function startMain() {
-        consoleSetupAborter.abort();
+    async function startMain(seed: number, inits: PlayerInit[]) {
         errorMsg = "";
-
-        if (typeof resumeExecution !== "undefined") resumeExecution();
 
         sl([["Setup form submitted! Starting Hadronize...", "gray"]]);
 
         try {
-            validatePlayerInits(playerInits);
+            validatePlayerInits(inits);
         } catch (err) {
             errorMsg =
                 "Player names are not valid! Remember that you can't have duplicate player names.";
@@ -87,231 +47,23 @@
                 showPlayerOrder: true,
                 showPreviousObservation: true,
             },
-            [seed, playerInits],
+            [seed, inits],
             (result: Result) => (status = result),
         );
     }
 
-    /**
-     * Helper to solicit user input in the browser console via the
-     * `window.r` property.
-     */
-    async function browserConsoleInput(): Promise<string> {
-        let userInput: string = "";
-
-        function respond(input: unknown) {
-            if (typeof input === "string") {
-                userInput = input;
-            } else if (typeof input === "number") {
-                userInput = input.toString();
-            } else if (typeof input === "undefined") {
-                userInput = "";
-            } else {
-                userInput = specialValueString;
-            }
-
-            resumeExecution();
-        }
-
-        // I would have liked to use the anonymous getter trick that I used
-        // in the NBR CLI, but I don't think that setting `window.0` is a
-        // good idea, especially because we'd have to do it for all 32-bit
-        // numbers in order to allow all possible seed inputs to be inputted.
-        //
-        (window as any).r = respond;
-
-        // Alternative syntax
-        // Object.defineProperty(window, "r", {
-        //     set(val) {
-        //         respond(val);
-        //     },
-        //     configurable: true,
-        // });
-
-        await new Promise<void>((resolve) => {
-            resumeExecution = resolve;
-        });
-
-        // Clean up
-        delete (window as any)["r"];
-
-        return userInput;
-    }
-
-    /**
-     * Get the setup values from the console using getBrowserConsoleInput,
-     * allowing users to set up a Hadronize game entirely from the browser
-     * console without interacting with the webpage form.
-     */
-    async function setupViaConsole(): Promise<void> {
-        // Seed
-        const seedInput: string | undefined =
-            await getValidatedUserInputWithAbort(
-                browserConsoleInput,
-                [
-                    "What seed to use?",
-                    [" (enter an integer or leave blank for random)", "gray"],
-                ],
-                [
-                    ["Invalid seed!", "red"],
-                    " Enter a positive integer to use as the seed or leave blank for a random seed.",
-                ],
-                (input: string): boolean => {
-                    if (input === specialValueString) return false;
-                    if (input === "") return true;
-                    const num = Number(input);
-                    if (Number.isNaN(num)) return false;
-                    if (num < 1) return false;
-                    return true;
-                },
-                consoleSetupAborter.signal,
-            );
-        if (seedInput === undefined) return;
-        if (seedInput !== "") {
-            seed = Number(seedInput);
-        }
-        sl([
-            ["Using seed ", "gray"],
-            [seed.toString(), "yellow"],
-            [".\n", "gray"],
-        ]);
-
-        // Player Count
-        const playerCountInput: string | undefined =
-            await getValidatedUserInputWithAbort(
-                browserConsoleInput,
-                [
-                    "How many players?",
-                    [
-                        ` (enter an integer between ${MIN_PLAYERS} and ${MAX_PLAYERS})`,
-                        "gray",
-                    ],
-                ],
-                [
-                    ["Invalid player count!", "red"],
-                    ` Enter an integer between ${MIN_PLAYERS} and ${MAX_PLAYERS})`,
-                ],
-                (input: string): boolean => {
-                    if (input === specialValueString) return false;
-                    const num = Number(input);
-                    if (Number.isNaN(num)) return false;
-                    if (num < MIN_PLAYERS) return false;
-                    if (num > MAX_PLAYERS) return false;
-                    return true;
-                },
-                consoleSetupAborter.signal,
-            );
-        if (playerCountInput === undefined) return;
-        playerCount = Number(playerCountInput);
-
-        // Player Inits
-        for (let i: number = 0; i < playerCount; i++) {
-            const playerName: string | undefined =
-                await getValidatedUserInputWithAbort(
-                    browserConsoleInput,
-                    [
-                        `What is the name of `,
-                        [`player ${i}`, "magenta"],
-                        "?",
-                        [` (enter an string)`, "gray"],
-                    ],
-                    [
-                        ["Invalid player name!", "red"],
-                        ` Try only using letters, and ensure that there isn't already a player with that name.`,
-                    ],
-                    (input: string): boolean => {
-                        if (input === specialValueString) return false;
-                        if (
-                            playerInputs.some(
-                                (p, index) => p.name === input && index !== i,
-                            )
-                        )
-                            return false;
-                        return true;
-                    },
-                    consoleSetupAborter.signal,
-                );
-            if (playerName === undefined) return;
-            playerInputs[i].name = playerName;
-            playerInputs = playerInputs;
-
-            const playerType: string | undefined =
-                await getValidatedUserInputWithAbort(
-                    browserConsoleInput,
-                    [
-                        `What player type is `,
-                        [playerName, "magenta"],
-                        "?",
-                        [` (enter either "Human" or "Bot")`, "gray"],
-                    ],
-                    [
-                        ["Invalid player type!", "red"],
-                        ` Enter either "Human" or "Bot".`,
-                    ],
-                    (input: string): boolean => {
-                        if (input === specialValueString) return false;
-                        if (input.toLowerCase() === "human") return true;
-                        if (input.toLowerCase() === "bot") return true;
-                        return false;
-                    },
-                    consoleSetupAborter.signal,
-                );
-            if (playerType === undefined) return;
-            playerInputs[i].type =
-                playerType.toLowerCase() === "human" ? "Human" : "Bot";
-            playerInputs = playerInputs;
-
-            sl([
-                [`Player ${i} is named `, "gray"],
-                [playerInputs[i].name, "yellow"],
-                [" and is a ", "gray"],
-                [playerInputs[i].type, "yellow"],
-                [".\n", "gray"],
-            ]);
-        }
-
-        await startMain();
-    }
-
-    onMount(async () => {
-        seed = Math.floor(Math.random() * 2 ** 32);
-
-        // Welcome to Hadronize!
-        // To setup Hadronize in the console, use the r(myinput) syntax.
-        // For example, to respond to the query below about setting the seed,
-        // you could type r(42) to set the seed to the number 42. Remember to
-        // add quotes for string inputs.
+    function printWelcome() {
         sl([["Welcome to Hadronize!", "blue"]]);
-        sl([
-            ["To setup Hadronize in the console, use the ", "gray"],
-            ["r", "magenta"],
-            ["(", "white"],
-            ["myinput", "blue"],
-            [")", "white"],
-            [" syntax.", "gray"],
-        ]);
-        sl([
-            [
-                "For example, to respond to the query below about setting the seed, \nyou could type ",
-                "gray",
-            ],
-            ["r", "magenta"],
-            ["(", "white"],
-            ["42", "blue"],
-            [")", "white"],
-            [
-                " to set the seed to the number 42. Remember to \nadd quotes for string inputs.",
-                "gray",
-            ],
-        ]);
+        sl([["Waiting on setup form...", "gray"]]);
+    }
 
-        await setupViaConsole();
+    onMount(() => {
+        printWelcome();
     });
 </script>
 
 <svelte:head>
     <title>Hadronize CLI</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/holiday.css" />
 </svelte:head>
 
 <main>
@@ -350,89 +102,26 @@
             or in the browser console.
         </li>
 
-        <form>
-            <fieldset>
-                <legend>Hadronize Setup</legend>
+        <InputForm submitForm={startMain} disabled={status !== "not started"} />
 
-                <label for="seed">Seed (defaults to a random value)</label>
-                <input
-                    type="number"
-                    id="seed"
-                    min="0"
-                    step="1"
-                    bind:value={seed}
-                    disabled={status !== "not started"}
-                />
+        {#if errorMsg || status !== "not started"}
+            <blockquote class="msg">
+                {#if errorMsg !== ""}
+                    <p class="errorMsg">{errorMsg}</p>
+                {:else if status === undefined}
+                    <p>
+                        Hadronize is running! Open your browser console with <kbd
+                            >F12</kbd
+                        >
+                    </p>
+                {:else if status !== "not started"}
+                    <p>
+                        {@html sl(endgameChunks, "html", false)}
+                    </p>
+                {/if}
+            </blockquote>
+        {/if}
 
-                <label for="playerCount"
-                    >Player count (min is {MIN_PLAYERS}, max is {MAX_PLAYERS})</label
-                >
-                <input
-                    type="number"
-                    id="playerCount"
-                    min={MIN_PLAYERS}
-                    max={MAX_PLAYERS}
-                    step="1"
-                    bind:value={playerCount}
-                    disabled={status !== "not started"}
-                />
-
-                <div
-                    id="players"
-                    class={status !== "not started" ? "disabled" : ""}
-                >
-                    {#each playerInputs.slice(0, playerCount) as player, index}
-                        <div class="player" id={`player${index}`}>
-                            <div class="player-input">
-                                <label for={`player${index}-name`}
-                                    >Player {index}'s name</label
-                                >
-                                <input
-                                    type="text"
-                                    id={`player${index}-name`}
-                                    bind:value={player.name}
-                                    disabled={status !== "not started"}
-                                />
-                            </div>
-
-                            <div class="player-input">
-                                <label for={`player${index}-type`}
-                                    >{player.name}'s type</label
-                                >
-                                <select
-                                    id={`player${index}-type`}
-                                    bind:value={player.type}
-                                    disabled={status !== "not started"}
-                                >
-                                    <option value="Human">Human</option>
-                                    <option value="Bot">Bot</option>
-                                </select>
-                            </div>
-                        </div>
-                    {/each}
-                </div>
-
-                <button onclick={startMain} disabled={status !== "not started"}
-                    >Start Hadronize</button
-                >
-
-                <div class="msg">
-                    {#if errorMsg !== ""}
-                        <p class="errorMsg">{errorMsg}</p>
-                    {:else if status === undefined}
-                        <p>
-                            Hadronize is running! Open your browser console with <kbd
-                                >F12</kbd
-                            >
-                        </p>
-                    {:else if status !== "not started"}
-                        <p>
-                            {@html sl(endgameChunks, "html", false)}
-                        </p>
-                    {/if}
-                </div>
-            </fieldset>
-        </form>
         <li>
             Open your browser console with <kbd>F12</kbd> to start playing Hadronize.
         </li>
@@ -454,40 +143,6 @@
     @media (pointer: fine) {
         .finehide {
             display: none;
-        }
-    }
-
-    fieldset {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-
-        &:has([disabled]) {
-            label {
-                opacity: 0.5;
-            }
-        }
-    }
-
-    #players {
-        display: flex;
-        flex-direction: column;
-        padding: 0.5rem;
-
-        border: var(--border-width) solid var(--border-color);
-        border-radius: var(--border-radius);
-
-        .player {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 0.2rem;
-
-            .player-input {
-                display: flex;
-                flex: 1;
-                flex-direction: column;
-            }
         }
     }
 

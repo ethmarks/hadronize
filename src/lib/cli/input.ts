@@ -1,5 +1,7 @@
 import { sl, type slChunk } from "./styledLog.ts";
 
+export type InputValidator = (input: string) => boolean;
+
 /**
  * Get input function of Non-browser runtimes (Node, Deno, and Bun).
  */
@@ -32,7 +34,7 @@ export function getNbrInputFunc(): (message: string) => Promise<string> {
     };
   } else {
     throw new Error(
-      "Running in an unspported NBR; cannot get user input function. Try running this in Node or Deno instead.",
+      "Running in an unspported runtime; cannot get user input function. Try running this in Node or Deno instead.",
     );
   }
 }
@@ -44,7 +46,7 @@ export async function getValidatedUserInput(
   userInputFunc: () => Promise<string>,
   promptMessage: slChunk[],
   invalidMessage: slChunk[],
-  validator: (input: string) => boolean,
+  validator: InputValidator,
 ): Promise<string> {
   let userInput: string | undefined = undefined;
 
@@ -56,33 +58,6 @@ export async function getValidatedUserInput(
     sl(promptMessage);
 
     userInput = await userInputFunc();
-  }
-
-  return userInput;
-}
-
-/**
- * Generic helper for getting validated user input with an abort controller.
- */
-export async function getValidatedUserInputWithAbort(
-  userInputFunc: () => Promise<string>,
-  promptMessage: slChunk[],
-  invalidMessage: slChunk[],
-  validator: (input: string) => boolean,
-  abort: AbortSignal,
-): Promise<string | undefined> {
-  let userInput: string | undefined = undefined;
-
-  while (userInput === undefined || !validator(userInput)) {
-    if (userInput !== undefined) {
-      sl(invalidMessage);
-    }
-
-    sl(promptMessage);
-
-    userInput = await userInputFunc();
-
-    if (abort?.aborted) return;
   }
 
   return userInput;
