@@ -58,7 +58,7 @@
     <title>Play Hadronize</title>
 </svelte:head>
 
-<main class={gameStarted ? "started" : ""}>
+<div id="container" class={gameStarted ? "started" : ""}>
     <div id="endGame">
         <button onclick={exitGame}>Exit Game</button>
     </div>
@@ -74,7 +74,7 @@
     </div>
 
     <div id="gameContainer" bind:this={gameContainer}></div>
-</main>
+</div>
 
 <style lang="scss">
     #gameContainer {

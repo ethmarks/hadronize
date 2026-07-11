@@ -14,6 +14,7 @@
 
     const navLinks: [Title, URL][] = [
         ["Home", "/"],
+        ["Rules", "/rules"],
         ["Play", "/play"],
     ];
 </script>
@@ -40,7 +41,9 @@
     </ul>
 </nav>
 
-{@render children()}
+<main>
+    {@render children()}
+</main>
 
 <footer>
     By <a href="https://github.com/ethmarks">Ethan Marks</a>
