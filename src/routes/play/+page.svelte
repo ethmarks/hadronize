@@ -1,8 +1,9 @@
 <script lang="ts">
+    import { slide } from "svelte/transition";
     import Game from "../../lib/components/Game.svelte";
     import InputForm from "../../lib/components/InputForm.svelte";
 
-    import type { PlayerInit } from "../../lib/Player.ts";
+    import { validatePlayerInits, type PlayerInit } from "../../lib/Player.ts";
 
     import { mount, unmount } from "svelte";
 
@@ -13,18 +14,32 @@
 
     const ENABLE_SPEED = false;
 
-    function mountGame(
-        seed: number,
-        playerInits: PlayerInit[],
-        speed?: number,
-    ) {
+    let errorMsg: string = $state("");
+
+    function submitForm(seed: number, inits: PlayerInit[], speed?: number) {
+        errorMsg = "";
+
+        try {
+            validatePlayerInits(inits);
+        } catch (err) {
+            errorMsg =
+                "Player names are not valid! Remember that you can't have duplicate player names.";
+        }
+
+        // Only mount game if there weren't any error messages
+        if (errorMsg === "") {
+            mountGame(seed, inits, speed);
+        }
+    }
+
+    function mountGame(seed: number, inits: PlayerInit[], speed?: number) {
         gameStarted = true;
 
         if (gameInstance) unmount(gameInstance);
 
         gameInstance = mount(Game, {
             target: gameContainer,
-            props: { gameParams: [seed, playerInits], speed: speed ?? 1 },
+            props: { gameParams: [seed, inits], speed: speed ?? 1 },
         });
     }
 
@@ -49,7 +64,13 @@
     </div>
 
     <div id="setup">
-        <InputForm submitForm={mountGame} enableSpeed={ENABLE_SPEED} />
+        <InputForm {submitForm} enableSpeed={ENABLE_SPEED} />
+
+        {#if errorMsg}
+            <blockquote transition:slide class="msg">
+                <p class="errorMsg">{errorMsg}</p>
+            </blockquote>
+        {/if}
     </div>
 
     <div id="gameContainer" bind:this={gameContainer}></div>
@@ -86,6 +107,10 @@
         place-content: center;
 
         z-index: 1000;
+    }
+
+    .errorMsg {
+        color: #fc0032;
     }
 
     /* Animation Stuff */
