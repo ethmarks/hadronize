@@ -26,7 +26,6 @@
     "vitest": "^4.1.9"
   },
   "dependencies": {
-    "holiday.css": "^0.11.6",
     "picocolors": "^1.1.1"
   }
 }

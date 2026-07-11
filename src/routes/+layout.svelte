@@ -1,6 +1,6 @@
 <script lang="ts">
     import favicon from "$lib/assets/favicon.svg";
-    import "holiday.css";
+    import "$lib/assets/holiday.css";
 
     let { children } = $props();
 </script>
