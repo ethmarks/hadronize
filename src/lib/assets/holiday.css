@@ -133,7 +133,7 @@ button,
 [type="button"],
 [type="reset"],
 [type="submit"] {
-    -webkit-appearance: button;
+    appearance: button;
 }
 
 /**
@@ -167,7 +167,7 @@ Correct the cursor style of increment and decrement buttons in Safari.
 */
 
 [type="search"] {
-    -webkit-appearance: textfield; /* 1 */
+    appearance: textfield; /* 1 */
     outline-offset: -2px; /* 2 */
 }
 
@@ -484,11 +484,11 @@ footer {
 }
 
 figure > figcaption,
-body > header {
+body > #content > header {
     text-align: center;
 }
 
-body > footer {
+body > #content > footer {
     padding-bottom: 1rem;
     text-align: center;
 }
@@ -581,7 +581,7 @@ picture {
         border-bottom: var(--border-width) solid var(--border-color);
     }
 
-    body > nav {
+    body > #content > nav {
         position: relative;
         left: calc(-50vw + 50%);
         width: 100vw;
@@ -591,7 +591,7 @@ picture {
         padding-left: 0;
     }
 
-    body > nav > ul {
+    body > #content > nav > ul {
         width: calc(var(--max-body-width) + 2rem);
         padding-right: 0.5rem;
         padding-left: 0.5rem;
@@ -1104,7 +1104,7 @@ blockquote {
     border-left: 0.5rem solid var(--border-color);
 }
 
-body > footer {
+body > #content > footer {
     padding-top: 1rem;
     border-top: var(--border-width) solid var(--border-color);
 }

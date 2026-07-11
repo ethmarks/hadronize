@@ -67,8 +67,6 @@
 </svelte:head>
 
 <main>
-    <h1>Hadronize CLI</h1>
-    <a href="{base}/">Go home</a>
     <p>
         Hadronize CLI is a tool that lets you play Hadronize entirely in your
         browser console!

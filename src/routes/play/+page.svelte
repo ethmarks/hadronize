@@ -43,10 +43,6 @@
     <title>Play Hadronize</title>
 </svelte:head>
 
-<header>
-    <h1>Hadronize</h1>
-</header>
-
 <main class={gameStarted ? "started" : ""}>
     <div id="endGame">
         <button onclick={exitGame}>Exit Game</button>
@@ -60,10 +56,6 @@
 </main>
 
 <style lang="scss">
-    :global(body) {
-        overflow: hidden;
-    }
-
     #gameContainer {
         --top: 4rem;
         --bottom: 2rem;
@@ -108,6 +100,22 @@
 
     #endGame {
         clip-path: xywh(50% 0 0 0);
+    }
+
+    :global {
+        body > #content {
+            footer {
+                transition:
+                    opacity 0.4s 1s cubic-bezier(0.4, 0, 0.2, 1),
+                    border-top-color 0.4s 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            &:has(.started) {
+                footer {
+                    border-top-color: transparent;
+                    opacity: 0;
+                }
+            }
+        }
     }
 
     .started {
