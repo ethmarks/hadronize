@@ -717,7 +717,7 @@ picture {
     --light-code-text-color: #f14668;
     --light-code-background-color: #f5f5f5;
     --light-link-color: #3273dc;
-    --light-link-visited-color: #b86bff;
+    --light-link-visited-color: var(--light-link-color); /**#b86bff */
     --light-link-hover-color: #363636;
     --light-link-active-color: #363636;
 
@@ -738,7 +738,7 @@ picture {
     --dark-code-text-color: #f1a0b0;
     --dark-code-background-color: #292b2e;
     --dark-link-color: #90b3ed;
-    --dark-link-visited-color: #cb93ff;
+    --dark-link-visited-color: var(--dark-link-color); /** #cb93ff */
     --dark-link-hover-color: #fff;
     --dark-link-active-color: #fff;
 

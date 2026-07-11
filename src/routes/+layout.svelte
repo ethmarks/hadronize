@@ -1,9 +1,21 @@
 <script lang="ts">
-    import { base } from "$app/paths";
     import favicon from "$lib/assets/favicon.svg";
     import "$lib/assets/holiday.css";
 
+    import { base } from "$app/paths";
+    import { page } from "$app/state";
+
     let { children } = $props();
+
+    let pathname = $derived(page.url.pathname);
+
+    type Title = string;
+    type URL = string;
+
+    const navLinks: [Title, URL][] = [
+        ["Home", "/"],
+        ["Play", "/play"],
+    ];
 </script>
 
 <svelte:head>
@@ -16,9 +28,15 @@
 
 <nav>
     <ul>
-        <li><a href="{base}/">Home</a></li>
-        <li><a href="{base}/cli">CLI</a></li>
-        <li><a href="{base}/play">Play</a></li>
+        {#each navLinks as link}
+            <li>
+                <a
+                    href="{base}{link[1]}"
+                    aria-current={link[1] === pathname ? "page" : undefined}
+                    >{link[0]}</a
+                >
+            </li>
+        {/each}
     </ul>
 </nav>
 
