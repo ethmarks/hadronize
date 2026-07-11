@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      holiday.css:
+        specifier: ^0.11.6
+        version: 0.11.6
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
@@ -506,6 +509,9 @@ packages:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
+
+  holiday.css@0.11.6:
+    resolution: {integrity: sha512-F7MXwe4qrz3akF4pmC1DvMJ6RK6QHcnm+/df8FYNGKzEkvEe/TMhY4i2fS1Ydx3pI7tluf8nes+nQIaeX/lueg==}
 
   is-reference@3.0.3:
     resolution: {integrity: sha512-ixkJoqQvAP88E6wLydLGGqCJsrFUnqoH6HnaczB8XmDH1oaWU+xxdptvikTgaEhtZ53Ky6YXiBuUI2WXLMCwjw==}
@@ -1157,6 +1163,8 @@ snapshots:
 
   fsevents@2.3.3:
     optional: true
+
+  holiday.css@0.11.6: {}
 
   is-reference@3.0.3:
     dependencies:
