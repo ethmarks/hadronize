@@ -16,9 +16,10 @@
     interface Props {
         gameParams: ConstructorParameters<typeof Hadronize>;
         speed: number;
+        abortSignal?: AbortSignal;
     }
 
-    let { gameParams, speed }: Props = $props();
+    let { gameParams, speed, abortSignal }: Props = $props();
 
     const LABEL_DEFAULT_COLOR = "black";
     const LABEL_ACTIVE_COLOR = "#f2b74b";
@@ -66,6 +67,8 @@
         mouse,
         () => speed,
         CLI_OPT,
+        // svelte-ignore state_referenced_locally
+        abortSignal,
     );
 
     onMount(async () => {

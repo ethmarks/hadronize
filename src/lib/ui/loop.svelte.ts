@@ -23,6 +23,7 @@ export class LoopManager {
     public mouse: MouseManager,
     public getSpeed: () => number,
     public opt: CliOptions,
+    public abortSignal?: AbortSignal,
   ) {}
 
   private async sleep(ms: number) {
@@ -52,6 +53,14 @@ export class LoopManager {
       },
 
       preReaction: async (ctx: { observation: Observation }) => {
+        // The driver is an awaited async that we can't really control, so the
+        // next best thing is to check if we've aborted immediately *after* the
+        // driver runs.
+        if (this.abortSignal?.aborted) {
+          // This should bubble up to the while loop in start()
+          throw new DOMException("aborted", "AbortError");
+        }
+
         this.store.superposed.owner = ctx.observation.observer;
 
         playSound("collapse.ogg", 0.7);
@@ -65,7 +74,7 @@ export class LoopManager {
         const reaction = ctx.observation.reaction;
 
         if (reaction === "hadronized") {
-          playSound("hadronize.ogg");
+          playSound("hadronize.ogg", 0.5);
         } else if (reaction === "tunneled") {
           playSound("tunnel.ogg");
         }
@@ -114,7 +123,21 @@ export class LoopManager {
 
   public async start(): Promise<void> {
     while (this.store.result === undefined) {
-      this.store.result = await this.turn();
+      try {
+        this.store.result = await this.turn();
+      } catch (err) {
+        if (!(err instanceof Error)) throw new Error("unknown error");
+
+        // Return silently if we aborted, otherwise loudly throw the original
+        // error.
+        if (err.name === "AbortError") {
+          return;
+        } else {
+          throw err;
+        }
+      }
+
+      if (this.abortSignal?.aborted) return;
     }
 
     this.endGame();

@@ -45,6 +45,8 @@
         }
     }
 
+    let aborter: AbortController;
+
     function mountGame(seed: number, inits: PlayerInit[], speed?: number) {
         gameStarted = true;
 
@@ -52,14 +54,22 @@
 
         playSound("start.ogg");
 
+        aborter = new AbortController();
+
         gameInstance = mount(Game, {
             target: gameContainer,
-            props: { gameParams: [seed, inits], speed: speed ?? 1 },
+            props: {
+                gameParams: [seed, inits],
+                speed: speed ?? 1,
+                abortSignal: aborter.signal,
+            },
         });
     }
 
     async function exitGame() {
         gameStarted = false;
+
+        aborter.abort();
 
         // Wait for game close animations to finish
         const ANIMATION_MS = 1300;
