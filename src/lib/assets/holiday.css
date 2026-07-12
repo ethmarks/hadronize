@@ -572,92 +572,94 @@ picture {
         margin: -1rem -0.5rem;
     }
 }
-@media (hover: hover) {
-    body {
-        overflow-x: hidden;
-    }
 
-    nav {
-        display: flex;
-        background-color: var(--background-color);
-        border-bottom: var(--border-width) solid var(--border-color);
-    }
+/* Nav */
 
-    body > #content > nav {
-        position: relative;
-        left: calc(-50vw + 50%);
-        width: 100vw;
-    }
+body {
+    overflow-x: hidden;
+}
 
-    nav ul {
-        padding-left: 0;
-    }
+nav {
+    display: flex;
+    background-color: var(--background-color);
+    border-bottom: var(--border-width) solid var(--border-color);
+}
 
-    body > #content > nav > ul {
-        width: calc(var(--max-body-width) + 2rem);
-        padding-right: 0.5rem;
-        padding-left: 0.5rem;
-        margin: 0.5rem auto;
-    }
+body > #content > nav {
+    position: relative;
+    left: calc(-50vw + 50%);
+    width: 100vw;
+}
 
-    nav ul li {
-        position: relative;
-        display: inline-block;
-    }
+nav ul {
+    padding-left: 0;
+}
 
-    nav > ul > li {
-        padding: 0.5rem;
-        margin: 0;
-    }
+body > #content > nav > ul {
+    width: calc(var(--max-body-width) + 2rem);
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    margin: 0.5rem auto;
+}
 
-    nav ul li a {
-        text-decoration: none;
-        white-space: nowrap;
-    }
+nav ul li {
+    position: relative;
+    display: inline-block;
+}
 
-    nav ul li ul {
-        position: absolute;
-        left: -9999px;
-        z-index: 1;
-        min-width: calc(100% + var(--border-width) * 2);
-        padding: 0.25rem 0.5rem;
-        margin-top: 0.5rem;
-        margin-left: calc(-0.5rem - var(--border-width));
-        background-color: var(--background-color);
-        border: var(--border-width) solid var(--border-color);
-        border-radius: var(--border-radius);
-    }
+nav > ul > li {
+    padding: 0.5rem;
+    margin: 0;
+}
 
-    nav ul li ul li {
-        width: 100%;
-    }
+nav ul li a {
+    text-decoration: none;
+    white-space: nowrap;
+}
 
-    /* stylelint-disable-next-line
+nav ul li ul {
+    position: absolute;
+    left: -9999px;
+    z-index: 1;
+    min-width: calc(100% + var(--border-width) * 2);
+    padding: 0.25rem 0.5rem;
+    margin-top: 0.5rem;
+    margin-left: calc(-0.5rem - var(--border-width));
+    background-color: var(--background-color);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+nav ul li ul li {
+    width: 100%;
+}
+
+/* stylelint-disable-next-line
   selector-max-compound-selectors,
   selector-max-type
   -- this HAS to be this complex */
-    nav ul li ul li ul {
-        min-width: calc(100% + 1rem + var(--border-width) * 2);
-        margin-top: 0.75rem;
-    }
-
-    nav :focus ~ ul,
-    nav :focus ~ ul ul,
-    nav ul ul:focus-within,
-    nav ul li:hover ul {
-        left: initial;
-    }
-
-    nav li > *:not(ul, a, :only-child) {
-        cursor: default;
-    }
-
-    nav li > *:not(ul, :only-child)::after {
-        content: " ▾";
-    }
+nav ul li ul li ul {
+    min-width: calc(100% + 1rem + var(--border-width) * 2);
+    margin-top: 0.75rem;
 }
 
-@media not all and (hover: hover) {
+nav :focus ~ ul,
+nav :focus ~ ul ul,
+nav ul ul:focus-within,
+nav ul li:hover ul {
+    left: initial;
+}
+
+nav li > *:not(ul, a, :only-child) {
+    cursor: default;
+}
+
+nav li > *:not(ul, :only-child)::after {
+    content: " ▾";
+}
+
+/* I don't like the menu thing so I'm disabling it */
+/*@media not all and (hover: hover) {
     nav {
         position: relative;
         left: calc(-50vw + 50%);
@@ -694,7 +696,8 @@ picture {
     .holiday-css-dark nav {
         background-image: url('data:image/svg+xml;utf8,<svg height="32px" id="Layer_1" style="enable-background:new 0 0 32 32;" version="1.1" viewBox="0 0 32 32" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path fill="%23fff" d="M4,10h24c1.104,0,2-0.896,2-2s-0.896-2-2-2H4C2.896,6,2,6.896,2,8S2.896,10,4,10z M28,14H4c-1.104,0-2,0.896-2,2  s0.896,2,2,2h24c1.104,0,2-0.896,2-2S29.104,14,28,14z M28,22H4c-1.104,0-2,0.896-2,2s0.896,2,2,2h24c1.104,0,2-0.896,2-2  S29.104,22,28,22z"/></svg>');
     }
-}
+}*/
+
 :root {
     color-scheme: light dark;
 
