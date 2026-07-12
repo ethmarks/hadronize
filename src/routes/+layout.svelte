@@ -29,7 +29,7 @@
     <h1>Hadronize</h1>
 </header>
 
-<nav>
+<nav class={base}>
     <ul>
         {#each navLinks as link}
             <li>
