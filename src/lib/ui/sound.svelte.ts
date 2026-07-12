@@ -28,23 +28,29 @@ const getSoundPath: (sound: Sound) => string = (sound: Sound) =>
   `${base}/sounds/${sound}`;
 
 let audioCtx: AudioContext | undefined = undefined;
-const soundCache = new Map<Sound, AudioBuffer>();
 
-export async function initAudio(): Promise<void> {
-  // If we aren't running in the browser or if we've already inited, do an
-  // early return.
-  if (typeof window === "undefined" || typeof audioCtx !== "undefined") return;
+// This is for storing the raw audio data
+const rawAudioCache = new Map<Sound, ArrayBuffer>();
 
-  audioCtx = new window.AudioContext();
+// This is for storing the audio buffers decoded with the audio context, which
+// requires the audio context to exist, so we can't use it immediately on page load.
+const decodedAudioCache = new Map<Sound, AudioBuffer>();
 
-  const preloads: Promise<void>[] = SOUNDS.map(async (sound) => {
+let isPreloadingStarted = false;
+
+/**
+ * Fetches and preloads the raw audio data. This is safe to run immediately on
+ * page load.
+ */
+export async function preloadSounds(): Promise<void> {
+  if (typeof window === "undefined" || isPreloadingStarted) return;
+  isPreloadingStarted = true;
+
+  const preloads = SOUNDS.map(async (sound) => {
     try {
       const response = await fetch(getSoundPath(sound));
       const arrayBuffer = await response.arrayBuffer();
-      if (audioCtx) {
-        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-        soundCache.set(sound, audioBuffer);
-      }
+      rawAudioCache.set(sound, arrayBuffer);
     } catch {
       console.error(`Failed to preload sound ${sound}`);
     }
@@ -53,12 +59,43 @@ export async function initAudio(): Promise<void> {
   await Promise.all(preloads);
 }
 
+/**
+ * Decodes the raw audio data. This creates an audio context, so if we run it
+ * on page load we'll get an annoying warning in the console. Instead, we gotta
+ * run it after a user interaction.
+ */
+export async function decodeSounds(): Promise<void> {
+  if (typeof window === "undefined" || typeof audioCtx !== "undefined") return;
+
+  audioCtx = new window.AudioContext();
+
+  // In case we didn't preload the sounds before trying to decode them
+  if (rawAudioCache.size === 0) await preloadSounds();
+
+  const rawCacheEntries = Array.from(rawAudioCache.entries());
+
+  const decodes: Promise<void>[] = rawCacheEntries.map(
+    async ([sound, arrayBuffer]) => {
+      try {
+        if (audioCtx) {
+          const decoded = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
+          decodedAudioCache.set(sound, decoded);
+        }
+      } catch {
+        console.error(`Failed to preload sound ${sound}`);
+      }
+    },
+  );
+
+  await Promise.all(decodes);
+}
+
 export function playSound(sound: Sound, volume: number = 1): void {
   // If we aren't running in the browser, do an early return.
   if (typeof window === "undefined") return;
 
   if (audioCtx === undefined) {
-    initAudio();
+    decodeSounds();
     // early return because we're fire-and-forgetting an async and we don't
     // want race conditions.
     return;
@@ -68,7 +105,7 @@ export function playSound(sound: Sound, volume: number = 1): void {
     audioCtx.resume();
   }
 
-  const buffer = soundCache.get(sound);
+  const buffer = decodedAudioCache.get(sound);
   if (buffer === undefined) {
     console.warn(`Sound ${sound} is not loaded in cache`);
     return;

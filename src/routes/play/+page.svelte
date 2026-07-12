@@ -3,7 +3,11 @@
     import Game from "../../lib/components/Game.svelte";
     import InputForm from "../../lib/components/InputForm.svelte";
 
-    import { initAudio, playSound } from "../../lib/ui/sound.svelte.ts";
+    import {
+        preloadSounds,
+        decodeSounds,
+        playSound,
+    } from "../../lib/ui/sound.svelte.ts";
     import { validatePlayerInits, type PlayerInit } from "../../lib/Player.ts";
 
     import { mount, onMount, unmount } from "svelte";
@@ -17,7 +21,15 @@
 
     let errorMsg: string = $state("");
 
-    function submitForm(seed: number, inits: PlayerInit[], speed?: number) {
+    async function submitForm(
+        seed: number,
+        inits: PlayerInit[],
+        speed?: number,
+    ) {
+        // This is the first guaranteed user interaction, so we hijack it to
+        // decode the sounds
+        await decodeSounds();
+
         errorMsg = "";
 
         try {
@@ -57,7 +69,7 @@
     }
 
     onMount(() => {
-        initAudio();
+        preloadSounds();
     });
 </script>
 
