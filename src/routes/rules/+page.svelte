@@ -5,7 +5,7 @@
 <h2>Rules</h2>
 
 <ul>
-    <li>2-6 player</li>
+    <li>2-6 players</li>
     <li>~10 minutes per game</li>
 </ul>
 

@@ -3,12 +3,18 @@
 </svelte:head>
 
 <main>
-    <p>Hadronize is still under very heavy development.</p>
-    <h2>Links you might want to check out</h2>
-    <ul>
-        <li><a href="https://github.com/ethmarks/hadronize">GitHub Repo</a></li>
-        <li><a href="./rules">Rules page</a></li>
-        <li><a href="./cli">CLI page</a></li>
-        <li><a href="./play">Play page</a></li>
-    </ul>
+    <h2>Welcome to Hadronize!</h2>
+
+    <p>
+        Hadronize is a quark-themed set collection game. On each turn, a player
+        gets to decide who will observe a quark in superposition. Choose wisely,
+        and you can score your quarks by hadronizing them, or you can steal
+        another player's quarks by quantum-tunneling them. Choose poorly, and
+        you might wind up gifting the quark to an opponent!
+    </p>
+
+    <p>
+        To get started, <a href="./rules">read the rules</a>, then head to the
+        <a href="./play">play page</a>.
+    </p>
 </main>

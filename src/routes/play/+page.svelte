@@ -58,11 +58,9 @@
     <title>Play | Hadronize</title>
 </svelte:head>
 
-<div id="container" class={gameStarted ? "started" : ""}>
-    <div id="endGame">
-        <button onclick={exitGame}>Exit Game</button>
-    </div>
+<h2>Play</h2>
 
+<div id="container" class={gameStarted ? "started" : ""}>
     <div id="setup">
         <InputForm {submitForm} enableSpeed={ENABLE_SPEED} />
 
@@ -74,6 +72,10 @@
     </div>
 
     <div id="gameContainer" bind:this={gameContainer}></div>
+
+    <div id="endGame">
+        <button onclick={exitGame}>Exit Game</button>
+    </div>
 </div>
 
 <style lang="scss">
