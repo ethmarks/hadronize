@@ -31,6 +31,11 @@ export interface UIChamber {
   label: LabelProps;
   quarkMap: QuarkMap;
   quarkRadius: number;
+
+  /**
+   * Fixed value to prevent hover thrashing
+   */
+  hoverRadius: number;
 }
 
 export class StoreManager {
@@ -105,6 +110,7 @@ export class StoreManager {
       y: 0,
       quarkMap,
       quarkRadius: 75,
+      hoverRadius: 70,
       label,
     };
   };

@@ -12,7 +12,6 @@ const DROP_PADDING = 50;
 export class MouseManager {
   superposedQuarkPressed: boolean = $state(false);
   mousePos: { x: number; y: number } = $state({ x: 0, y: 0 });
-  hoveredChamber: UIChamber | undefined = $state(undefined);
   dropIndicator: DropIndicatorDTO = $state({
     active: false,
     radius: 0,
@@ -31,63 +30,96 @@ export class MouseManager {
     return this.getSuperposed();
   }
 
-  detectDrop() {
-    let isSuperposedOverHovered = false;
-    for (const chamber of this.chambers) {
+  collapseIntoChamber(order: number): void {
+    this.dropIndicator.active = false;
+    // Collapse the quark into the selected chamber
+    const turnEvent = new CustomEvent("takeTurn", {
+      detail: { playerOrder: order },
+    });
+    window.dispatchEvent(turnEvent);
+  }
+
+  markChamberAsDraggedOver(order: number): void {
+    const chamber = this.chambers[order];
+
+    this.dropIndicator.active = true;
+    this.dropIndicator.radius = chamber.quarkRadius + DROP_PADDING;
+    this.dropIndicator.x = chamber.x;
+    this.dropIndicator.y = chamber.y;
+  }
+
+  markChamberAsHoveredOver(order: number): void {
+    const chamber = this.chambers[order];
+    if (chamber.showCount === false) {
+      chamber.showCount = true;
+      this.layout.update();
+    }
+  }
+
+  clearHoverStates(): void {
+    this.chambers.forEach((chamber) => {
+      if (chamber.showCount === true) {
+        chamber.showCount = false;
+        this.layout.update();
+      }
+    });
+  }
+
+  /**
+   * The chamber whose hover radius the mouse is inside of.
+   */
+  findHoveredChamber(): UIChamber | undefined {
+    return this.chambers.find((chamber) => {
       const mouseDistance = Math.sqrt(
         Math.abs(chamber.x - this.mousePos.x) ** 2 +
           Math.abs(chamber.y - this.mousePos.y) ** 2,
       );
+
+      return mouseDistance < chamber.hoverRadius + DROP_PADDING;
+    });
+  }
+
+  /**
+   * The chamber whose quark radius the superposed quark is inside of.
+   */
+  findDraggedOverChamber(): UIChamber | undefined {
+    return this.chambers.find((chamber) => {
       const superposedDistance = Math.sqrt(
         Math.abs(chamber.x - this.superposed.x) ** 2 +
           Math.abs(chamber.y - this.superposed.y) ** 2,
       );
+      return superposedDistance < chamber.quarkRadius + DROP_PADDING;
+    });
+  }
 
-      if (superposedDistance < chamber.quarkRadius + DROP_PADDING) {
-        isSuperposedOverHovered = true;
-      }
+  handleMouseUp() {
+    const chamber = this.findDraggedOverChamber();
 
-      if (mouseDistance < chamber.quarkRadius + DROP_PADDING) {
-        this.hoveredChamber = chamber;
-
-        // Multiple chambers can't be hovered over simultaneously, so we
-        // skip checking the others.
-        break;
-      }
-
-      this.hoveredChamber = undefined;
-      this.dropIndicator.active = false;
+    if (chamber) {
+      this.collapseIntoChamber(chamber.order);
     }
+  }
 
-    if (this.hoveredChamber === undefined) {
-      this.chambers.forEach((c) => {
-        if (c.showCount === true) {
-          c.showCount = false;
-          this.layout.update();
-        }
-      });
-    } else {
-      if (this.superposedQuarkPressed) {
-        this.dropIndicator.active = true;
-        this.dropIndicator.radius =
-          this.hoveredChamber.quarkRadius + DROP_PADDING;
-        this.dropIndicator.x = this.hoveredChamber.x;
-        this.dropIndicator.y = this.hoveredChamber.y;
-      } else {
-        if (isSuperposedOverHovered) {
-          this.dropIndicator.active = false;
-          // Collapse the quark into the selected chamber
-          const turnEvent = new CustomEvent("takeTurn", {
-            detail: { playerOrder: this.hoveredChamber.order },
-          });
-          window.dispatchEvent(turnEvent);
-        } else {
-          if (this.hoveredChamber.showCount === false) {
-            this.hoveredChamber.showCount = true;
-            this.layout.update();
-          }
-        }
+  updateDropIndicator() {
+    if (this.superposedQuarkPressed) {
+      const draggedOverChamber = this.findDraggedOverChamber();
+
+      if (draggedOverChamber === undefined) {
+        this.dropIndicator.active = false;
+        return;
       }
+
+      this.clearHoverStates();
+      this.markChamberAsDraggedOver(draggedOverChamber.order);
+    } else {
+      const hoveredChamber = this.findHoveredChamber();
+
+      if (hoveredChamber === undefined) {
+        this.clearHoverStates();
+        return;
+      }
+
+      this.markChamberAsHoveredOver(hoveredChamber.order);
     }
   }
 
@@ -103,7 +135,7 @@ export class MouseManager {
         this.superposed.y = this.mousePos.y - this.layout.quarkSize / 2;
       }
 
-      this.detectDrop();
+      this.updateDropIndicator();
     }
   }
 }

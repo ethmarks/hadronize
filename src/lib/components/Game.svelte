@@ -81,7 +81,7 @@
     on:mousemove={(e: MouseEvent) => mouse.handleMouseMove(e)}
     onmouseup={() => {
         mouse.superposedQuarkPressed = false;
-        mouse.detectDrop();
+        mouse.handleMouseUp();
     }}
 />
 
