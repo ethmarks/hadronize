@@ -3,10 +3,10 @@
     import Game from "../../lib/components/Game.svelte";
     import InputForm from "../../lib/components/InputForm.svelte";
 
-    import { playSound } from "../../lib/ui/sound.svelte.ts";
+    import { initAudio, playSound } from "../../lib/ui/sound.svelte.ts";
     import { validatePlayerInits, type PlayerInit } from "../../lib/Player.ts";
 
-    import { mount, unmount } from "svelte";
+    import { mount, onMount, unmount } from "svelte";
 
     let gameContainer: HTMLElement;
     let gameInstance: ReturnType<typeof Game>;
@@ -55,6 +55,10 @@
 
         if (gameInstance) unmount(gameInstance);
     }
+
+    onMount(() => {
+        initAudio();
+    });
 </script>
 
 <svelte:head>
