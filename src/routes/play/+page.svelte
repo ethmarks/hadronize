@@ -158,20 +158,9 @@
         clip-path: xywh(50% 0 0 0);
     }
 
-    :global {
-        body > #content {
-            footer {
-                transition:
-                    opacity 0.4s 1s cubic-bezier(0.4, 0, 0.2, 1),
-                    border-top-color 0.4s 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            &:has(.started) {
-                footer {
-                    border-top-color: transparent;
-                    opacity: 0;
-                }
-            }
-        }
+    :global(body > #content:has(.started) > footer) {
+        border-top-color: transparent;
+        opacity: 0;
     }
 
     .started {
@@ -189,16 +178,42 @@
     }
 
     @media (prefers-reduced-motion: no-preference) {
+        /** In animations */
+
+        .started {
+            #setup {
+                transition: clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            #gameContainer {
+                transition: clip-path 0.9s 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            #endGame {
+                transition: clip-path 0.4s 1.1s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+        }
+
+        :global(body > #content:has(.started) > footer) {
+            transition:
+                opacity 0.4s 1s cubic-bezier(0.4, 0, 0.2, 1),
+                border-top-color 0.4s 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /** Out animations */
+
         #setup {
             transition: clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #gameContainer {
-            transition: clip-path 0.9s 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #endGame {
-            transition: clip-path 0.4s 1.1s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: clip-path 0.4s 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        :global(body > #content > footer) {
+            transition: opacity 0.4s 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
     }
 </style>
