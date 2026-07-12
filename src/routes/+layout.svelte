@@ -7,7 +7,7 @@
 
     let { children } = $props();
 
-    let pathname = $derived(page.url.pathname);
+    let pathname = $derived(page.url.pathname.substring(base.length + 1));
 
     type Title = string;
     type URL = string;
