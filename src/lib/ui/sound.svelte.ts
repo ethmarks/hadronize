@@ -21,6 +21,9 @@ export const SOUNDS = [
 
   // https://freesound.org/people/broumbroum/sounds/50559/
   "dragover.ogg",
+
+  // https://freesound.org/people/unfa/sounds/244266/
+  "close.ogg",
 ] as const;
 export type Sound = (typeof SOUNDS)[number];
 

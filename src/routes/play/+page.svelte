@@ -69,6 +69,8 @@
     async function exitGame() {
         gameStarted = false;
 
+        playSound("close.ogg");
+
         aborter.abort();
 
         // Wait for game close animations to finish
