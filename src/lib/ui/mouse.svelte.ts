@@ -2,6 +2,7 @@ import type { UIChamber, UIQuark } from "./store.svelte.ts";
 import { type DropIndicatorDTO } from "../components/DropIndicator.svelte";
 import type { LayoutManager } from "./layout.svelte.ts";
 import type { Result } from "../Hadronize.ts";
+import { playSound } from "./sound.svelte.ts";
 
 /**
  * The number of pixels that the drop indicator's radius should exceed the
@@ -18,6 +19,8 @@ export class MouseManager {
     x: 0,
     y: 0,
   });
+  isHovering: boolean = false;
+  isDraggingOver: boolean = false;
 
   constructor(
     public chambers: UIChamber[],
@@ -50,6 +53,7 @@ export class MouseManager {
 
   markChamberAsHoveredOver(order: number): void {
     const chamber = this.chambers[order];
+
     if (chamber.showCount === false) {
       chamber.showCount = true;
       this.layout.update();
@@ -105,21 +109,37 @@ export class MouseManager {
       const draggedOverChamber = this.findDraggedOverChamber();
 
       if (draggedOverChamber === undefined) {
-        this.dropIndicator.active = false;
+        if (this.isDraggingOver === true) {
+          this.dropIndicator.active = false;
+          this.isDraggingOver = false;
+        }
         return;
       }
 
-      this.clearHoverStates();
-      this.markChamberAsDraggedOver(draggedOverChamber.order);
+      if (this.isDraggingOver === false) {
+        this.isDraggingOver = true;
+
+        playSound("dragover.ogg", 0.5);
+
+        this.clearHoverStates();
+        this.markChamberAsDraggedOver(draggedOverChamber.order);
+      }
     } else {
       const hoveredChamber = this.findHoveredChamber();
 
       if (hoveredChamber === undefined) {
-        this.clearHoverStates();
+        if (this.isHovering === true) {
+          this.isHovering = false;
+          this.clearHoverStates();
+        }
         return;
       }
 
-      this.markChamberAsHoveredOver(hoveredChamber.order);
+      if (this.isHovering === false) {
+        this.isHovering = true;
+
+        this.markChamberAsHoveredOver(hoveredChamber.order);
+      }
     }
   }
 

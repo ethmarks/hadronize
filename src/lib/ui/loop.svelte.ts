@@ -12,6 +12,7 @@ import type {
 } from "../Hadronize.ts";
 import type { LayoutManager } from "./layout.svelte.ts";
 import type { MouseManager } from "./mouse.svelte.ts";
+import { playSound } from "./sound.svelte.ts";
 import type { StoreManager } from "./store.svelte.ts";
 
 export class LoopManager {
@@ -53,12 +54,22 @@ export class LoopManager {
       preReaction: async (ctx: { observation: Observation }) => {
         this.store.superposed.owner = ctx.observation.observer;
 
+        playSound("collapse.ogg", 0.7);
+
         this.store.syncChambers();
         this.layout.update();
         await this.sleep(250);
       },
 
-      preChecks: async () => {
+      preChecks: async (ctx: { observation: Observation }) => {
+        const reaction = ctx.observation.reaction;
+
+        if (reaction === "hadronized") {
+          playSound("hadronize.ogg");
+        } else if (reaction === "tunneled") {
+          playSound("tunnel.ogg");
+        }
+
         this.store.syncChambers();
         this.layout.update();
         await this.sleep(150);
@@ -76,6 +87,8 @@ export class LoopManager {
     if (this.store.result === undefined) {
       throw new Error("endgame() was triggered while game was still running!");
     }
+
+    playSound("endgame.ogg");
 
     logFinalObservation(this.game, this.store.result, this.opt);
 

@@ -3,6 +3,7 @@
     import Game from "../../lib/components/Game.svelte";
     import InputForm from "../../lib/components/InputForm.svelte";
 
+    import { playSound } from "../../lib/ui/sound.svelte.ts";
     import { validatePlayerInits, type PlayerInit } from "../../lib/Player.ts";
 
     import { mount, unmount } from "svelte";
@@ -36,6 +37,8 @@
         gameStarted = true;
 
         if (gameInstance) unmount(gameInstance);
+
+        playSound("start.ogg");
 
         gameInstance = mount(Game, {
             target: gameContainer,
