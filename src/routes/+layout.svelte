@@ -7,7 +7,7 @@
 
     let { children } = $props();
 
-    let pathname = $derived(page.url.pathname.substring(base.length + 1));
+    let pathname = $derived(page.url.pathname.substring(base.length));
 
     type Title = string;
     type URL = string;
@@ -29,7 +29,7 @@
     <h1>Hadronize</h1>
 </header>
 
-<nav class={base}>
+<nav class={pathname}>
     <ul>
         {#each navLinks as link}
             <li>
