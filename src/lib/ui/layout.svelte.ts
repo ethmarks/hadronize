@@ -3,7 +3,7 @@ import type { Flavor } from "../Quark.ts";
 import type { UIChamber, UIQuark } from "./store.svelte.ts";
 import { getVertexPos, getVertexDistance } from "../utils/polygon.ts";
 
-const SHUFFLE_CHAMBERS = false;
+const REVOLVE_CHAMBERS = false;
 
 class Container {
   width: number = $state(0);
@@ -14,16 +14,26 @@ class Container {
   y: number = $derived(this.height / 2);
 }
 
+export type ChamberLayoutType = "ring" | "grid";
+
 export class LayoutManager {
   public container = new Container();
   public quarkSize = $state(50);
 
+  public chamberLayoutType: ChamberLayoutType = "ring";
+
   constructor(
     public game: Hadronize,
+
+    // Store values
     public quarks: UIQuark[],
     public chambers: UIChamber[],
+
+    // Store getters
     public syncQuarks: () => void,
     public getResult: () => Result,
+
+    // Constants
     public labelDefaultColor: string,
     public labelActiveColor: string,
   ) {}
@@ -46,99 +56,109 @@ export class LayoutManager {
     this.update();
   }
 
-  updateChamberContent(chamber: UIChamber) {
-    if (chamber.showCount === false && chamber.tooLarge === false) {
-      const flatIndicies: number[] = Object.values(chamber.quarkMap).flat();
+  placeQuarksFull(chamber: UIChamber) {
+    const flatIndicies: number[] = Object.values(chamber.quarkMap).flat();
 
-      const sides = flatIndicies.length;
+    const sides = flatIndicies.length;
 
-      let spacing: number = getVertexDistance(sides, chamber.quarkRadius);
+    let spacing: number = getVertexDistance(sides, chamber.quarkRadius);
 
-      // Will cause an infinite loop if run with 1 or fewer sides
-      if (sides > 1) {
-        while (spacing < 60) {
-          chamber.quarkRadius += 1;
-          spacing = getVertexDistance(sides, chamber.quarkRadius);
-        }
-        while (spacing > 80) {
-          chamber.quarkRadius -= 1;
-          spacing = getVertexDistance(sides, chamber.quarkRadius);
-        }
+    // Will cause an infinite loop if run with 1 or fewer sides
+    if (sides > 1) {
+      while (spacing < 60) {
+        chamber.quarkRadius += 1;
+        spacing = getVertexDistance(sides, chamber.quarkRadius);
+      }
+      while (spacing > 80) {
+        chamber.quarkRadius -= 1;
+        spacing = getVertexDistance(sides, chamber.quarkRadius);
+      }
+    }
+
+    flatIndicies.forEach((quarkIndex, i) => {
+      const quarkPos =
+        sides === 1
+          ? { x: chamber.x, y: chamber.y }
+          : getVertexPos(
+              chamber.x,
+              chamber.y,
+              sides,
+              i,
+              chamber.quarkRadius,
+              chamber.order / this.chambers.length,
+            );
+
+      if (
+        chamber.quarkRadius >= this.chamberSpacing / 2 ||
+        quarkPos.x > this.container.width - this.quarkSize / 2 ||
+        quarkPos.x < 0 + this.quarkSize / 2 ||
+        quarkPos.y > this.container.height - this.quarkSize / 2 ||
+        quarkPos.y < 0 + this.quarkSize / 2
+      ) {
+        chamber.tooLarge = true;
       }
 
-      flatIndicies.forEach((quarkIndex, i) => {
-        const quarkPos =
-          sides === 1
-            ? { x: chamber.x, y: chamber.y }
-            : getVertexPos(
-                chamber.x,
-                chamber.y,
-                sides,
-                i,
-                chamber.quarkRadius,
-                chamber.order / this.chambers.length,
-              );
+      const quark = this.quarks[quarkIndex];
+      quark.x = quarkPos.x - this.quarkSize / 2;
+      quark.y = quarkPos.y - this.quarkSize / 2;
 
-        if (
-          chamber.quarkRadius >= this.chamberSpacing / 2 ||
-          quarkPos.x > this.container.width - this.quarkSize / 2 ||
-          quarkPos.x < 0 + this.quarkSize / 2 ||
-          quarkPos.y > this.container.height - this.quarkSize / 2 ||
-          quarkPos.y < 0 + this.quarkSize / 2
-        ) {
-          chamber.tooLarge = true;
-        }
+      quark.text =
+        quark.status === "hadronized" ? "h" : quark.flavor.slice(0, 1);
+    });
+  }
 
-        const quark = this.quarks[quarkIndex];
-        quark.x = quarkPos.x - this.quarkSize / 2;
-        quark.y = quarkPos.y - this.quarkSize / 2;
+  placeQuarksCount(chamber: UIChamber) {
+    const nonEmptyByFlavor = Object.entries(chamber.quarkMap).filter(
+      ([_, indices]) => indices.length > 0,
+    ) as [Flavor | "hadron", number[]][];
 
-        quark.text =
-          quark.status === "hadronized" ? "h" : quark.flavor.slice(0, 1);
+    const hasHadrons = nonEmptyByFlavor.some(
+      ([flavor, _]) => flavor === "hadron",
+    );
+
+    const sides = hasHadrons
+      ? nonEmptyByFlavor.length - 1
+      : nonEmptyByFlavor.length;
+
+    let spacing: number = getVertexDistance(sides, chamber.quarkRadius);
+
+    // Will cause an infinite loop if run with 1 or fewer sides
+    if (sides > 1) {
+      while (spacing < 100) {
+        chamber.quarkRadius += 1;
+        spacing = getVertexDistance(sides, chamber.quarkRadius);
+      }
+      while (spacing > 120) {
+        chamber.quarkRadius -= 1;
+        spacing = getVertexDistance(sides, chamber.quarkRadius);
+      }
+    }
+
+    nonEmptyByFlavor.forEach(([flavor, indices], i) => {
+      const quarkPos =
+        flavor === "hadron"
+          ? { x: chamber.x, y: chamber.y }
+          : getVertexPos(chamber.x, chamber.y, sides, i, chamber.quarkRadius);
+      indices.forEach((quarkIndex) => {
+        const UIquark = this.quarks[quarkIndex];
+        UIquark.x = quarkPos.x - this.quarkSize / 2;
+        UIquark.y = quarkPos.y - this.quarkSize / 2;
+        UIquark.text = indices.length.toString();
       });
+    });
+  }
+
+  placeQuarks(chamber: UIChamber) {
+    const showFull = chamber.showCount === false && chamber.tooLarge === false;
+
+    if (showFull) {
+      this.placeQuarksFull(chamber);
     } else {
-      const nonEmptyByFlavor = Object.entries(chamber.quarkMap).filter(
-        ([_, indices]) => indices.length > 0,
-      ) as [Flavor | "hadron", number[]][];
-
-      const hasHadrons = nonEmptyByFlavor.some(
-        ([flavor, _]) => flavor === "hadron",
-      );
-
-      const sides = hasHadrons
-        ? nonEmptyByFlavor.length - 1
-        : nonEmptyByFlavor.length;
-
-      let spacing: number = getVertexDistance(sides, chamber.quarkRadius);
-
-      // Will cause an infinite loop if run with 1 or fewer sides
-      if (sides > 1) {
-        while (spacing < 100) {
-          chamber.quarkRadius += 1;
-          spacing = getVertexDistance(sides, chamber.quarkRadius);
-        }
-        while (spacing > 120) {
-          chamber.quarkRadius -= 1;
-          spacing = getVertexDistance(sides, chamber.quarkRadius);
-        }
-      }
-
-      nonEmptyByFlavor.forEach(([flavor, indices], i) => {
-        const quarkPos =
-          flavor === "hadron"
-            ? { x: chamber.x, y: chamber.y }
-            : getVertexPos(chamber.x, chamber.y, sides, i, chamber.quarkRadius);
-        indices.forEach((quarkIndex) => {
-          const UIquark = this.quarks[quarkIndex];
-          UIquark.x = quarkPos.x - this.quarkSize / 2;
-          UIquark.y = quarkPos.y - this.quarkSize / 2;
-          UIquark.text = indices.length.toString();
-        });
-      });
+      this.placeQuarksCount(chamber);
     }
   }
 
-  updateChamberLabel(chamber: UIChamber) {
+  placeChamberLabel(chamber: UIChamber) {
     chamber.label.x = chamber.x;
     chamber.label.y = chamber.y - chamber.quarkRadius - this.quarkSize;
     chamber.label.color =
@@ -158,25 +178,50 @@ export class LayoutManager {
     }
   }
 
+  getPosInChamberRing(
+    count: number,
+    order: number,
+    radius: number,
+  ): { x: number; y: number } {
+    return getVertexPos(
+      this.container.x,
+      this.container.y,
+      count,
+      order,
+      radius,
+      -0.25,
+    );
+  }
+
+  getPosInChamberGrid(count: number, order: number): { x: number; y: number } {
+    // TODO
+    return { x: 0, y: 0 };
+  }
+
+  placeChamber(chamber: UIChamber) {
+    const count = this.chambers.length;
+    const order = REVOLVE_CHAMBERS
+      ? (chamber.order - ((this.game.turn - 1) % count) + count) % count
+      : chamber.order;
+
+    const pos =
+      this.chamberLayoutType === "ring"
+        ? this.getPosInChamberRing(count, order, this.chamberRadius)
+        : this.getPosInChamberGrid(count, order);
+
+    chamber.x = pos.x;
+    chamber.y = pos.y;
+  }
+
   update() {
     this.updateContainer();
 
     this.chambers.forEach((chamber) => {
-      const chamberPos = getVertexPos(
-        this.container.x,
-        this.container.y,
-        this.chambers.length,
-        chamber.order,
-        this.chamberRadius,
-        SHUFFLE_CHAMBERS
-          ? ((this.game.turn - 1) / this.chambers.length) * -1 - 0.25
-          : -0.25,
-      );
-      chamber.x = chamberPos.x;
-      chamber.y = chamberPos.y;
+      this.placeChamber(chamber);
 
-      this.updateChamberContent(chamber);
-      this.updateChamberLabel(chamber);
+      this.placeQuarks(chamber);
+
+      this.placeChamberLabel(chamber);
     });
 
     this.syncQuarks();

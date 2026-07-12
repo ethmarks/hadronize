@@ -85,7 +85,7 @@ export class LoopManager {
       },
 
       post: async () => {
-        this.store.chambers.forEach((c) => this.layout.updateChamberLabel(c));
+        this.store.chambers.forEach((c) => this.layout.placeChamberLabel(c));
       },
     };
 
@@ -114,8 +114,8 @@ export class LoopManager {
       winningChamber.y = this.layout.container.y;
       winningChamber.showCount = false;
       winningChamber.tooLarge = false;
-      this.layout.updateChamberContent(winningChamber);
-      this.layout.updateChamberLabel(winningChamber);
+      this.layout.placeQuarks(winningChamber);
+      this.layout.placeChamberLabel(winningChamber);
       winningChamber.label.color = "#98c379";
       winningChamber.label.text += " Wins!";
     }
