@@ -61,12 +61,13 @@ export class MouseManager {
   }
 
   clearHoverStates(): void {
-    this.chambers.forEach((chamber) => {
+    for (const chamber of this.chambers) {
       if (chamber.hovered === true) {
         chamber.hovered = false;
+        this.layout.update();
+        return;
       }
-    });
-    this.layout.update();
+    }
   }
 
   /**

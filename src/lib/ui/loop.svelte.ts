@@ -113,7 +113,7 @@ export class LoopManager {
       winningChamber.x = this.layout.container.x;
       winningChamber.y = this.layout.container.y;
       winningChamber.hovered = false;
-      winningChamber.tooLarge = false;
+      winningChamber.layoutMode = "full";
       this.layout.placeQuarks(winningChamber);
       this.layout.placeChamberLabel(winningChamber);
       winningChamber.label.color = "#98c379";
