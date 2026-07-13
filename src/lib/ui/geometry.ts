@@ -81,7 +81,7 @@ export function computeLayoutPlan(
   // If some chambers are _still_ overlapping, it means that we've set every
   // chamber to are overlapping with each other or are offscreen, we switch the
   // layout to a grid.
-  if (anyChambersOverlap(chamberPlans, quarkSize, container)) {
+  if (anyChambersOverlap(chamberPlans, quarkSize, container, quarkPadding)) {
     globalLayoutMode = "grid";
 
     // We know that the chambers won't fit in full mode if we're using the ring
@@ -308,7 +308,7 @@ function theseChambersOverlap(
   chamber1: ChamberPlan,
   chamber2: ChamberPlan,
   quarkSize: number,
-  quarkPadding: number = 20,
+  quarkPadding: number,
 ): boolean {
   const radius1 = chamber1.quarkRadius + quarkSize / 2 + quarkPadding;
   const radius2 = chamber2.quarkRadius + quarkSize / 2 + quarkPadding;
@@ -320,6 +320,26 @@ function theseChambersOverlap(
   const radiusSumSquared = (radius1 + radius2) ** 2;
 
   return distanceSquared < radiusSumSquared;
+}
+
+function tooCloseToCenter(
+  chamber: ChamberPlan,
+  container: Container,
+  quarkSize: number,
+  quarkPadding: number,
+) {
+  const radius = chamber.quarkRadius + quarkSize / 2 + quarkPadding;
+
+  // center gets double padding
+  const minDistanceFromCenter = quarkSize / 2 + quarkPadding * 2;
+
+  const distanceX = chamber.x - container.width / 2;
+  const distanceY = chamber.y - container.height / 2;
+
+  const distanceSquared = distanceX ** 2 + distanceY ** 2;
+  const minDistanceSquared = (radius + minDistanceFromCenter) ** 2;
+
+  return distanceSquared < minDistanceSquared;
 }
 
 function thisChamberIsOffscreen(
@@ -345,16 +365,21 @@ function anyChambersOverlap(
   chambers: ChamberPlan[],
   quarkSize: number,
   container: Container,
+  quarkPadding: number,
 ): boolean {
   for (let index1 = 0; index1 < chambers.length; index1++) {
     const chamber1 = chambers[index1];
 
     if (thisChamberIsOffscreen(chamber1, quarkSize, container)) return true;
 
+    if (tooCloseToCenter(chamber1, container, quarkSize, quarkPadding))
+      return true;
+
     for (let index2 = index1 + 1; index2 < chambers.length; index2++) {
       const chamber2 = chambers[index2];
 
-      if (theseChambersOverlap(chamber1, chamber2, quarkSize)) return true;
+      if (theseChambersOverlap(chamber1, chamber2, quarkSize, quarkPadding))
+        return true;
     }
   }
   return false;
@@ -381,7 +406,7 @@ function shrinkOffendingChambers(
   placeAllChambers(chambers, globalLayoutMode, container, chamberRingRadius);
 
   while (
-    anyChambersOverlap(chambers, quarkSize, container) &&
+    anyChambersOverlap(chambers, quarkSize, container, quarkPadding) &&
     fullChambers.length > 0
   ) {
     // Sort from most quarks to fewest
