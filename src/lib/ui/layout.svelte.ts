@@ -143,7 +143,7 @@ export class LayoutManager {
 
     nonEmptyByFlavor.forEach(([flavor, indices], i) => {
       const quarkPos =
-        flavor === "hadron"
+        flavor === "hadron" || (!hasHadrons && sides === 1)
           ? { x: chamber.x, y: chamber.y }
           : getVertexPos(chamber.x, chamber.y, sides, i, quarkRadius);
       indices.forEach((quarkIndex) => {
@@ -156,12 +156,12 @@ export class LayoutManager {
   }
 
   placeQuarks(chamber: UIChamber) {
-    const showFull = chamber.showCount === false && chamber.tooLarge === false;
+    const showCount = chamber.hovered || chamber.tooLarge;
 
-    if (showFull) {
-      this.placeQuarksFull(chamber);
-    } else {
+    if (showCount) {
       this.placeQuarksCount(chamber);
+    } else {
+      this.placeQuarksFull(chamber);
     }
   }
 

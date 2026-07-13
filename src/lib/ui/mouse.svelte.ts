@@ -54,19 +54,19 @@ export class MouseManager {
   markChamberAsHoveredOver(order: number): void {
     const chamber = this.chambers[order];
 
-    if (chamber.showCount === false) {
-      chamber.showCount = true;
+    if (chamber.hovered === false) {
+      chamber.hovered = true;
       this.layout.update();
     }
   }
 
   clearHoverStates(): void {
     this.chambers.forEach((chamber) => {
-      if (chamber.showCount === true) {
-        chamber.showCount = false;
-        this.layout.update();
+      if (chamber.hovered === true) {
+        chamber.hovered = false;
       }
     });
+    this.layout.update();
   }
 
   /**
@@ -127,19 +127,18 @@ export class MouseManager {
     } else {
       const hoveredChamber = this.findHoveredChamber();
 
+      this.clearHoverStates();
+
       if (hoveredChamber === undefined) {
         if (this.isHovering === true) {
           this.isHovering = false;
-          this.clearHoverStates();
         }
         return;
       }
 
-      if (this.isHovering === false) {
-        this.isHovering = true;
+      this.isHovering = true;
 
-        this.markChamberAsHoveredOver(hoveredChamber.order);
-      }
+      this.markChamberAsHoveredOver(hoveredChamber.order);
     }
   }
 

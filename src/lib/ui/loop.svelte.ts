@@ -112,7 +112,7 @@ export class LoopManager {
       const winningChamber = this.store.chambers[this.store.result];
       winningChamber.x = this.layout.container.x;
       winningChamber.y = this.layout.container.y;
-      winningChamber.showCount = false;
+      winningChamber.hovered = false;
       winningChamber.tooLarge = false;
       this.layout.placeQuarks(winningChamber);
       this.layout.placeChamberLabel(winningChamber);

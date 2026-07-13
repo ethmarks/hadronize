@@ -24,7 +24,7 @@ export type QuarkMap = Record<Flavor | "hadron", number[]>;
 
 export interface UIChamber {
   order: number;
-  showCount: boolean;
+  hovered: boolean;
   tooLarge: boolean;
   x: number;
   y: number;
@@ -104,7 +104,7 @@ export class StoreManager {
 
     return {
       order: player.order,
-      showCount: false,
+      hovered: false,
       tooLarge: false,
       x: 0,
       y: 0,
