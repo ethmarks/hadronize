@@ -42,11 +42,11 @@ export class LayoutManager {
     public labelActiveColor: string,
   ) {}
 
-  public get chamberRadius(): number {
+  get chamberRadius(): number {
     return Math.min(this.container.width, this.container.height) * 0.25;
   }
 
-  public get chamberSpacing(): number {
+  get chamberSpacing(): number {
     return getVertexDistance(this.chambers.length, this.chamberRadius);
   }
 
@@ -60,24 +60,35 @@ export class LayoutManager {
     this.update();
   }
 
+  recalculateQuarkRadius(chamber: UIChamber, sides: number): void {
+    // If we have 1 or fewer sides, return early and don't change the
+    // quarkRadius.
+    if (sides <= 1) return;
+
+    // The relationship between radius and vertex distance is perfectly
+    // linear, so we can calculate it analytically rather than using a loop
+    // like I was before.
+
+    // Spacing per 1 pixel of radius
+    const spacingPerPixel = getVertexDistance(sides, 1);
+
+    const minRadius = (this.quarkSize * 1.2) / spacingPerPixel;
+    const maxRadius = (this.quarkSize * 1.6) / spacingPerPixel;
+
+    // We use a clamp so that we only change the radius when we need to,
+    // which prevents the layout from changing unnecessarily.
+    chamber.quarkRadius = Math.max(
+      minRadius,
+      Math.min(maxRadius, chamber.quarkRadius),
+    );
+  }
+
   placeQuarksFull(chamber: UIChamber) {
     const flatIndicies: number[] = Object.values(chamber.quarkMap).flat();
 
     const sides = flatIndicies.length;
 
-    let spacing: number = getVertexDistance(sides, chamber.quarkRadius);
-
-    // Will cause an infinite loop if run with 1 or fewer sides
-    if (sides > 1) {
-      while (spacing < 60) {
-        chamber.quarkRadius += 1;
-        spacing = getVertexDistance(sides, chamber.quarkRadius);
-      }
-      while (spacing > 80) {
-        chamber.quarkRadius -= 1;
-        spacing = getVertexDistance(sides, chamber.quarkRadius);
-      }
-    }
+    this.recalculateQuarkRadius(chamber, sides);
 
     flatIndicies.forEach((quarkIndex, i) => {
       const quarkPos =
@@ -124,25 +135,17 @@ export class LayoutManager {
       ? nonEmptyByFlavor.length - 1
       : nonEmptyByFlavor.length;
 
-    let spacing: number = getVertexDistance(sides, chamber.quarkRadius);
+    this.recalculateQuarkRadius(chamber, sides);
 
-    // Will cause an infinite loop if run with 1 or fewer sides
-    if (sides > 1) {
-      while (spacing < 100) {
-        chamber.quarkRadius += 1;
-        spacing = getVertexDistance(sides, chamber.quarkRadius);
-      }
-      while (spacing > 120) {
-        chamber.quarkRadius -= 1;
-        spacing = getVertexDistance(sides, chamber.quarkRadius);
-      }
-    }
+    const quarkRadius = hasHadrons
+      ? Math.max(this.quarkSize * 1.2, chamber.quarkRadius)
+      : chamber.quarkRadius;
 
     nonEmptyByFlavor.forEach(([flavor, indices], i) => {
       const quarkPos =
         flavor === "hadron"
           ? { x: chamber.x, y: chamber.y }
-          : getVertexPos(chamber.x, chamber.y, sides, i, chamber.quarkRadius);
+          : getVertexPos(chamber.x, chamber.y, sides, i, quarkRadius);
       indices.forEach((quarkIndex) => {
         const UIquark = this.quarks[quarkIndex];
         UIquark.x = quarkPos.x - this.quarkSize / 2;
