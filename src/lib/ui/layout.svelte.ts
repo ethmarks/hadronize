@@ -1,7 +1,11 @@
 import type { Hadronize, Result } from "../Hadronize.ts";
 import type { Flavor } from "../Quark.ts";
 import type { UIChamber, UIQuark } from "./store.svelte.ts";
-import { getVertexPos, getVertexDistance } from "../utils/polygon.ts";
+import {
+  getVertexPos,
+  getVertexDistance,
+  getGridPos,
+} from "../utils/polygon.ts";
 
 const REVOLVE_CHAMBERS = false;
 
@@ -194,8 +198,16 @@ export class LayoutManager {
   }
 
   getPosInChamberGrid(count: number, order: number): { x: number; y: number } {
-    // TODO
-    return { x: 0, y: 0 };
+    const longLength = Math.max(this.container.width, this.container.height);
+    const shortLength = Math.min(this.container.width, this.container.height);
+
+    const { long, short } = getGridPos(count, order, longLength, shortLength);
+
+    if (this.container.width > this.container.height) {
+      return { x: long, y: short };
+    } else {
+      return { x: short, y: long };
+    }
   }
 
   placeChamber(chamber: UIChamber) {

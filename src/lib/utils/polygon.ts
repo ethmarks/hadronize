@@ -1,5 +1,5 @@
 /**
- * Utility to calculate the x and y coordinates of a polygon.
+ * Utility to calculate the x and y coordinates of a vertex of a polygon.
  *
  * @param centerX X coord of the center of the polygon
  * @param centerY Y coord of the center of the polygon
@@ -48,4 +48,51 @@ export function getVertexDistance(sides: number, radius: number): number {
     return 0;
   }
   return 2 * radius * Math.sin(Math.PI / sides);
+}
+
+/**
+ * Utility to calculate the coordinates of a node in a grid.
+ *
+ * Uses 'long' and 'short' abstractions. Remember to map these to x and y
+ * based on their relative sizes.
+ *
+ * @param order Specific node to calculate
+ * @param count Number of nodes in grid
+ * @param longLength Length of long axis
+ * @param shortLength Length of short axis
+ * @returns The long and short coordinates
+ */
+export function getGridPos(
+  count: number,
+  order: number,
+  longLength: number,
+  shortLength: number,
+): { long: number; short: number } {
+  // Validate
+  if (!Number.isInteger(count) || count < 2 || count > 6)
+    throw new Error("count must be an integer between 2 and 6");
+  if (!Number.isInteger(order) || order < 0 || order >= count)
+    throw new Error("order must be a nonnegative integer less than count");
+  if (longLength < shortLength)
+    throw new Error("Long axis and short axis were incorrectly mapped");
+
+  if (count === 2) {
+    const short = shortLength / 2;
+    const long = order === 0 ? longLength * 0.25 : longLength * 0.75;
+    return { short, long };
+  }
+
+  const rowSizes = [Math.floor(count / 2), Math.ceil(count / 2)];
+
+  // prettier-ignore
+  const [row, column] = order < rowSizes[0]
+    ? [0, order]
+    : [1, order - rowSizes[0]];
+
+  const nodesInThisRow = rowSizes[row];
+
+  const long = (column + 0.5) * (longLength / nodesInThisRow);
+  const short = (row + 0.5) * (shortLength / 2);
+
+  return { long, short };
 }
