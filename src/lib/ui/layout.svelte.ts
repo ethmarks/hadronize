@@ -122,8 +122,6 @@ export class LayoutManager {
   }
 
   placeQuarks(chamber: UIChamber) {
-    chamber.layoutMode = chamber.hovered ? "count" : "full";
-
     if (chamber.layoutMode === "count") {
       this.placeQuarksCount(chamber);
     } else {
