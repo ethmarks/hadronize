@@ -34,7 +34,7 @@
         {#each navLinks as link}
             <li>
                 <a
-                    href="{base}{link[1]}"
+                    href="{link[1].startsWith('/') ? base : ''}{link[1]}"
                     aria-current={link[1] === pathname ? "page" : undefined}
                     >{link[0]}</a
                 >
