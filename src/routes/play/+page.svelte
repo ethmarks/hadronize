@@ -13,7 +13,7 @@
     import { mount, onMount, unmount } from "svelte";
 
     let gameContainer: HTMLElement;
-    let gameInstance: ReturnType<typeof Game>;
+    let gameInstance: ReturnType<typeof Game> | undefined = undefined;
 
     let gameStarted: boolean = $state(false);
 
@@ -48,9 +48,10 @@
     let aborter: AbortController;
 
     function mountGame(seed: number, inits: PlayerInit[], speed?: number) {
-        gameStarted = true;
+        // Don't start a new game while another one is still running
+        if (gameInstance) return;
 
-        if (gameInstance) unmount(gameInstance);
+        gameStarted = true;
 
         playSound("start.ogg");
 
@@ -74,10 +75,11 @@
         aborter.abort();
 
         // Wait for game close animations to finish
-        const ANIMATION_MS = 1300;
+        const ANIMATION_MS = 500;
         await new Promise((resolve) => setTimeout(resolve, ANIMATION_MS));
 
         if (gameInstance) unmount(gameInstance);
+        gameInstance = undefined;
     }
 
     onMount(() => {
