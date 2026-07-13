@@ -75,7 +75,7 @@
         transform: scale(1);
         opacity: 1;
         transition-duration: 0.3s;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-timing-function: var(--timing);
         transition-property: transform, opacity;
 
         &[data-status="latent"] {
@@ -91,7 +91,7 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.4s var(--timing);
         }
 
         .bg {

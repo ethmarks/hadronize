@@ -705,6 +705,9 @@ nav li > *:not(ul, :only-child)::after {
     --border-radius: 0.25rem;
     --border-width: 1px;
 
+    /* Timing function */
+    --timing: cubic-bezier(0.4, 0, 0.2, 1);
+
     /* Public light mode colors */
     --light-border-color: #dbdbdb;
     --light-border-hover-color: #b5b5b5;
