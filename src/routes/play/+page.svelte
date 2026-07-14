@@ -162,9 +162,15 @@
         clip-path: xywh(50% 0 0 0);
     }
 
-    :global(body > #content:has(.started) > footer) {
-        border-top-color: transparent;
-        opacity: 0;
+    :global {
+        html:has(.started) {
+            overflow-y: hidden;
+
+            #content > footer {
+                border-top-color: transparent;
+                opacity: 0;
+            }
+        }
     }
 
     .started {
