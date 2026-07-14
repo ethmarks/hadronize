@@ -54,6 +54,20 @@ export function computeLayoutPlan(
   let quarkSize = preferredQuarkSize;
   let chamberRingRadius = preferredChamberRingRadius;
 
+  //
+  // Pipeline step 1: basic stuff that's done unconditionally.
+  //
+  // As far as we know, everything is ideal. We're using the preferred quark
+  // size, all non-hovered chambers are full, and we're using the ring layout
+  // with the preferred ring radius.
+  //
+  // We set the quarkRadius, x position, and y position of each chamber, all of
+  // which are things that we need to do regardless even if everything really
+  // is ideal.
+  //
+  // This might compromise quark radius.
+  //
+
   // Fit each chamber's quarks.
   //
   // If the quarks are so close together that they overlap (plus their
@@ -64,6 +78,28 @@ export function computeLayoutPlan(
   chambers.forEach((chamber) => {
     smartSetQuarkRadius(chamber, quarkSize, preferredQuarkRadius, quarkPadding);
   });
+
+  // Set x and y positions
+  placeAllChambers(chambers, globalLayoutMode, container, chamberRingRadius);
+
+  // Return early if chambers aren't overlapping
+  if (!anyChambersOverlap(chambers, quarkSize, container, quarkPadding)) {
+    return {
+      chambers: chambers,
+      layoutMode: globalLayoutMode,
+      quarkSize,
+    };
+  }
+
+  //
+  // Pipeline step 2: adjusting the chamber ring radius.
+  //
+  // We know that some of the chambers are overlapping. To fix it, we'll need
+  // to compromise one of our preferred values, and the least-disruptive one
+  // available to us is the chamber ring radius.
+  //
+  // This might compromise chamber ring radius.
+  //
 
   const maxChamberRingRadius =
     Math.min(container.width, container.height) * 0.5;
@@ -78,7 +114,25 @@ export function computeLayoutPlan(
     globalLayoutMode,
   );
 
-  // Shrink all chambers that are overlapping with each other or are offscreen.
+  if (!anyChambersOverlap(chambers, quarkSize, container, quarkPadding)) {
+    return {
+      chambers: chambers,
+      layoutMode: globalLayoutMode,
+      quarkSize,
+    };
+  }
+
+  //
+  // Pipeline step 3: setting chambers to count mode.
+  //
+  // Chambers are still overlapping, and just moving them further apart isn't
+  // cutting it. Clearly there are just too many quarks. The next
+  // least-disruptive compromise is the chamber layout mode.
+  //
+  // This will compromise chamber layout, but it might recover quark radius and
+  // chamber ring radius.
+  //
+
   smartSetChamberLayout(
     chambers,
     quarkSize,
@@ -86,41 +140,51 @@ export function computeLayoutPlan(
     chamberRingRadius,
     preferredQuarkRadius,
     quarkPadding,
+    maxChamberRingRadius,
     globalLayoutMode,
   );
 
-  // Set global layout mode.
-  //
-  // If some chambers are _still_ overlapping, it means that we've set every
-  // chamber to are overlapping with each other or are offscreen, we switch the
-  // layout to a grid.
-  if (anyChambersOverlap(chambers, quarkSize, container, quarkPadding)) {
-    globalLayoutMode = "grid";
-
-    // We know that the chambers won't fit in full mode if we're using the ring
-    // layout mode, but now that we're resigned to using the grid layout, some
-    // of them might fit in full mode.
-    chambers.forEach((chamber) => {
-      chamber.layoutMode = chamber.hovered ? "count" : "full";
-    });
-    smartSetChamberLayout(
-      chambers,
+  if (!anyChambersOverlap(chambers, quarkSize, container, quarkPadding)) {
+    return {
+      chambers: chambers,
+      layoutMode: globalLayoutMode,
       quarkSize,
-      container,
-      chamberRingRadius,
-      preferredQuarkRadius,
-      quarkPadding,
-      globalLayoutMode,
-    );
+    };
   }
 
-  // Collect final layout into a plan and return it
-  const plan: LayoutPlan = {
+  //
+  // Pipeline step 4: switching to grid layout.
+  //
+  // Even with every chamber in count mode, there's still not enough room, and
+  // chambers are still overlapping. We're kind of running out of tricks, so
+  // the least-disruptive thing we can do is completely rearrange the chambers
+  // from a ring into a grid.
+  //
+  // This will compromise global layout, but it might let us recover chamber
+  // layout, quark radius, and chamber ring radius.
+
+  globalLayoutMode = "grid";
+
+  chambers.forEach((chamber) => {
+    chamber.layoutMode = chamber.hovered ? "count" : "full";
+    smartSetQuarkRadius(chamber, quarkSize, preferredQuarkRadius, quarkPadding);
+  });
+  smartSetChamberLayout(
+    chambers,
+    quarkSize,
+    container,
+    chamberRingRadius,
+    preferredQuarkRadius,
+    quarkPadding,
+    maxChamberRingRadius,
+    globalLayoutMode,
+  );
+
+  return {
     chambers: chambers,
     layoutMode: globalLayoutMode,
     quarkSize,
   };
-  return plan;
 }
 
 function makeChamberPlan(
@@ -398,25 +462,60 @@ function anyChambersOverlap(
   return false;
 }
 
+function smartGetChamberRingRadius(
+  chambers: ChamberPlan[],
+  quarkSize: number,
+  container: Container,
+  quarkPadding: number,
+  currentChamberRingRadius: number,
+  maxChamberRingRadius: number,
+  globalLayoutMode: GlobalLayoutMode,
+): number {
+  let tempChamberRingRadius = currentChamberRingRadius;
+  while (
+    anyChambersOverlap(chambers, quarkSize, container, quarkPadding) &&
+    tempChamberRingRadius < maxChamberRingRadius
+  ) {
+    tempChamberRingRadius += 2;
+    placeAllChambers(
+      chambers,
+      globalLayoutMode,
+      container,
+      tempChamberRingRadius,
+    );
+  }
+  return tempChamberRingRadius;
+}
+
 /**
  * If any chambers are overlapping with each other or are offscreen, we switch
  * the largest one (which is probably the offender) and check again until
  * either all the chambers fit or all chambers are set to count mode.
+ *
+ * Returns a new chamber ring radius.
  */
 function smartSetChamberLayout(
   chambers: ChamberPlan[],
   quarkSize: number,
   container: Container,
-  chamberRingRadius: number,
+  currentChamberRingRadius: number,
   preferredQuarkRadius: number,
   quarkPadding: number,
+  maxChamberRingRadius: number,
   globalLayoutMode: GlobalLayoutMode,
-) {
+): number {
   const fullChambers = chambers.filter(
     (chamber) => chamber.layoutMode === "full",
   );
 
-  placeAllChambers(chambers, globalLayoutMode, container, chamberRingRadius);
+  let tempChamberRingRadius = currentChamberRingRadius;
+
+  placeAllChambers(
+    chambers,
+    globalLayoutMode,
+    container,
+    tempChamberRingRadius,
+  );
 
   while (
     anyChambersOverlap(chambers, quarkSize, container, quarkPadding) &&
@@ -440,25 +539,19 @@ function smartSetChamberLayout(
       preferredQuarkRadius,
       quarkPadding,
     );
-    placeAllChambers(chambers, globalLayoutMode, container, chamberRingRadius);
-  }
-}
 
-function smartGetChamberRingRadius(
-  chambers: ChamberPlan[],
-  quarkSize: number,
-  container: Container,
-  quarkPadding: number,
-  currentChamberRingRadius: number,
-  maxChamberRingRadius: number,
-  globalLayoutMode: GlobalLayoutMode,
-): number {
-  let tempChamberRingRadius = currentChamberRingRadius;
-  while (
-    anyChambersOverlap(chambers, quarkSize, container, quarkPadding) &&
-    tempChamberRingRadius < maxChamberRingRadius
-  ) {
-    tempChamberRingRadius += 2;
+    if (globalLayoutMode === "ring") {
+      tempChamberRingRadius = smartGetChamberRingRadius(
+        chambers,
+        quarkSize,
+        container,
+        quarkPadding,
+        tempChamberRingRadius,
+        maxChamberRingRadius,
+        globalLayoutMode,
+      );
+    }
+
     placeAllChambers(
       chambers,
       globalLayoutMode,
@@ -466,5 +559,6 @@ function smartGetChamberRingRadius(
       tempChamberRingRadius,
     );
   }
+
   return tempChamberRingRadius;
 }
