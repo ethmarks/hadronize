@@ -6,7 +6,7 @@ import {
   computeLayoutPlan,
   type InputChamber,
   type LayoutPlan,
-} from "./geometry.ts";
+} from "./planLayout.ts";
 
 class Container {
   width: number = $state(0);
