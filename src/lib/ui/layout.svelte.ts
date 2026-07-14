@@ -4,6 +4,7 @@ import type { UIChamber, UIQuark } from "./store.svelte.ts";
 import { getVertexPos } from "../utils/polygon.ts";
 import {
   computeLayoutPlan,
+  smartSetQuarkRadius,
   type InputChamber,
   type LayoutPlan,
 } from "./planLayout.ts";
@@ -245,5 +246,21 @@ export class LayoutManager {
     });
 
     chamber.label.color = "transparent";
+  }
+
+  focalizeChamber(chamber: UIChamber) {
+    chamber.hovered = false;
+    chamber.layoutMode = "full";
+    chamber.x = this.container.x;
+    chamber.y = this.container.y;
+
+    // UIChamber overlaps with ChamberPlan so they're compatible
+    smartSetQuarkRadius(chamber, this.quarkSize);
+
+    this.placeQuarks(chamber);
+
+    chamber.label.color = "#98c379";
+    chamber.label.text += " Wins!";
+    this.placeChamberLabel(chamber);
   }
 }

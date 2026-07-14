@@ -387,7 +387,7 @@ function minQuarkRadius(chamber: ChamberPlan, quarkSize: number): number {
   return minRadius;
 }
 
-function smartSetQuarkRadius(chamber: ChamberPlan, quarkSize: number) {
+export function smartSetQuarkRadius(chamber: ChamberPlan, quarkSize: number) {
   const isOverlapping = quarksOverlap(chamber, quarkSize);
   chamber.quarkRadius = isOverlapping
     ? minQuarkRadius(chamber, quarkSize)

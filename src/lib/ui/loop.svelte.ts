@@ -105,18 +105,7 @@ export class LoopManager {
 
     if (typeof this.store.result === "number") {
       const winningChamber = this.store.chambers[this.store.result];
-
-      winningChamber.hovered = false;
-      winningChamber.layoutMode = "full";
-      this.layout.update();
-
-      winningChamber.x = this.layout.container.x;
-      winningChamber.y = this.layout.container.y;
-      this.layout.placeQuarks(winningChamber);
-
-      winningChamber.label.color = "#98c379";
-      winningChamber.label.text += " Wins!";
-      this.layout.placeChamberLabel(winningChamber);
+      this.layout.focalizeChamber(winningChamber);
     }
 
     const chambersToExplode = this.store.chambers.filter(
