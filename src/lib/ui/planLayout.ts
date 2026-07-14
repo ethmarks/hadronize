@@ -180,6 +180,84 @@ export function computeLayoutPlan(
     globalLayoutMode,
   );
 
+  if (!anyChambersOverlap(chambers, quarkSize, container, quarkPadding)) {
+    return {
+      chambers: chambers,
+      layoutMode: globalLayoutMode,
+      quarkSize,
+    };
+  }
+
+  //
+  // Pipeline step 5: decreasing quark size.
+  //
+  // We only have one trick left, and it's a disruptive one. We'll try
+  // decreasing the quark size.
+  //
+  // Each iteration, we decrement the quark size by 2 pixels. We start with
+  // preferred values for everything, and if it doesn't work then we work
+  // through the previous 4 steps. If it still doesn't work, we try
+  // decrementing by another 2 pixels. We continue this until either there's no
+  // overlap or we reach the minimum quark size.
+  //
+
+  const minimumQuarkSize = 30;
+
+  while (
+    anyChambersOverlap(chambers, quarkSize, container, quarkPadding) &&
+    quarkSize > minimumQuarkSize
+  ) {
+    quarkSize -= 2;
+
+    globalLayoutMode = "ring";
+
+    chambers.forEach((chamber) => {
+      chamber.layoutMode = chamber.hovered ? "count" : "full";
+      smartSetQuarkRadius(
+        chamber,
+        quarkSize,
+        preferredQuarkRadius,
+        quarkPadding,
+      );
+    });
+    smartSetChamberLayout(
+      chambers,
+      quarkSize,
+      container,
+      chamberRingRadius,
+      preferredQuarkRadius,
+      quarkPadding,
+      maxChamberRingRadius,
+      globalLayoutMode,
+    );
+
+    if (!anyChambersOverlap(chambers, quarkSize, container, quarkPadding)) {
+      break;
+    }
+
+    globalLayoutMode = "grid";
+
+    chambers.forEach((chamber) => {
+      chamber.layoutMode = chamber.hovered ? "count" : "full";
+      smartSetQuarkRadius(
+        chamber,
+        quarkSize,
+        preferredQuarkRadius,
+        quarkPadding,
+      );
+    });
+    smartSetChamberLayout(
+      chambers,
+      quarkSize,
+      container,
+      chamberRingRadius,
+      preferredQuarkRadius,
+      quarkPadding,
+      maxChamberRingRadius,
+      globalLayoutMode,
+    );
+  }
+
   return {
     chambers: chambers,
     layoutMode: globalLayoutMode,
