@@ -15,9 +15,10 @@ const FLAVORS = _STRICT_FLAVORS.map((f) => f);
  * impossible.
  */
 const getPlayers: (count: number) => PlayerInit[] = (count: number) =>
-  Array.from({ length: count }).map((_, index) => {
-    return { name: `p${index}`, driver: dogpileDriver };
-  });
+  Array.from({ length: count }).map((_, index) => ({
+    name: `p${index}`,
+    driver: dogpileDriver,
+  }));
 
 // We run every constructor test with multiple seeds to ensure that none of
 // the tests pass by coincidence or hardcoding.

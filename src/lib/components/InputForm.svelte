@@ -31,12 +31,10 @@
     ]);
 
     function onsubmit() {
-        const inits = playerInputs.slice(0, playerCount).map((p) => {
-            return {
-                name: p.name,
-                driver: p.type === "Human" ? manualDriver : evDriver,
-            };
-        });
+        const inits = playerInputs.slice(0, playerCount).map((p) => ({
+            name: p.name,
+            driver: p.type === "Human" ? manualDriver : evDriver,
+        }));
 
         submitForm(seed, inits, speed);
     }

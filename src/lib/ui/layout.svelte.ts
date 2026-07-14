@@ -148,13 +148,11 @@ export class LayoutManager {
   }
 
   getLayoutPlan(): LayoutPlan {
-    const inputChambers: InputChamber[] = this.chambers.map((chamber) => {
-      return {
-        order: chamber.order,
-        hovered: chamber.hovered,
-        quarkMap: chamber.quarkMap,
-      };
-    });
+    const inputChambers: InputChamber[] = this.chambers.map((chamber) => ({
+      order: chamber.order,
+      hovered: chamber.hovered,
+      quarkMap: chamber.quarkMap,
+    }));
 
     const inputContainer = {
       width: this.container.width,

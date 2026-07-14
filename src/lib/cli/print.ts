@@ -36,9 +36,7 @@ function getChamberChunks(
 ): slChunk[] {
   // Count the quarks of each flavor
   let quarkCounts: { flavor: Flavor; count: number }[] = FLAVORS.map(
-    (flavor) => {
-      return { flavor, count: 0 };
-    },
+    (flavor) => ({ flavor, count: 0 }),
   );
   chamber.forEach((quark) => {
     quarkCounts.find((dto) => dto.flavor === quark)!.count++;
