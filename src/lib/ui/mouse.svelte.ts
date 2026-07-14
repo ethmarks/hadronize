@@ -102,6 +102,9 @@ export class MouseManager {
 
     if (chamber) {
       this.collapseIntoChamber(chamber.order);
+    } else {
+      this.superposed.x = this.layout.container.x - this.layout.quarkSize / 2;
+      this.superposed.y = this.layout.container.y - this.layout.quarkSize / 2;
     }
   }
 
