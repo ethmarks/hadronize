@@ -371,9 +371,7 @@ function quarksOverlap(chamber: ChamberPlan, quarkSize: number): boolean {
   return currentSpacing < minSpacing;
 }
 
-function minQuarkRadius(chamber: ChamberPlan, quarkSize: number): number {
-  const sides = getSides(chamber);
-
+function minQuarkRadius(sides: number, quarkSize: number): number {
   // The check in quarksOverlap() should have already guarenteed that was
   // greater than 1, but we check again just in case.
   if (sides <= 1)
@@ -387,11 +385,19 @@ function minQuarkRadius(chamber: ChamberPlan, quarkSize: number): number {
   return minRadius;
 }
 
-export function smartSetQuarkRadius(chamber: ChamberPlan, quarkSize: number) {
+function smartSetQuarkRadius(chamber: ChamberPlan, quarkSize: number) {
   const isOverlapping = quarksOverlap(chamber, quarkSize);
   chamber.quarkRadius = isOverlapping
-    ? minQuarkRadius(chamber, quarkSize)
+    ? minQuarkRadius(getSides(chamber), quarkSize)
     : getPreferredQuarkRadius(quarkSize);
+}
+
+export function getFullQuarkRadius(
+  chamber: ChamberPlan,
+  quarkSize: number,
+): number {
+  const sides = getFullSides(chamber);
+  return minQuarkRadius(sides, quarkSize);
 }
 
 // ===================================

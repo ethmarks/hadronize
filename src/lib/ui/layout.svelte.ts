@@ -4,7 +4,7 @@ import type { UIChamber, UIQuark } from "./store.svelte.ts";
 import { getVertexPos } from "../utils/polygon.ts";
 import {
   computeLayoutPlan,
-  smartSetQuarkRadius,
+  getFullQuarkRadius,
   type InputChamber,
   type LayoutPlan,
 } from "./planLayout.ts";
@@ -255,7 +255,7 @@ export class LayoutManager {
     chamber.y = this.container.y;
 
     // UIChamber overlaps with ChamberPlan so they're compatible
-    smartSetQuarkRadius(chamber, this.quarkSize);
+    chamber.quarkRadius = getFullQuarkRadius(chamber, this.quarkSize);
 
     this.placeQuarks(chamber);
 
