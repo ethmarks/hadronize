@@ -20,7 +20,7 @@ export class MouseManager {
     y: 0,
   });
   isHovering: boolean = false;
-  isDraggingOver: boolean = false;
+  lastDraggedOverChamber: number | undefined = undefined;
 
   constructor(
     public chambers: UIChamber[],
@@ -110,15 +110,16 @@ export class MouseManager {
       const draggedOverChamber = this.findDraggedOverChamber();
 
       if (draggedOverChamber === undefined) {
-        if (this.isDraggingOver === true) {
+        if (this.lastDraggedOverChamber !== undefined) {
+          this.lastDraggedOverChamber = undefined;
+
           this.dropIndicator.active = false;
-          this.isDraggingOver = false;
         }
         return;
       }
 
-      if (this.isDraggingOver === false) {
-        this.isDraggingOver = true;
+      if (this.lastDraggedOverChamber !== draggedOverChamber.order) {
+        this.lastDraggedOverChamber = draggedOverChamber.order;
 
         playSound("dragover.ogg", 0.5);
 
