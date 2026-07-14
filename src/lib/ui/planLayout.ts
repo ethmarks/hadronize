@@ -40,19 +40,17 @@ interface Container {
 export function computeLayoutPlan(
   inputChambers: InputChamber[],
   container: Container,
-  quarkPadding: number,
   preferredQuarkSize: number,
-  preferredQuarkRadius: number,
   preferredChamberRingRadius: number,
 ): LayoutPlan {
   let globalLayoutMode: GlobalLayoutMode = "ring";
 
-  const chambers: ChamberPlan[] = inputChambers.map((inputChamber) =>
-    makeChamberPlan(inputChamber, preferredQuarkRadius),
-  );
-
   let quarkSize = preferredQuarkSize;
   let chamberRingRadius = preferredChamberRingRadius;
+
+  const chambers: ChamberPlan[] = inputChambers.map((inputChamber) =>
+    makeChamberPlan(inputChamber, quarkSize),
+  );
 
   //
   // Pipeline step 1: basic stuff that's done unconditionally.
@@ -76,14 +74,14 @@ export function computeLayoutPlan(
   //
   // If the quarks aren't overlapping, we leave the radius alone.
   chambers.forEach((chamber) => {
-    smartSetQuarkRadius(chamber, quarkSize, preferredQuarkRadius, quarkPadding);
+    smartSetQuarkRadius(chamber, quarkSize);
   });
 
   // Set x and y positions
   placeAllChambers(chambers, globalLayoutMode, container, chamberRingRadius);
 
   // Return early if chambers aren't overlapping
-  if (!anyChambersOverlap(chambers, quarkSize, container, quarkPadding)) {
+  if (!anyChambersOverlap(chambers, quarkSize, container)) {
     return {
       chambers: chambers,
       layoutMode: globalLayoutMode,
@@ -108,13 +106,12 @@ export function computeLayoutPlan(
     chambers,
     quarkSize,
     container,
-    quarkPadding,
     chamberRingRadius,
     maxChamberRingRadius,
     globalLayoutMode,
   );
 
-  if (!anyChambersOverlap(chambers, quarkSize, container, quarkPadding)) {
+  if (!anyChambersOverlap(chambers, quarkSize, container)) {
     return {
       chambers: chambers,
       layoutMode: globalLayoutMode,
@@ -138,13 +135,11 @@ export function computeLayoutPlan(
     quarkSize,
     container,
     chamberRingRadius,
-    preferredQuarkRadius,
-    quarkPadding,
     maxChamberRingRadius,
     globalLayoutMode,
   );
 
-  if (!anyChambersOverlap(chambers, quarkSize, container, quarkPadding)) {
+  if (!anyChambersOverlap(chambers, quarkSize, container)) {
     return {
       chambers: chambers,
       layoutMode: globalLayoutMode,
@@ -167,20 +162,18 @@ export function computeLayoutPlan(
 
   chambers.forEach((chamber) => {
     chamber.layoutMode = chamber.hovered ? "count" : "full";
-    smartSetQuarkRadius(chamber, quarkSize, preferredQuarkRadius, quarkPadding);
+    smartSetQuarkRadius(chamber, quarkSize);
   });
   smartSetChamberLayout(
     chambers,
     quarkSize,
     container,
     chamberRingRadius,
-    preferredQuarkRadius,
-    quarkPadding,
     maxChamberRingRadius,
     globalLayoutMode,
   );
 
-  if (!anyChambersOverlap(chambers, quarkSize, container, quarkPadding)) {
+  if (!anyChambersOverlap(chambers, quarkSize, container)) {
     return {
       chambers: chambers,
       layoutMode: globalLayoutMode,
@@ -204,7 +197,7 @@ export function computeLayoutPlan(
   const minimumQuarkSize = 30;
 
   while (
-    anyChambersOverlap(chambers, quarkSize, container, quarkPadding) &&
+    anyChambersOverlap(chambers, quarkSize, container) &&
     quarkSize > minimumQuarkSize
   ) {
     quarkSize -= 2;
@@ -213,25 +206,18 @@ export function computeLayoutPlan(
 
     chambers.forEach((chamber) => {
       chamber.layoutMode = chamber.hovered ? "count" : "full";
-      smartSetQuarkRadius(
-        chamber,
-        quarkSize,
-        preferredQuarkRadius,
-        quarkPadding,
-      );
+      smartSetQuarkRadius(chamber, quarkSize);
     });
     smartSetChamberLayout(
       chambers,
       quarkSize,
       container,
       chamberRingRadius,
-      preferredQuarkRadius,
-      quarkPadding,
       maxChamberRingRadius,
       globalLayoutMode,
     );
 
-    if (!anyChambersOverlap(chambers, quarkSize, container, quarkPadding)) {
+    if (!anyChambersOverlap(chambers, quarkSize, container)) {
       break;
     }
 
@@ -239,20 +225,13 @@ export function computeLayoutPlan(
 
     chambers.forEach((chamber) => {
       chamber.layoutMode = chamber.hovered ? "count" : "full";
-      smartSetQuarkRadius(
-        chamber,
-        quarkSize,
-        preferredQuarkRadius,
-        quarkPadding,
-      );
+      smartSetQuarkRadius(chamber, quarkSize);
     });
     smartSetChamberLayout(
       chambers,
       quarkSize,
       container,
       chamberRingRadius,
-      preferredQuarkRadius,
-      quarkPadding,
       maxChamberRingRadius,
       globalLayoutMode,
     );
@@ -265,15 +244,19 @@ export function computeLayoutPlan(
   };
 }
 
-function makeChamberPlan(
-  input: InputChamber,
-  preferredQuarkRadius: number,
-): ChamberPlan {
+function getQuarkPadding(quarkSize: number): number {
+  return quarkSize * 0.2;
+}
+function getPreferredQuarkRadius(quarkSize: number): number {
+  return quarkSize * 1.2;
+}
+
+function makeChamberPlan(input: InputChamber, quarkSize: number): ChamberPlan {
   return {
     ...input,
     x: 0,
     y: 0,
-    quarkRadius: preferredQuarkRadius,
+    quarkRadius: getPreferredQuarkRadius(quarkSize),
     layoutMode: input.hovered ? "count" : "full",
   };
 }
@@ -317,11 +300,7 @@ function getSides(chamber: ChamberPlan) {
     : getFullSides(chamber);
 }
 
-function quarksOverlap(
-  chamber: ChamberPlan,
-  quarkSize: number,
-  quarkPadding: number,
-): boolean {
+function quarksOverlap(chamber: ChamberPlan, quarkSize: number): boolean {
   const sides = getSides(chamber);
 
   // Can't overlap if there's only 1
@@ -329,16 +308,12 @@ function quarksOverlap(
 
   const currentSpacing = getVertexDistance(sides, chamber.quarkRadius);
 
-  const minSpacing = quarkSize + quarkPadding;
+  const minSpacing = quarkSize + getQuarkPadding(quarkSize);
 
   return currentSpacing < minSpacing;
 }
 
-function minQuarkRadius(
-  chamber: ChamberPlan,
-  quarkSize: number,
-  quarkPadding: number,
-): number {
+function minQuarkRadius(chamber: ChamberPlan, quarkSize: number): number {
   const sides = getSides(chamber);
 
   // The check in quarksOverlap() should have already guarenteed that was
@@ -349,21 +324,16 @@ function minQuarkRadius(
   // Spacing per 1 pixel of radius
   const spacingPerPixel = getVertexDistance(sides, 1);
 
-  const minRadius = (quarkSize + quarkPadding) / spacingPerPixel;
+  const minRadius = (quarkSize + getQuarkPadding(quarkSize)) / spacingPerPixel;
 
   return minRadius;
 }
 
-function smartSetQuarkRadius(
-  chamber: ChamberPlan,
-  quarkSize: number,
-  preferredQuarkRadius: number,
-  quarkPadding: number,
-) {
-  const isOverlapping = quarksOverlap(chamber, quarkSize, quarkPadding);
+function smartSetQuarkRadius(chamber: ChamberPlan, quarkSize: number) {
+  const isOverlapping = quarksOverlap(chamber, quarkSize);
   chamber.quarkRadius = isOverlapping
-    ? minQuarkRadius(chamber, quarkSize, quarkPadding)
-    : preferredQuarkRadius;
+    ? minQuarkRadius(chamber, quarkSize)
+    : getPreferredQuarkRadius(quarkSize);
 }
 
 // ===================================
@@ -463,8 +433,8 @@ function theseChambersOverlap(
   chamber1: ChamberPlan,
   chamber2: ChamberPlan,
   quarkSize: number,
-  quarkPadding: number,
 ): boolean {
+  const quarkPadding = getQuarkPadding(quarkSize);
   const radius1 = chamber1.quarkRadius + quarkSize / 2 + quarkPadding;
   const radius2 = chamber2.quarkRadius + quarkSize / 2 + quarkPadding;
 
@@ -481,8 +451,8 @@ function tooCloseToCenter(
   chamber: ChamberPlan,
   container: Container,
   quarkSize: number,
-  quarkPadding: number,
 ) {
+  const quarkPadding = getQuarkPadding(quarkSize);
   const radius = chamber.quarkRadius + quarkSize / 2 + quarkPadding;
 
   // center gets double padding
@@ -520,21 +490,18 @@ function anyChambersOverlap(
   chambers: ChamberPlan[],
   quarkSize: number,
   container: Container,
-  quarkPadding: number,
 ): boolean {
   for (let index1 = 0; index1 < chambers.length; index1++) {
     const chamber1 = chambers[index1];
 
     if (thisChamberIsOffscreen(chamber1, quarkSize, container)) return true;
 
-    if (tooCloseToCenter(chamber1, container, quarkSize, quarkPadding))
-      return true;
+    if (tooCloseToCenter(chamber1, container, quarkSize)) return true;
 
     for (let index2 = index1 + 1; index2 < chambers.length; index2++) {
       const chamber2 = chambers[index2];
 
-      if (theseChambersOverlap(chamber1, chamber2, quarkSize, quarkPadding))
-        return true;
+      if (theseChambersOverlap(chamber1, chamber2, quarkSize)) return true;
     }
   }
   return false;
@@ -544,14 +511,13 @@ function smartGetChamberRingRadius(
   chambers: ChamberPlan[],
   quarkSize: number,
   container: Container,
-  quarkPadding: number,
   currentChamberRingRadius: number,
   maxChamberRingRadius: number,
   globalLayoutMode: GlobalLayoutMode,
 ): number {
   let tempChamberRingRadius = currentChamberRingRadius;
   while (
-    anyChambersOverlap(chambers, quarkSize, container, quarkPadding) &&
+    anyChambersOverlap(chambers, quarkSize, container) &&
     tempChamberRingRadius < maxChamberRingRadius
   ) {
     tempChamberRingRadius += 2;
@@ -577,8 +543,6 @@ function smartSetChamberLayout(
   quarkSize: number,
   container: Container,
   currentChamberRingRadius: number,
-  preferredQuarkRadius: number,
-  quarkPadding: number,
   maxChamberRingRadius: number,
   globalLayoutMode: GlobalLayoutMode,
 ): number {
@@ -596,7 +560,7 @@ function smartSetChamberLayout(
   );
 
   while (
-    anyChambersOverlap(chambers, quarkSize, container, quarkPadding) &&
+    anyChambersOverlap(chambers, quarkSize, container) &&
     fullChambers.length > 0
   ) {
     // Sort from most quarks to fewest
@@ -611,19 +575,13 @@ function smartSetChamberLayout(
     }
 
     offender.layoutMode = "count";
-    smartSetQuarkRadius(
-      offender,
-      quarkSize,
-      preferredQuarkRadius,
-      quarkPadding,
-    );
+    smartSetQuarkRadius(offender, quarkSize);
 
     if (globalLayoutMode === "ring") {
       tempChamberRingRadius = smartGetChamberRingRadius(
         chambers,
         quarkSize,
         container,
-        quarkPadding,
         tempChamberRingRadius,
         maxChamberRingRadius,
         globalLayoutMode,

@@ -27,9 +27,7 @@ export type GlobalLayoutMode = "ring" | "grid";
  */
 export type ChamberLayoutMode = "full" | "count";
 
-const QUARK_PADDING = 10;
 const PREFERRED_QUARK_SIZE = 50;
-const PREFERRED_QUARK_RADIUS = 60;
 
 export class LayoutManager {
   public container = new Container();
@@ -169,9 +167,7 @@ export class LayoutManager {
     const plan = computeLayoutPlan(
       inputChambers,
       inputContainer,
-      QUARK_PADDING,
       PREFERRED_QUARK_SIZE,
-      PREFERRED_QUARK_RADIUS,
       preferredChamberRingRadius,
     );
 
