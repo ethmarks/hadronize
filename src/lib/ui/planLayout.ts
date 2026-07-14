@@ -43,6 +43,66 @@ export function computeLayoutPlan(
   preferredQuarkSize: number,
   preferredChamberRingRadius: number,
 ): LayoutPlan {
+  // The reason that we can't always just use solveLayout directly is that it's
+  // vulnerable to layout thrashing if the user hovers over a large chamber
+  // while the game is in grid mode.
+
+  const inputHoveredChamber = inputChambers.find((chamber) => chamber.hovered);
+
+  // If nothing is hovered, we can just use solveLayout directly and do an
+  // early return.
+  if (inputHoveredChamber === undefined) {
+    return solveLayout(
+      inputChambers,
+      container,
+      preferredQuarkSize,
+      preferredChamberRingRadius,
+    );
+  }
+
+  const stableInputChambers = inputChambers.map((chamber) => ({
+    ...chamber,
+    hovered: false,
+  }));
+
+  const plan = solveLayout(
+    stableInputChambers,
+    container,
+    preferredQuarkSize,
+    preferredChamberRingRadius,
+  );
+
+  const hoveredChamber = plan.chambers[inputHoveredChamber.order];
+
+  if (hoveredChamber.order !== inputHoveredChamber.order)
+    throw new Error(
+      "the indices of plan chambers doesn't line up with the chamber orders. Something is seriously wrong.",
+    );
+
+  hoveredChamber.hovered = true;
+  hoveredChamber.layoutMode = "count";
+
+  // The ONLY function that directly uses a chamber's layout mode is getSides.
+  //
+  // And the only functions that use getSides are:
+  //
+  // 1. the quark radius functions
+  // 2. smartSetChamberLayout()
+  //
+  // We are intentionally not running smartSetChamberLayout() because we want
+  // the layout mode to be 'count' no matter what. So the only thing the we need
+  // to recalculate is the quark radius.
+  smartSetQuarkRadius(hoveredChamber, plan.quarkSize);
+
+  return plan;
+}
+
+function solveLayout(
+  inputChambers: InputChamber[],
+  container: Container,
+  preferredQuarkSize: number,
+  preferredChamberRingRadius: number,
+): LayoutPlan {
   let globalLayoutMode: GlobalLayoutMode = "ring";
 
   let quarkSize = preferredQuarkSize;
@@ -407,23 +467,39 @@ function getChamberPos(
   );
 }
 
-function placeAllChambers(
-  chamberPlans: ChamberPlan[],
+function placeChamber(
+  chamber: ChamberPlan,
+  count: number,
   layoutMode: GlobalLayoutMode,
   container: Container,
   chamberRingRadius?: number,
 ) {
-  chamberPlans.forEach((chamber) => {
-    const pos = getChamberPos(
+  const pos = getChamberPos(
+    chamber,
+    count,
+    layoutMode,
+    container,
+    chamberRingRadius,
+  );
+
+  chamber.x = pos.x;
+  chamber.y = pos.y;
+}
+
+function placeAllChambers(
+  chambers: ChamberPlan[],
+  layoutMode: GlobalLayoutMode,
+  container: Container,
+  chamberRingRadius?: number,
+) {
+  chambers.forEach((chamber) => {
+    placeChamber(
       chamber,
-      chamberPlans.length,
+      chambers.length,
       layoutMode,
       container,
       chamberRingRadius,
     );
-
-    chamber.x = pos.x;
-    chamber.y = pos.y;
   });
 }
 
