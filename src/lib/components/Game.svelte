@@ -81,7 +81,7 @@
 </script>
 
 <svelte:window
-    on:mousemove={(e: MouseEvent) => mouse.handleMouseMove(e)}
+    on:mousemove={(e: MouseEvent) => mouse.handleMouseEvent(e)}
     onmouseup={() => {
         mouse.superposedQuarkPressed = false;
         mouse.handleMouseUp();

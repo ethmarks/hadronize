@@ -33,6 +33,10 @@ export class MouseManager {
     return this.getSuperposed();
   }
 
+  pointerIsFine(): boolean {
+    return window.matchMedia("(pointer: fine)").matches;
+  }
+
   collapseIntoChamber(order: number): void {
     this.dropIndicator.active = false;
     // Collapse the quark into the selected chamber
@@ -98,6 +102,8 @@ export class MouseManager {
   }
 
   handleMouseUp() {
+    if (!this.pointerIsFine()) return;
+
     const chamber = this.findDraggedOverChamber();
 
     if (chamber) {
@@ -108,7 +114,7 @@ export class MouseManager {
     }
   }
 
-  updateDropIndicator() {
+  handleFinePointer() {
     if (this.superposedQuarkPressed) {
       const draggedOverChamber = this.findDraggedOverChamber();
 
@@ -147,19 +153,32 @@ export class MouseManager {
     }
   }
 
-  handleMouseMove(event: MouseEvent) {
-    if (this.getResult() === undefined) {
-      this.mousePos = {
-        x: event.clientX - this.layout.container.left,
-        y: event.clientY - this.layout.container.top,
-      };
+  handleCoarsePoiner() {
+    const tappedChamber = this.findHoveredChamber();
 
-      if (this.superposedQuarkPressed) {
-        this.superposed.x = this.mousePos.x - this.layout.quarkSize / 2;
-        this.superposed.y = this.mousePos.y - this.layout.quarkSize / 2;
-      }
+    if (tappedChamber === undefined) return;
 
-      this.updateDropIndicator();
+    this.collapseIntoChamber(tappedChamber.order);
+  }
+
+  handleMouseEvent(event: MouseEvent) {
+    if (this.getResult() !== undefined) return;
+
+    this.mousePos = {
+      x: event.clientX - this.layout.container.left,
+      y: event.clientY - this.layout.container.top,
+    };
+
+    if (this.superposedQuarkPressed) {
+      this.superposed.x = this.mousePos.x - this.layout.quarkSize / 2;
+      this.superposed.y = this.mousePos.y - this.layout.quarkSize / 2;
+    }
+
+    if (this.pointerIsFine()) {
+      this.handleFinePointer();
+    } else {
+      // coarse pointer is the default
+      this.handleCoarsePoiner();
     }
   }
 }
