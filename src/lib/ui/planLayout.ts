@@ -99,15 +99,11 @@ export function computeLayoutPlan(
   // This might compromise chamber ring radius.
   //
 
-  const maxChamberRingRadius =
-    Math.min(container.width, container.height) * 0.5;
-
   chamberRingRadius = smartGetChamberRingRadius(
     chambers,
     quarkSize,
     container,
     chamberRingRadius,
-    maxChamberRingRadius,
     globalLayoutMode,
   );
 
@@ -135,7 +131,6 @@ export function computeLayoutPlan(
     quarkSize,
     container,
     chamberRingRadius,
-    maxChamberRingRadius,
     globalLayoutMode,
   );
 
@@ -169,7 +164,6 @@ export function computeLayoutPlan(
     quarkSize,
     container,
     chamberRingRadius,
-    maxChamberRingRadius,
     globalLayoutMode,
   );
 
@@ -194,7 +188,7 @@ export function computeLayoutPlan(
   // overlap or we reach the minimum quark size.
   //
 
-  const minimumQuarkSize = 30;
+  const minimumQuarkSize = getMinimumQuarkSize();
 
   while (
     anyChambersOverlap(chambers, quarkSize, container) &&
@@ -213,7 +207,6 @@ export function computeLayoutPlan(
       quarkSize,
       container,
       chamberRingRadius,
-      maxChamberRingRadius,
       globalLayoutMode,
     );
 
@@ -232,7 +225,6 @@ export function computeLayoutPlan(
       quarkSize,
       container,
       chamberRingRadius,
-      maxChamberRingRadius,
       globalLayoutMode,
     );
   }
@@ -249,6 +241,12 @@ function getQuarkPadding(quarkSize: number): number {
 }
 function getPreferredQuarkRadius(quarkSize: number): number {
   return quarkSize * 1.2;
+}
+function getMaxChamberRingRadius(container: Container): number {
+  return Math.min(container.width, container.height) * 0.5;
+}
+function getMinimumQuarkSize(): number {
+  return 30;
 }
 
 function makeChamberPlan(input: InputChamber, quarkSize: number): ChamberPlan {
@@ -512,9 +510,10 @@ function smartGetChamberRingRadius(
   quarkSize: number,
   container: Container,
   currentChamberRingRadius: number,
-  maxChamberRingRadius: number,
   globalLayoutMode: GlobalLayoutMode,
 ): number {
+  const maxChamberRingRadius = getMaxChamberRingRadius(container);
+
   let tempChamberRingRadius = currentChamberRingRadius;
   while (
     anyChambersOverlap(chambers, quarkSize, container) &&
@@ -543,7 +542,6 @@ function smartSetChamberLayout(
   quarkSize: number,
   container: Container,
   currentChamberRingRadius: number,
-  maxChamberRingRadius: number,
   globalLayoutMode: GlobalLayoutMode,
 ): number {
   const fullChambers = chambers.filter(
@@ -583,7 +581,6 @@ function smartSetChamberLayout(
         quarkSize,
         container,
         tempChamberRingRadius,
-        maxChamberRingRadius,
         globalLayoutMode,
       );
     }
