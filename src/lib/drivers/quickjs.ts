@@ -10,29 +10,42 @@ class QuickJSError {
 }
 
 /**
- * From one of my earlier projects
+ * Adapted from
  *
  * https://github.com/ethmarks/nolet/blob/main/src/lib/runSnippet.ts
  */
 function runSnippet(
   userCode: string,
-  inputString: string,
+  state: CurrentGameState,
   iife: boolean = true,
 ): unknown {
   const vm = QuickJS.newContext();
+
+  //
+  // Adding state object
+  //
+
+  const jsonHandle = vm.newString(JSON.stringify(state));
+
+  const stateHandle = vm
+    .unwrapResult(vm.evalCode(`JSON.parse`))
+    .consume((jsonParseFn) => {
+      return vm.unwrapResult(
+        vm.callFunction(jsonParseFn, vm.undefined, jsonHandle),
+      );
+    });
+
+  jsonHandle.dispose();
+
+  vm.setProp(vm.global, "state", stateHandle);
+  stateHandle.dispose();
 
   // Remove non-deterministic functions from the global object.
   vm.evalCode("delete Math.random;");
   vm.evalCode("delete Date;");
   vm.evalCode("delete performance;");
 
-  const snippet = iife ? `(() => {\n${userCode}\n})();` : userCode;
-
-  const code = `
-${inputString}
-
-${snippet}
-`;
+  const code = iife ? `(() => {\n${userCode}\n})();` : userCode;
 
   vm.runtime.setInterruptHandler(
     shouldInterruptAfterDeadline(Date.now() + 1000),
@@ -129,11 +142,9 @@ export function quickjsDriverFactory(code: string): Driver {
     state: CurrentGameState,
     pad: Scratchpad,
   ): Promise<number | undefined> => {
-    const inputString = `const state = ${JSON.stringify(state)};`;
-
     const me = state.players[state.activePlayer];
 
-    const res = runSnippet(code, inputString);
+    const res = runSnippet(code, state);
 
     if (res instanceof QuickJSError) {
       console.error(`Error from QuickJS driver (${me.name}): ${res.message}`);
