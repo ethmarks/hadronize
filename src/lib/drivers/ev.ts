@@ -1,6 +1,11 @@
-import { quickjsDriverFactory } from "./quickjs.ts";
+import type { Driver } from "../Player.ts";
+import { js } from "./quickjs.ts";
 
-const code = `
+/**
+ * A driver that evaluates the expected value of choosing each player and
+ * maximizes that value.
+ */
+export const evDriver: Driver = js`
   // Hadronizing 2 quarks is preferable to tunneling 2 quarks because the
   // former permenantly increases your score while the latter is only an
   // intermediate step.
@@ -53,9 +58,3 @@ const code = `
 
   return expectedValues[0].player;
   `;
-
-/**
- * A driver that evaluates the expected value of choosing each player and
- * maximizes that value.
- */
-export const evDriver = quickjsDriverFactory(code);

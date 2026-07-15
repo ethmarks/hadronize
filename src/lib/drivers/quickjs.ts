@@ -124,7 +124,7 @@ ${snippet}
   return output;
 }
 
-export const quickjsDriverFactory = (code: string): Driver => {
+export function quickjsDriverFactory(code: string): Driver {
   return async (
     state: CurrentGameState,
     pad: Scratchpad,
@@ -149,4 +149,7 @@ export const quickjsDriverFactory = (code: string): Driver => {
 
     return res;
   };
-};
+}
+
+export const js = (strings: TemplateStringsArray): Driver =>
+  quickjsDriverFactory(strings[0]);
