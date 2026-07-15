@@ -158,10 +158,15 @@
             width: 100%;
             height: 100%;
             z-index: 2;
+            line-height: 1.6;
 
             color: white;
             text-align: center;
             text-shadow: 1px 1px slategray;
+
+            font-family:
+                "Degheest", system-ui, "Segoe UI", Roboto, Helvetica, Arial,
+                sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
         }
     }
 </style>
