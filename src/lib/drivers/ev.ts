@@ -1,24 +1,15 @@
-import type { CurrentGameState } from "../Hadronize.ts";
-import type { Scratchpad, Driver } from "../Player.ts";
+import { quickjsDriverFactory } from "./quickjs.ts";
 
-/**
- * A driver that evaluates the expected value of choosing each player and
- * maximizes that value.
- *
- */
-export const evDriver: Driver = async (
-  state: CurrentGameState,
-  pad: Scratchpad,
-): Promise<number> => {
+const code = `
   // Hadronizing 2 quarks is preferable to tunneling 2 quarks because the
   // former permenantly increases your score while the latter is only an
   // intermediate step.
   //
   // So we add an arbitrary weight to represent the preference for hadronizing
   // over simply gaining quarks.
-  const HADRONIZE_WEIGHT: number = 1.5;
+  const HADRONIZE_WEIGHT = 1.5;
 
-  const expectedValues: { player: number; ev: number }[] = state.players.map(
+  const expectedValues = state.players.map(
     (player) => {
       let ev = 0;
 
@@ -61,4 +52,10 @@ export const evDriver: Driver = async (
   expectedValues.sort((valA, valB) => valB.ev - valA.ev);
 
   return expectedValues[0].player;
-};
+  `;
+
+/**
+ * A driver that evaluates the expected value of choosing each player and
+ * maximizes that value.
+ */
+export const evDriver = quickjsDriverFactory(code);
