@@ -1,24 +1,24 @@
 <script lang="ts">
     import { MIN_PLAYERS, MAX_PLAYERS } from "../Hadronize.ts";
     import type { PlayerInit } from "../Player.ts";
+    import { QUARK_STYLES, type QuarkStyle } from "./Quark.svelte";
 
     import { prngDriver } from "../drivers/prng.ts";
     import { evDriver } from "../drivers/ev.ts";
     import { manualDriver } from "../drivers/manual.ts";
-    import { onMount } from "svelte";
+
     import { slide } from "svelte/transition";
 
     interface Props {
-        submitForm: (seed: number, inits: PlayerInit[], speed?: number) => void;
-
-        disabled?: boolean;
-        enableSpeed?: boolean;
+        submitForm: (
+            seed: number,
+            inits: PlayerInit[],
+            speed: number,
+            quarkStyle: QuarkStyle,
+        ) => void;
     }
 
-    let { submitForm, disabled, enableSpeed }: Props = $props();
-
-    let seed: number = $state(1);
-    let speed: number = $state(1);
+    let { submitForm }: Props = $props();
 
     let playerCount: number = $state(3);
     let playerInputs: { name: string; type: "Human" | "Bot" }[] = $state([
@@ -30,35 +30,36 @@
         { name: "Frank", type: "Bot" },
     ]);
 
+    let seed: number = $state(1);
+    let overrideSeed: boolean = $state(false);
+    const randomizeSeed = () => (seed = Math.floor(Math.random() * 2 ** 32));
+
+    let speed: number = $state(1);
+
+    let quarkStyle: QuarkStyle = $state("solid");
+
+    const capitalizer = (str: string) =>
+        str.charAt(0).toUpperCase() + str.slice(1);
+
     function onsubmit() {
         const inits = playerInputs.slice(0, playerCount).map((p) => ({
             name: p.name,
             driver: p.type === "Human" ? manualDriver : evDriver,
         }));
 
-        submitForm(seed, inits, speed);
+        submitForm(seed, inits, speed, quarkStyle);
+
+        randomizeSeed();
     }
 
-    onMount(() => {
-        seed = Math.floor(Math.random() * 2 ** 32);
+    $effect(() => {
+        if (overrideSeed === false) randomizeSeed();
     });
 </script>
 
 <form {onsubmit}>
     <fieldset>
         <legend>Hadronize Setup</legend>
-        <label for="seed">Seed (defaults to a random value)</label>
-
-        <input
-            id="seed"
-            type="number"
-            min="0"
-            max={2 ** 32}
-            step="1"
-            required
-            bind:value={seed}
-            {disabled}
-        />
 
         <label for="playerCount"
             >Player count (min is {MIN_PLAYERS}, max is {MAX_PLAYERS})</label
@@ -70,10 +71,9 @@
             max={MAX_PLAYERS}
             step="1"
             bind:value={playerCount}
-            {disabled}
         />
 
-        <div id="players" class={disabled ? "disabled" : ""}>
+        <div id="players">
             {#each playerInputs.slice(0, playerCount) as player, index (index)}
                 <div transition:slide class="player" id={`player${index}`}>
                     <div class="player-input">
@@ -84,7 +84,6 @@
                             type="text"
                             id={`player${index}-name`}
                             bind:value={player.name}
-                            {disabled}
                         />
                     </div>
 
@@ -95,7 +94,6 @@
                         <select
                             id={`player${index}-type`}
                             bind:value={player.type}
-                            {disabled}
                         >
                             <option value="Human">Human</option>
                             <option value="Bot">Bot</option>
@@ -105,8 +103,30 @@
             {/each}
         </div>
 
-        {#if enableSpeed}
-            <label for="speed">Speed</label>
+        <details>
+            <summary>Advanced </summary>
+
+            <div class="overrideSeedContainer">
+                <label for="seed">Override seed</label>
+
+                <input
+                    id="overrideSeed"
+                    type="checkbox"
+                    bind:checked={overrideSeed}
+                />
+            </div>
+
+            <input
+                id="seed"
+                type="number"
+                min="0"
+                max={2 ** 32}
+                step="1"
+                disabled={!overrideSeed}
+                bind:value={seed}
+            />
+
+            <label for="speed">Animation speed</label>
             <input
                 id="speed"
                 type="number"
@@ -115,9 +135,16 @@
                 step="1"
                 bind:value={speed}
             />
-        {/if}
 
-        <button type="submit" {disabled}>Start Game</button>
+            <label for="quark-style">Quark style</label>
+            <select id="quark-style" bind:value={quarkStyle}>
+                {#each QUARK_STYLES as style}
+                    <option value={style}>{capitalizer(style)}</option>
+                {/each}
+            </select>
+        </details>
+
+        <button type="submit">Start Game</button>
     </fieldset>
 </form>
 
@@ -126,12 +153,6 @@
         display: flex;
         flex-direction: column;
         gap: 0.2rem;
-
-        &:has([disabled]) {
-            label {
-                opacity: 0.5;
-            }
-        }
     }
 
     #players {
@@ -153,6 +174,23 @@
                 flex: 1;
                 flex-direction: column;
             }
+        }
+    }
+
+    .overrideSeedContainer {
+        display: flex;
+        align-items: center;
+        justify-content: start;
+
+        input[type="checkbox"] {
+            width: 1em;
+            height: 1em;
+        }
+
+        label {
+            margin-top: 0;
+            margin-right: 0.7rem;
+            width: fit-content;
         }
     }
 </style>
