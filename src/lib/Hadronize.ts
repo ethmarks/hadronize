@@ -508,13 +508,20 @@ export class Hadronize {
     );
 
     if (driverResponse === undefined) {
-      console.error(
+      console.warn(
         `${this.activePlayer.name}'s [#${this.activePlayer.order}] driver did not return a response. Skipping turn.`,
       );
       return;
     }
 
     const observer = this.players[driverResponse];
+
+    if (observer === undefined) {
+      console.warn(
+        `${this.activePlayer.name}'s [#${this.activePlayer.order}] driver returned an invalid response. Skipping turn.`,
+      );
+      return;
+    }
 
     await hooks?.preObservation?.({ game: this, observer });
 
