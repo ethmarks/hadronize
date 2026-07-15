@@ -10,12 +10,10 @@
 
     interface Props {
         submitForm: (seed: number, inits: PlayerInit[], speed?: number) => void;
-
-        disabled?: boolean;
         enableSpeed?: boolean;
     }
 
-    let { submitForm, disabled, enableSpeed }: Props = $props();
+    let { submitForm, enableSpeed }: Props = $props();
 
     let seed: number = $state(1);
     let speed: number = $state(1);
@@ -30,6 +28,8 @@
         { name: "Frank", type: "Bot" },
     ]);
 
+    let overrideSeed: boolean = $state(false);
+
     function onsubmit() {
         const inits = playerInputs.slice(0, playerCount).map((p) => ({
             name: p.name,
@@ -39,26 +39,16 @@
         submitForm(seed, inits, speed);
     }
 
-    onMount(() => {
-        seed = Math.floor(Math.random() * 2 ** 32);
+    $effect(() => {
+        if (overrideSeed === false) {
+            seed = Math.floor(Math.random() * 2 ** 32);
+        }
     });
 </script>
 
 <form {onsubmit}>
     <fieldset>
         <legend>Hadronize Setup</legend>
-        <label for="seed">Seed (defaults to a random value)</label>
-
-        <input
-            id="seed"
-            type="number"
-            min="0"
-            max={2 ** 32}
-            step="1"
-            required
-            bind:value={seed}
-            {disabled}
-        />
 
         <label for="playerCount"
             >Player count (min is {MIN_PLAYERS}, max is {MAX_PLAYERS})</label
@@ -70,10 +60,9 @@
             max={MAX_PLAYERS}
             step="1"
             bind:value={playerCount}
-            {disabled}
         />
 
-        <div id="players" class={disabled ? "disabled" : ""}>
+        <div id="players">
             {#each playerInputs.slice(0, playerCount) as player, index (index)}
                 <div transition:slide class="player" id={`player${index}`}>
                     <div class="player-input">
@@ -84,7 +73,6 @@
                             type="text"
                             id={`player${index}-name`}
                             bind:value={player.name}
-                            {disabled}
                         />
                     </div>
 
@@ -95,7 +83,6 @@
                         <select
                             id={`player${index}-type`}
                             bind:value={player.type}
-                            {disabled}
                         >
                             <option value="Human">Human</option>
                             <option value="Bot">Bot</option>
@@ -117,7 +104,31 @@
             />
         {/if}
 
-        <button type="submit" {disabled}>Start Game</button>
+        <details>
+            <summary>Advanced </summary>
+
+            <div class="overrideSeedContainer">
+                <label for="seed">Override seed</label>
+
+                <input
+                    id="overrideSeed"
+                    type="checkbox"
+                    bind:checked={overrideSeed}
+                />
+            </div>
+
+            <input
+                id="seed"
+                type="number"
+                min="0"
+                max={2 ** 32}
+                step="1"
+                disabled={!overrideSeed}
+                bind:value={seed}
+            />
+        </details>
+
+        <button type="submit">Start Game</button>
     </fieldset>
 </form>
 
@@ -126,12 +137,6 @@
         display: flex;
         flex-direction: column;
         gap: 0.2rem;
-
-        &:has([disabled]) {
-            label {
-                opacity: 0.5;
-            }
-        }
     }
 
     #players {
@@ -153,6 +158,23 @@
                 flex: 1;
                 flex-direction: column;
             }
+        }
+    }
+
+    .overrideSeedContainer {
+        display: flex;
+        align-items: center;
+        justify-content: start;
+
+        input[type="checkbox"] {
+            width: 1em;
+            height: 1em;
+        }
+
+        label {
+            margin-top: 0;
+            margin-right: 0.7rem;
+            width: fit-content;
         }
     }
 </style>
