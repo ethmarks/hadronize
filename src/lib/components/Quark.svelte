@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Flavor, Quark, QuarkStatus } from "../Quark.ts";
 
-    import { blur } from "svelte/transition";
+    import { blur, fade } from "svelte/transition";
     import { Spring } from "svelte/motion";
     import { cubicOut } from "svelte/easing";
 
@@ -17,20 +17,13 @@
 
     let { quark, status, text, x, y, size, onmousedown }: Props = $props();
 
-    const COLOR_MAP: Record<Flavor, string> = {
-        up: "#5dafef", // blue
-        down: "#e5c07b", // yellow
-        charm: "#4db6ac", // cyan
-        strange: "#98c379", // green
-        top: "#c678dd", // magenta
-        bottom: "#ef657a", // red
-    };
-
-    let flavorColor: string = $derived(COLOR_MAP[quark.flavor]);
-
-    let superpos1: string = $derived(COLOR_MAP[quark.superposition[0]]);
-    let superpos2: string = $derived(COLOR_MAP[quark.superposition[1]]);
-    let superpos3: string = $derived(COLOR_MAP[quark.superposition[2]]);
+    const flavors: (Flavor | "hadron")[] = $derived(
+        status === "hadronized"
+            ? ["hadron"]
+            : status === "collapsed"
+              ? [quark.flavor]
+              : quark.superposition,
+    );
 
     let pos = new Spring({ x: 0, y: 0 }, { stiffness: 0.08, damping: 0.6 });
 
@@ -51,14 +44,15 @@
     role="button"
     tabindex="0"
 >
-    <span class="bg" style:--flavor-color={flavorColor}></span>
-    <span
-        class="superposed-bg"
-        style:--superpos1={superpos1}
-        style:--superpos2={superpos2}
-        style:--superpos3={superpos3}
-    >
-    </span>
+    <div class="bgs">
+        {#each flavors as flavor, index (`${flavor}-${index}`)}
+            <span
+                transition:fade={{ duration: 400, easing: cubicOut }}
+                class="bg {flavors.length > 1 ? `third-${index}` : undefined}"
+                data-flavor={flavor}
+            ></span>
+        {/each}
+    </div>
     {#key text}
         <span
             transition:blur={{
@@ -96,77 +90,162 @@
             transform: scale(0);
             opacity: 0;
         }
+    }
 
-        .bg,
-        .superposed-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            transition: opacity 0.4s var(--timing);
-        }
-
+    :global([data-quark-style="patterned"]) {
         .bg {
-            opacity: 0;
-            z-index: 1;
-            background: var(--flavor-color);
-            border: 2px solid color-mix(var(--flavor-color) 90%, black);
-            transition-property: background, opacity, border;
+            background-image: var(--pattern);
         }
+    }
 
-        .superposed-bg {
-            z-index: 2;
+    .bg {
+        position: absolute;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
 
-            /* This looks much nicer, but IMO it's more difficult to distinguish between colors and is less useful for UX. */
-            /* background: conic-gradient(
-                var(--superpos1),
-                var(--superpos2),
-                var(--superpos3),
-                var(--superpos1)
-            ); */
-            background: conic-gradient(
-                var(--superpos1) 0deg 120deg,
-                var(--superpos2) 120deg 240deg,
-                var(--superpos3) 240deg 360deg
+        background-color: var(--color);
+        background-size:
+            8px 8px,
+            cover;
+        border: 2px solid color-mix(var(--color) 90%, black);
+
+        &[data-flavor="up"] {
+            --color: #5dafef;
+            --pattern: repeating-linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.4),
+                rgba(255, 255, 255, 0.4) 4px,
+                transparent 4px,
+                transparent 8px
             );
-            filter: blur(2px);
         }
 
-        &[data-status="collapsed"],
-        &[data-status="hadronized"] {
-            .bg {
-                opacity: 1;
-            }
-            .superposed-bg {
-                opacity: 0;
-            }
+        &[data-flavor="down"] {
+            --color: #e5c07b;
+            --pattern: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 3px,
+                transparent 3px,
+                transparent 7px
+            );
         }
 
-        &[data-status="hadronized"] {
-            .bg {
-                background: #dbd9d9;
-                border: 2px dashed #595757;
-            }
+        &[data-flavor="charm"] {
+            --color: #4db6ac;
+            --pattern:
+                linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.3) 25%,
+                    transparent 25%
+                ),
+                linear-gradient(
+                    225deg,
+                    rgba(255, 255, 255, 0.3) 25%,
+                    transparent 25%
+                ),
+                linear-gradient(
+                    45deg,
+                    rgba(255, 255, 255, 0.3) 25%,
+                    transparent 25%
+                ),
+                linear-gradient(
+                    315deg,
+                    rgba(255, 255, 255, 0.3) 25%,
+                    transparent 25%
+                );
+            background-size: 10px 10px;
         }
 
-        .letter {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
-            line-height: 1.6;
-
-            color: white;
-            text-align: center;
-            text-shadow: 1px 1px slategray;
-
-            font-family:
-                "Degheest", system-ui, "Segoe UI", Roboto, Helvetica, Arial,
-                sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        &[data-flavor="strange"] {
+            --color: #98c379;
+            --pattern:
+                linear-gradient(
+                    45deg,
+                    rgba(0, 0, 0, 0.1) 25%,
+                    transparent 25%,
+                    transparent 75%,
+                    rgba(0, 0, 0, 0.1) 75%
+                ),
+                linear-gradient(
+                    45deg,
+                    rgba(0, 0, 0, 0.1) 25%,
+                    transparent 25%,
+                    transparent 75%,
+                    rgba(0, 0, 0, 0.1) 75%
+                );
+            background-size: 8px 8px;
+            background-position:
+                0 0,
+                2px 2px;
         }
+
+        &[data-flavor="top"] {
+            --color: #c678dd;
+            --pattern: radial-gradient(rgba(0, 0, 0, 0.2) 15%, transparent 16%);
+        }
+
+        &[data-flavor="bottom"] {
+            --color: #ef657a;
+
+            --pattern: repeating-radial-gradient(
+                circle at center,
+                transparent,
+                transparent 4px,
+                rgba(255, 255, 255, 0.35) 4px,
+                rgba(255, 255, 255, 0.35) 7px
+            );
+        }
+
+        &[data-flavor="hadron"] {
+            --color: #dbd9d9;
+            --pattern: none;
+        }
+
+        &.third-0 {
+            mask-image: conic-gradient(
+                black 0deg 120deg,
+                transparent 120deg 240deg,
+                transparent 240deg 360deg
+            );
+        }
+
+        &.third-1 {
+            mask-image: conic-gradient(
+                transparent 0deg 120deg,
+                black 120deg 240deg,
+                transparent 240deg 360deg
+            );
+        }
+
+        &.third-2 {
+            mask-image: conic-gradient(
+                transparent 0deg 120deg,
+                transparent 120deg 240deg,
+                black 240deg 360deg
+            );
+        }
+    }
+
+    .letter {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        line-height: 1.6;
+
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px slategray;
+
+        font-family:
+            "Degheest", system-ui, "Segoe UI", Roboto, Helvetica, Arial,
+            sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
     }
 </style>
