@@ -1,22 +1,24 @@
 <script lang="ts">
     import { MIN_PLAYERS, MAX_PLAYERS } from "../Hadronize.ts";
     import type { PlayerInit } from "../Player.ts";
+    import { QUARK_STYLES, type QuarkStyle } from "./Quark.svelte";
 
     import { prngDriver } from "../drivers/prng.ts";
     import { evDriver } from "../drivers/ev.ts";
     import { manualDriver } from "../drivers/manual.ts";
-    import { onMount } from "svelte";
+
     import { slide } from "svelte/transition";
 
     interface Props {
-        submitForm: (seed: number, inits: PlayerInit[], speed?: number) => void;
-        enableSpeed?: boolean;
+        submitForm: (
+            seed: number,
+            inits: PlayerInit[],
+            speed: number,
+            quarkStyle: QuarkStyle,
+        ) => void;
     }
 
-    let { submitForm, enableSpeed }: Props = $props();
-
-    let seed: number = $state(1);
-    let speed: number = $state(1);
+    let { submitForm }: Props = $props();
 
     let playerCount: number = $state(3);
     let playerInputs: { name: string; type: "Human" | "Bot" }[] = $state([
@@ -28,7 +30,16 @@
         { name: "Frank", type: "Bot" },
     ]);
 
+    let seed: number = $state(1);
     let overrideSeed: boolean = $state(false);
+    const randomizeSeed = () => (seed = Math.floor(Math.random() * 2 ** 32));
+
+    let speed: number = $state(1);
+
+    let quarkStyle: QuarkStyle = $state("solid");
+
+    const capitalizer = (str: string) =>
+        str.charAt(0).toUpperCase() + str.slice(1);
 
     function onsubmit() {
         const inits = playerInputs.slice(0, playerCount).map((p) => ({
@@ -36,13 +47,13 @@
             driver: p.type === "Human" ? manualDriver : evDriver,
         }));
 
-        submitForm(seed, inits, speed);
+        submitForm(seed, inits, speed, quarkStyle);
+
+        randomizeSeed();
     }
 
     $effect(() => {
-        if (overrideSeed === false) {
-            seed = Math.floor(Math.random() * 2 ** 32);
-        }
+        if (overrideSeed === false) randomizeSeed();
     });
 </script>
 
@@ -92,18 +103,6 @@
             {/each}
         </div>
 
-        {#if enableSpeed}
-            <label for="speed">Speed</label>
-            <input
-                id="speed"
-                type="number"
-                min="0"
-                max="50"
-                step="1"
-                bind:value={speed}
-            />
-        {/if}
-
         <details>
             <summary>Advanced </summary>
 
@@ -126,6 +125,23 @@
                 disabled={!overrideSeed}
                 bind:value={seed}
             />
+
+            <label for="speed">Animation speed</label>
+            <input
+                id="speed"
+                type="number"
+                min="0"
+                max="50"
+                step="1"
+                bind:value={speed}
+            />
+
+            <label for="quark-style">Quark style</label>
+            <select id="quark-style" bind:value={quarkStyle}>
+                {#each QUARK_STYLES as style}
+                    <option value={style}>{capitalizer(style)}</option>
+                {/each}
+            </select>
         </details>
 
         <button type="submit">Start Game</button>

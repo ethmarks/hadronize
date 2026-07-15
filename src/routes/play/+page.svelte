@@ -11,20 +11,21 @@
     import { validatePlayerInits, type PlayerInit } from "../../lib/Player.ts";
 
     import { mount, onMount, unmount } from "svelte";
+    import type { QuarkStyle } from "$lib/components/Quark.svelte";
 
     let gameContainer: HTMLElement;
     let gameInstance: ReturnType<typeof Game> | undefined = undefined;
 
     let gameStarted: boolean = $state(false);
-
-    const ENABLE_SPEED = false;
+    let quarkStyle: QuarkStyle = $state("solid");
 
     let errorMsg: string = $state("");
 
     async function submitForm(
         seed: number,
         inits: PlayerInit[],
-        speed?: number,
+        speed: number,
+        inputQuarkStyle: QuarkStyle,
     ) {
         // This is the first guaranteed user interaction, so we hijack it to
         // decode the sounds
@@ -40,9 +41,11 @@
         }
 
         // Only mount game if there weren't any error messages
-        if (errorMsg === "") {
-            mountGame(seed, inits, speed);
-        }
+        if (errorMsg !== "") return;
+
+        quarkStyle = inputQuarkStyle;
+
+        mountGame(seed, inits, speed);
     }
 
     let aborter: AbortController;
@@ -95,7 +98,7 @@
 
 <div id="container" class={gameStarted ? "started" : ""}>
     <div id="setup">
-        <InputForm {submitForm} enableSpeed={ENABLE_SPEED} />
+        <InputForm {submitForm} />
 
         {#if errorMsg}
             <blockquote transition:slide class="msg">
@@ -104,7 +107,11 @@
         {/if}
     </div>
 
-    <div id="gameContainer" bind:this={gameContainer}></div>
+    <div
+        id="gameContainer"
+        data-quark-style={quarkStyle}
+        bind:this={gameContainer}
+    ></div>
 
     <div id="endGame">
         <button onclick={exitGame}>Exit Game</button>

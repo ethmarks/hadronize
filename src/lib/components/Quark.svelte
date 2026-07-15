@@ -1,3 +1,8 @@
+<script module lang="ts">
+    export const QUARK_STYLES = ["solid", "patterned"] as const;
+    export type QuarkStyle = (typeof QUARK_STYLES)[number];
+</script>
+
 <script lang="ts">
     import type { Flavor, Quark, QuarkStatus } from "../Quark.ts";
 
