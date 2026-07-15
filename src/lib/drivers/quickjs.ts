@@ -1,5 +1,8 @@
 import { getQuickJS, shouldInterruptAfterDeadline } from "quickjs-emscripten";
 
+import type { CurrentGameState } from "../Hadronize.ts";
+import type { Driver, Scratchpad } from "../Player.ts";
+
 const QuickJS = await getQuickJS();
 
 class QuickJSError {
@@ -120,3 +123,30 @@ ${snippet}
 
   return output;
 }
+
+export const quickjsDriverFactory = (code: string): Driver => {
+  return async (
+    state: CurrentGameState,
+    pad: Scratchpad,
+  ): Promise<number | undefined> => {
+    const inputString = `const state = ${JSON.stringify(state)};`;
+
+    const me = state.players[state.activePlayer];
+
+    const res = runSnippet(code, inputString);
+
+    if (res instanceof QuickJSError) {
+      console.error(`Error from QuickJS driver (${me.name}): ${res.message}`);
+      return;
+    }
+
+    if (typeof res !== "number") {
+      console.error(
+        `QuickJS driver (${me.name}) returned a ${typeof res} instead of a number.`,
+      );
+      return;
+    }
+
+    return res;
+  };
+};
