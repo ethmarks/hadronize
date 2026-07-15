@@ -28,7 +28,7 @@ class PlayerScratchpad implements Scratchpad {
 export type Driver = (
   state: CurrentGameState,
   pad: Scratchpad,
-) => Promise<number>;
+) => Promise<number | undefined>;
 
 export function validatePlayerInits(inits: PlayerInit[]): void {
   if (inits.length < MIN_PLAYERS) {

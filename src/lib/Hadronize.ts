@@ -502,12 +502,19 @@ export class Hadronize {
 
     await hooks?.preDriver?.({ game: this });
 
-    const observerOrder = await this.activePlayer.driver(
+    const driverResponse = await this.activePlayer.driver(
       state,
       this.activePlayer.scratchpad,
     );
 
-    const observer = this.players[observerOrder];
+    if (driverResponse === undefined) {
+      console.error(
+        `${this.activePlayer.name}'s [#${this.activePlayer.order}] driver did not return a response. Skipping turn.`,
+      );
+      return;
+    }
+
+    const observer = this.players[driverResponse];
 
     await hooks?.preObservation?.({ game: this, observer });
 
