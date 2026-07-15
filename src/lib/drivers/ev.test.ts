@@ -6,9 +6,10 @@ import type { PlayerInit } from "../Player.ts";
 import { getRigging } from "../utils/rigging.ts";
 
 const getPlayers: (count: number) => PlayerInit[] = (count: number) =>
-  Array.from({ length: count }).map((_, index) => {
-    return { name: `dogpile${index}`, driver: dogpileDriver };
-  });
+  Array.from({ length: count }).map((_, index) => ({
+    name: `dogpile${index}`,
+    driver: dogpileDriver,
+  }));
 
 const getGame: (seed: number, playerCount?: number) => Hadronize = (
   seed: number,

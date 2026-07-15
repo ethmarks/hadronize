@@ -103,22 +103,15 @@ export class LoopManager {
 
     this.mouse.dropIndicator.active = false;
 
+    if (typeof this.store.result === "number") {
+      const winningChamber = this.store.chambers[this.store.result];
+      this.layout.focalizeChamber(winningChamber);
+    }
+
     const chambersToExplode = this.store.chambers.filter(
       (c) => c.order !== this.store.result,
     );
     chambersToExplode.forEach((c) => this.layout.explodeChamber(c));
-
-    if (typeof this.store.result === "number") {
-      const winningChamber = this.store.chambers[this.store.result];
-      winningChamber.x = this.layout.container.x;
-      winningChamber.y = this.layout.container.y;
-      winningChamber.hovered = false;
-      winningChamber.tooLarge = false;
-      this.layout.placeQuarks(winningChamber);
-      this.layout.placeChamberLabel(winningChamber);
-      winningChamber.label.color = "#98c379";
-      winningChamber.label.text += " Wins!";
-    }
   }
 
   public async start(): Promise<void> {

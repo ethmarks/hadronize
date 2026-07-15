@@ -120,12 +120,10 @@ async function getSetupViaInput(): Promise<[number, PlayerInit[]]> {
     });
   }
 
-  const players: PlayerInit[] = playerInputs.map((p) => {
-    return {
-      name: p.name,
-      driver: p.type === "human" ? manualDriver : prngDriver,
-    };
-  });
+  const players: PlayerInit[] = playerInputs.map((p) => ({
+    name: p.name,
+    driver: p.type === "human" ? manualDriver : prngDriver,
+  }));
 
   return [seed, players];
 }

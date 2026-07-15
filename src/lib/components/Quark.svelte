@@ -1,6 +1,9 @@
 <script lang="ts">
     import type { Flavor, Quark, QuarkStatus } from "../Quark.ts";
+
+    import { blur } from "svelte/transition";
     import { Spring } from "svelte/motion";
+    import { cubicOut } from "svelte/easing";
 
     interface Props {
         quark: Quark;
@@ -56,7 +59,18 @@
         style:--superpos3={superpos3}
     >
     </span>
-    <span class="letter" style:font-size="{size / 25}rem">{text}</span>
+    {#key text}
+        <span
+            transition:blur={{
+                duration: 240,
+                easing: cubicOut,
+                amount: "2px",
+                delay: 0,
+            }}
+            class="letter"
+            style:font-size="{size / 25}rem">{text}</span
+        >
+    {/key}
 </span>
 
 <style lang="scss">
@@ -144,10 +158,15 @@
             width: 100%;
             height: 100%;
             z-index: 2;
+            line-height: 1.6;
 
             color: white;
             text-align: center;
             text-shadow: 1px 1px slategray;
+
+            font-family:
+                "Degheest", system-ui, "Segoe UI", Roboto, Helvetica, Arial,
+                sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
         }
     }
 </style>

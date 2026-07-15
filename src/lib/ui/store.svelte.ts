@@ -8,6 +8,7 @@ import {
   type Superposition,
 } from "../Quark.ts";
 import type { LabelProps } from "../components/Label.svelte";
+import type { ChamberLayoutMode } from "./layout.svelte.ts";
 
 export interface UIQuark {
   index: number;
@@ -25,17 +26,19 @@ export type QuarkMap = Record<Flavor | "hadron", number[]>;
 export interface UIChamber {
   order: number;
   hovered: boolean;
-  tooLarge: boolean;
   x: number;
   y: number;
   label: LabelProps;
   quarkMap: QuarkMap;
-  quarkRadius: number;
 
   /**
    * Fixed value to prevent hover thrashing
    */
   hoverRadius: number;
+
+  layoutMode: ChamberLayoutMode;
+
+  quarkRadius: number;
 }
 
 export class StoreManager {
@@ -105,12 +108,12 @@ export class StoreManager {
     return {
       order: player.order,
       hovered: false,
-      tooLarge: false,
       x: 0,
       y: 0,
       quarkMap,
       quarkRadius: 75,
       hoverRadius: 70,
+      layoutMode: "full",
       label,
     };
   };

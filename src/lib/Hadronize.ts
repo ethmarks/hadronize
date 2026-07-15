@@ -456,16 +456,14 @@ export class Hadronize {
       turn: this.turn,
       activePlayer: this.activePlayer.order,
       superposedQuark: this.quarks[this.superposedIndex].superposition,
-      players: this.players.map((player) => {
-        return {
-          order: player.order,
-          name: player.name,
-          chamber: player.chamber.indices.map(
-            (index) => this.quarks[index].flavor,
-          ),
-          score: player.score,
-        };
-      }),
+      players: this.players.map((player) => ({
+        order: player.order,
+        name: player.name,
+        chamber: player.chamber.indices.map(
+          (index) => this.quarks[index].flavor,
+        ),
+        score: player.score,
+      })),
       timeline: [],
     };
 

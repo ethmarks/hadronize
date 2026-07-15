@@ -243,6 +243,7 @@ label > [type="radio"]:enabled {
 html {
     height: 100%;
     line-height: 1.4;
+    overflow-x: hidden;
 }
 
 h1,

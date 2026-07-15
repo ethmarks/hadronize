@@ -1,13 +1,13 @@
 import type { Hadronize, Result } from "../Hadronize.ts";
 import type { Flavor } from "../Quark.ts";
 import type { UIChamber, UIQuark } from "./store.svelte.ts";
+import { getVertexPos } from "../utils/polygon.ts";
 import {
-  getVertexPos,
-  getVertexDistance,
-  getGridPos,
-} from "../utils/polygon.ts";
-
-const REVOLVE_CHAMBERS = false;
+  computeLayoutPlan,
+  getFullQuarkRadius,
+  type InputChamber,
+  type LayoutPlan,
+} from "./planLayout.ts";
 
 class Container {
   width: number = $state(0);
@@ -18,13 +18,23 @@ class Container {
   y: number = $derived(this.height / 2);
 }
 
-export type ChamberLayoutType = "ring" | "grid";
+/**
+ * The layout used to place chambers in the game.
+ */
+export type GlobalLayoutMode = "ring" | "grid";
+
+/**
+ * The layout used to place quarks in a chamber.
+ */
+export type ChamberLayoutMode = "full" | "count";
+
+const PREFERRED_QUARK_SIZE = 50;
 
 export class LayoutManager {
   public container = new Container();
-  public quarkSize = $state(50);
+  public quarkSize = $state(PREFERRED_QUARK_SIZE);
 
-  public chamberLayoutType: ChamberLayoutType = "ring";
+  public globalLayoutMode: GlobalLayoutMode = "ring";
 
   constructor(
     public game: Hadronize,
@@ -42,14 +52,6 @@ export class LayoutManager {
     public labelActiveColor: string,
   ) {}
 
-  get chamberRadius(): number {
-    return Math.min(this.container.width, this.container.height) * 0.25;
-  }
-
-  get chamberSpacing(): number {
-    return getVertexDistance(this.chambers.length, this.chamberRadius);
-  }
-
   /**
    * For running inside onMount.
    */
@@ -60,35 +62,10 @@ export class LayoutManager {
     this.update();
   }
 
-  recalculateQuarkRadius(chamber: UIChamber, sides: number): void {
-    // If we have 1 or fewer sides, return early and don't change the
-    // quarkRadius.
-    if (sides <= 1) return;
-
-    // The relationship between radius and vertex distance is perfectly
-    // linear, so we can calculate it analytically rather than using a loop
-    // like I was before.
-
-    // Spacing per 1 pixel of radius
-    const spacingPerPixel = getVertexDistance(sides, 1);
-
-    const minRadius = (this.quarkSize * 1.2) / spacingPerPixel;
-    const maxRadius = (this.quarkSize * 1.6) / spacingPerPixel;
-
-    // We use a clamp so that we only change the radius when we need to,
-    // which prevents the layout from changing unnecessarily.
-    chamber.quarkRadius = Math.max(
-      minRadius,
-      Math.min(maxRadius, chamber.quarkRadius),
-    );
-  }
-
   placeQuarksFull(chamber: UIChamber) {
     const flatIndicies: number[] = Object.values(chamber.quarkMap).flat();
 
     const sides = flatIndicies.length;
-
-    this.recalculateQuarkRadius(chamber, sides);
 
     flatIndicies.forEach((quarkIndex, i) => {
       const quarkPos =
@@ -102,16 +79,6 @@ export class LayoutManager {
               chamber.quarkRadius,
               chamber.order / this.chambers.length,
             );
-
-      if (
-        chamber.quarkRadius >= this.chamberSpacing / 2 ||
-        quarkPos.x > this.container.width - this.quarkSize / 2 ||
-        quarkPos.x < 0 + this.quarkSize / 2 ||
-        quarkPos.y > this.container.height - this.quarkSize / 2 ||
-        quarkPos.y < 0 + this.quarkSize / 2
-      ) {
-        chamber.tooLarge = true;
-      }
 
       const quark = this.quarks[quarkIndex];
       quark.x = quarkPos.x - this.quarkSize / 2;
@@ -135,8 +102,6 @@ export class LayoutManager {
       ? nonEmptyByFlavor.length - 1
       : nonEmptyByFlavor.length;
 
-    this.recalculateQuarkRadius(chamber, sides);
-
     const quarkRadius = hasHadrons
       ? Math.max(this.quarkSize * 1.2, chamber.quarkRadius)
       : chamber.quarkRadius;
@@ -156,9 +121,7 @@ export class LayoutManager {
   }
 
   placeQuarks(chamber: UIChamber) {
-    const showCount = chamber.hovered || chamber.tooLarge;
-
-    if (showCount) {
+    if (chamber.layoutMode === "count") {
       this.placeQuarksCount(chamber);
     } else {
       this.placeQuarksFull(chamber);
@@ -185,57 +148,77 @@ export class LayoutManager {
     }
   }
 
-  getPosInChamberRing(
-    count: number,
-    order: number,
-    radius: number,
-  ): { x: number; y: number } {
-    return getVertexPos(
-      this.container.x,
-      this.container.y,
-      count,
-      order,
-      radius,
-      -0.25,
+  getLayoutPlan(): LayoutPlan {
+    const inputChambers: InputChamber[] = this.chambers.map((chamber) => ({
+      order: chamber.order,
+      hovered: chamber.hovered,
+      quarkMap: chamber.quarkMap,
+    }));
+
+    const inputContainer = {
+      width: this.container.width,
+      height: this.container.height,
+    };
+
+    const preferredChamberRingRadius =
+      Math.min(this.container.width, this.container.height) * 0.25;
+
+    const plan = computeLayoutPlan(
+      inputChambers,
+      inputContainer,
+      PREFERRED_QUARK_SIZE,
+      preferredChamberRingRadius,
     );
+
+    return plan;
   }
 
-  getPosInChamberGrid(count: number, order: number): { x: number; y: number } {
-    const longLength = Math.max(this.container.width, this.container.height);
-    const shortLength = Math.min(this.container.width, this.container.height);
+  applyLayoutPlan(plan: LayoutPlan): void {
+    // We check if the values are changed before modifying them to avoid
+    // unnecessarily triggering Svelte reactivity.
 
-    const { long, short } = getGridPos(count, order, longLength, shortLength);
+    plan.chambers.forEach((chamberPlan, index) => {
+      const uiChamber = this.chambers[index];
 
-    if (this.container.width > this.container.height) {
-      return { x: long, y: short };
-    } else {
-      return { x: short, y: long };
+      if (uiChamber.order !== chamberPlan.order) {
+        throw new Error("layout plan is improperly ordered");
+      }
+
+      if (uiChamber.x !== chamberPlan.x) {
+        uiChamber.x = chamberPlan.x;
+      }
+      if (uiChamber.y !== chamberPlan.y) {
+        uiChamber.y = chamberPlan.y;
+      }
+      if (uiChamber.layoutMode !== chamberPlan.layoutMode) {
+        uiChamber.layoutMode = chamberPlan.layoutMode;
+      }
+      if (uiChamber.quarkRadius !== chamberPlan.quarkRadius) {
+        uiChamber.quarkRadius = chamberPlan.quarkRadius;
+      }
+    });
+
+    if (this.globalLayoutMode !== plan.layoutMode) {
+      this.globalLayoutMode = plan.layoutMode;
     }
-  }
 
-  placeChamber(chamber: UIChamber) {
-    const count = this.chambers.length;
-    const order = REVOLVE_CHAMBERS
-      ? (chamber.order - ((this.game.turn - 1) % count) + count) % count
-      : chamber.order;
-
-    const pos =
-      this.chamberLayoutType === "ring"
-        ? this.getPosInChamberRing(count, order, this.chamberRadius)
-        : this.getPosInChamberGrid(count, order);
-
-    chamber.x = pos.x;
-    chamber.y = pos.y;
+    if (this.quarkSize !== plan.quarkSize) {
+      this.quarkSize = plan.quarkSize;
+    }
   }
 
   update() {
     this.updateContainer();
 
+    const plan = this.getLayoutPlan();
+
+    this.applyLayoutPlan(plan);
+
     this.chambers.forEach((chamber) => {
-      this.placeChamber(chamber);
+      // Chambers were already placed when we applied the layout plan
+      // this.placeChamber(chamber);
 
       this.placeQuarks(chamber);
-
       this.placeChamberLabel(chamber);
     });
 
@@ -263,5 +246,21 @@ export class LayoutManager {
     });
 
     chamber.label.color = "transparent";
+  }
+
+  focalizeChamber(chamber: UIChamber) {
+    chamber.hovered = false;
+    chamber.layoutMode = "full";
+    chamber.x = this.container.x;
+    chamber.y = this.container.y;
+
+    // UIChamber overlaps with ChamberPlan so they're compatible
+    chamber.quarkRadius = getFullQuarkRadius(chamber, this.quarkSize);
+
+    this.placeQuarks(chamber);
+
+    chamber.label.color = "#98c379";
+    chamber.label.text += " Wins!";
+    this.placeChamberLabel(chamber);
   }
 }
