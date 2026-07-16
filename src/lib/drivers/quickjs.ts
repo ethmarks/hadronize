@@ -1,4 +1,8 @@
-import { getQuickJS, shouldInterruptAfterDeadline } from "quickjs-emscripten";
+import {
+  getQuickJS,
+  QuickJSContext,
+  shouldInterruptAfterDeadline,
+} from "quickjs-emscripten";
 
 import type { CurrentGameState } from "../Hadronize.ts";
 import type { Driver, Scratchpad } from "../Player.ts";
@@ -9,34 +13,7 @@ class QuickJSError {
   constructor(public message: string) {}
 }
 
-/**
- * Simple hash for converting strings into 32-bit integers (the format that
- * mulberry32 takes as its seed)
- */
-function djb2Hash(str: string): number {
-  let hash = 5381;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) + hash + str.charCodeAt(i);
-  }
-  return hash >>> 0; // Force hash num into a 32-bit unsigned integer
-}
-
-/**
- * Adapted from
- *
- * https://github.com/ethmarks/nolet/blob/main/src/lib/runSnippet.ts
- */
-function runSnippet(
-  userCode: string,
-  state: CurrentGameState,
-  iife: boolean = true,
-): unknown {
-  const vm = QuickJS.newContext();
-
-  //
-  // Add state object
-  //
-
+function injectState(vm: QuickJSContext, state: CurrentGameState): void {
   const stateJSON = JSON.stringify(state);
 
   const jsonHandle = vm.newString(stateJSON);
@@ -53,10 +30,25 @@ function runSnippet(
 
   vm.setProp(vm.global, "state", stateHandle);
   stateHandle.dispose();
+}
 
-  //
-  // Replace Math.random with custom PRNG
-  //
+function determinizeMathDotRandom(
+  vm: QuickJSContext,
+  state: CurrentGameState,
+): void {
+  const stateJSON = JSON.stringify(state);
+
+  /**
+   * Simple hash for converting strings into 32-bit integers (the format that
+   * mulberry32 takes as its seed)
+   */
+  function djb2Hash(str: string): number {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) + hash + str.charCodeAt(i);
+    }
+    return hash >>> 0; // Force hash num into a 32-bit unsigned integer
+  }
 
   let seed = djb2Hash(stateJSON);
 
@@ -76,6 +68,23 @@ function runSnippet(
 
   mathHandle.dispose();
   mulberryHandle.dispose();
+}
+
+/**
+ * Adapted from
+ *
+ * https://github.com/ethmarks/nolet/blob/main/src/lib/runSnippet.ts
+ */
+function runSnippet(
+  userCode: string,
+  state: CurrentGameState,
+  iife: boolean = true,
+): unknown {
+  const vm = QuickJS.newContext();
+
+  injectState(vm, state);
+
+  determinizeMathDotRandom(vm, state);
 
   // Remove non-deterministic functions from the global object.
   vm.evalCode("delete Date;");
