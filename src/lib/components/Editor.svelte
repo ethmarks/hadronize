@@ -14,6 +14,7 @@ https://github.com/ethmarks/nolet/blob/main/src/lib/components/Editor.svelte
     import "prism-code-editor/scrollbar.css";
     import "prism-code-editor/autocomplete.css";
     import "prism-code-editor/autocomplete-icons.css";
+    import { onMount } from "svelte";
 
     interface Props {
         initialValue: string;
@@ -81,8 +82,7 @@ https://github.com/ethmarks/nolet/blob/main/src/lib/components/Editor.svelte
         );
     }
 
-    $effect(() => {
-        // $effect must be synchronous, but the lazy imports are necessarily asynchronous. So we move them into an async and fire-and-forget it.
+    onMount(() => {
         create(initialValue);
     });
 </script>
@@ -98,6 +98,11 @@ https://github.com/ethmarks/nolet/blob/main/src/lib/components/Editor.svelte
         margin-block: 1rem;
         border-radius: 0.5rem;
         overflow: hidden;
+    }
+
+    /** To undo holiday.css styles */
+    :global(.editor-container textarea) {
+        box-shadow: none;
     }
 
     p {

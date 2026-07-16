@@ -15,6 +15,7 @@
     const navLinks: [Title, URL][] = [
         ["Home", "/"],
         ["Play", "/play"],
+        ["Bots", "/bots"],
         ["CLI", "/cli"],
         ["Rules", "/rules"],
         ["Source", "https://github.com/ethmarks/hadronize"],

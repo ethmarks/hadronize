@@ -18,7 +18,7 @@ export const STOCK_DRIVER_PROGRAMS: DriverProgram[] = [
     description:
       "Chooses a completely random player each time. Not very smart.",
     code: js`
-  return Math.floor(Math.random() * state.players.length);
+return Math.floor(Math.random() * state.players.length);
   `,
   },
   {
