@@ -29,7 +29,7 @@ const runPrngDriver: (seed?: number) => Promise<number> = async (
   if (prngPlayer.name !== "prng")
     throw new Error("runPrngDriver did not initialize players correctly");
 
-  const result = await prngPlayer.driver(state, prngPlayer.scratchpad);
+  const result = await prngPlayer.driver(state);
 
   if (result === undefined) throw new Error("prng driver returned undefined");
 

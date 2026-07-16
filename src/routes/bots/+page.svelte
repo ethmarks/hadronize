@@ -88,11 +88,6 @@
       },
     },
   ],
-  };
-
-const pad = {
-  read: () => _scratchpadContent;
-  write: (newContent) => _scratchpadContent = newContent;
 };`;
 </script>
 
@@ -116,7 +111,7 @@ const pad = {
         id: `bot${playerTypes.length + 1}`,
         description: "I am the description! Edit me!",
         code: js`
-// remember, the state and pad variables are injected when the bot runs.
+// remember, the state variable is injected when the bot runs.
 
 // this bot tries to hadronize every single time. Doesn't even try to tunnel.
 const me = state.activePlayer;
@@ -178,13 +173,11 @@ return me;
         href="https://prism-code-editor.netlify.app/">Prism</a
     >). Remember to <code>return</code> your output at the end. You can
     reference the current state of the game through the <code>state</code>
-    variable, and you can read and write a persistent scratchpad through the
-    <code>pad</code> variable. To see an example of the format, click on the collapsible
-    below.
+    variable. To see an example of the format, click on the collapsible below.
 </p>
 
 <details>
-    <summary><code>state</code> and <code>pad</code> example</summary>
+    <summary><code>state</code> example</summary>
     <Editor initialValue={INJECT_EXAMPLE_SNIPPET} readOnly />
 </details>
 

@@ -1,4 +1,4 @@
-import type { Driver, Scratchpad } from "../Player.ts";
+import type { Driver } from "../Player.ts";
 import type { CurrentGameState, PlayerState } from "../Hadronize.ts";
 import sl, { type slChunk } from "../cli/styledLog.ts";
 import { getNbrInputFunc } from "../cli/input.ts";
@@ -75,7 +75,6 @@ async function getUserInput(state: CurrentGameState): Promise<string> {
  */
 export const manualDriver: Driver = async (
   state: CurrentGameState,
-  _pad: Scratchpad,
 ): Promise<number> => {
   let userInput: string = "";
 

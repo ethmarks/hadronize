@@ -501,10 +501,7 @@ export class Hadronize {
 
     await hooks?.preDriver?.({ game: this });
 
-    let driverResponse = await this.activePlayer.driver(
-      state,
-      this.activePlayer.scratchpad,
-    );
+    let driverResponse = await this.activePlayer.driver(state);
 
     if (driverResponse === undefined || !(driverResponse in this.players)) {
       console.warn(

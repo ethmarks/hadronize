@@ -5,7 +5,7 @@ import {
 } from "quickjs-emscripten";
 
 import type { CurrentGameState } from "../Hadronize.ts";
-import type { Driver, Scratchpad } from "../Player.ts";
+import type { Driver } from "../Player.ts";
 
 const QuickJS = await getQuickJS();
 
@@ -30,25 +30,6 @@ function injectState(vm: QuickJSContext, state: CurrentGameState): void {
 
   vm.setProp(vm.global, "state", stateHandle);
   stateHandle.dispose();
-}
-
-function injectScratchpad(vm: QuickJSContext, pad: Scratchpad): void {
-  const padHandle = vm.newObject();
-
-  const readHandle = vm.newFunction("read", () => {
-    return vm.newString(pad.read());
-  });
-  vm.setProp(padHandle, "read", readHandle);
-  readHandle.dispose();
-
-  const writeHandle = vm.newFunction("write", (contentHandle) => {
-    pad.write(vm.getString(contentHandle));
-  });
-  vm.setProp(padHandle, "write", writeHandle);
-  writeHandle.dispose();
-
-  vm.setProp(vm.global, "pad", padHandle);
-  padHandle.dispose();
 }
 
 function determinizeMathDotRandom(
@@ -97,14 +78,11 @@ function determinizeMathDotRandom(
 function runSnippet(
   userCode: string,
   state: CurrentGameState,
-  pad: Scratchpad,
   iife: boolean = true,
 ): unknown {
   const vm = QuickJS.newContext();
 
   injectState(vm, state);
-
-  injectScratchpad(vm, pad);
 
   determinizeMathDotRandom(vm, state);
 
@@ -200,13 +178,10 @@ function runSnippet(
 }
 
 export function quickjsDriverFactory(code: string): Driver {
-  return async (
-    state: CurrentGameState,
-    pad: Scratchpad,
-  ): Promise<number | undefined> => {
+  return async (state: CurrentGameState): Promise<number | undefined> => {
     const me = state.players[state.activePlayer];
 
-    const res = runSnippet(code, state, pad);
+    const res = runSnippet(code, state);
 
     if (res instanceof QuickJSError) {
       console.error(`Error from QuickJS driver (${me.name}): ${res.message}`);

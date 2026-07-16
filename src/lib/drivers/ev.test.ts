@@ -42,10 +42,7 @@ const runEVDriver: (seed: number) => Promise<number> = async (
   game.produceQuark();
   const state = game.updateState();
 
-  const result = await game.activePlayer.driver(
-    state,
-    game.activePlayer.scratchpad,
-  );
+  const result = await game.activePlayer.driver(state);
 
   if (result === undefined) throw new Error("prng driver returned undefined");
 
@@ -80,10 +77,7 @@ describe("EV Driver", () => {
 
         const state = game.updateState();
 
-        const result = await game.activePlayer.driver(
-          state,
-          game.activePlayer.scratchpad,
-        );
+        const result = await game.activePlayer.driver(state);
 
         expect(result).toBe(game.activePlayer.order);
       });
@@ -105,10 +99,7 @@ describe("EV Driver", () => {
 
         const state = game.updateState();
 
-        const result = await game.activePlayer.driver(
-          state,
-          game.activePlayer.scratchpad,
-        );
+        const result = await game.activePlayer.driver(state);
 
         expect(result).toBe(nonActivePlayer.order);
       });
@@ -125,10 +116,7 @@ describe("EV Driver", () => {
 
         const state = game.updateState();
 
-        const result = await game.activePlayer.driver(
-          state,
-          game.activePlayer.scratchpad,
-        );
+        const result = await game.activePlayer.driver(state);
 
         expect(result).toBe(game.activePlayer.order);
       });
@@ -145,10 +133,7 @@ describe("EV Driver", () => {
 
         const state = game.updateState();
 
-        const result = await game.activePlayer.driver(
-          state,
-          game.activePlayer.scratchpad,
-        );
+        const result = await game.activePlayer.driver(state);
 
         expect(result).toBe(game.activePlayer.order);
       });
@@ -178,10 +163,7 @@ describe("EV Driver", () => {
 
         const state = game.updateState();
 
-        const result = await game.activePlayer.driver(
-          state,
-          game.activePlayer.scratchpad,
-        );
+        const result = await game.activePlayer.driver(state);
 
         expect(result).toBe(nonActivePlayer.order);
       });
