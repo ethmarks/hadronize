@@ -9,15 +9,47 @@ import {
 } from "../Player.ts";
 import { type CliOptions } from "./print.ts";
 import { main } from "./main.ts";
-import { manualDriver } from "../drivers/manual.ts";
-import { prngDriver } from "../drivers/prng.ts";
 
-const SEED_VALIDATOR = (input: string): boolean => {
-  if (input === "") return true;
-  const num = Number(input);
-  if (Number.isNaN(num)) return false;
-  if (num < 1) return false;
-  return true;
+import { manualDriver } from "../drivers/manual.ts";
+import { STOCK_DRIVER_PROGRAMS, getDriver } from "../drivers/stockDrivers.ts";
+
+/** Subject to change */
+const DEFAULT_BOT_DRIVER = getDriver("prng");
+
+interface PlayerType {
+  id: string;
+  name: string;
+  driver: Driver;
+}
+
+const PLAYER_TYPES: PlayerType[] = [
+  { id: "manual", name: "Human", driver: manualDriver },
+  { id: "bot", name: "Bot", driver: DEFAULT_BOT_DRIVER },
+  ...STOCK_DRIVER_PROGRAMS.map((program) => ({
+    id: program.id,
+    name: program.name,
+    driver: getDriver(program.id),
+  })),
+];
+
+const PLAYER_IDS = PLAYER_TYPES.map((t) => `'${t.id}'`).join(", ");
+
+const findPlayerType = (input: string): PlayerType | undefined =>
+  PLAYER_TYPES.find(
+    (t) =>
+      t.id.toLowerCase() === input.toLowerCase() ||
+      t.name.toLowerCase() === input.toLowerCase(),
+  );
+
+const VALIDATORS: Record<"seed" | "playerType", (input: string) => boolean> = {
+  seed: (input: string): boolean => {
+    if (input === "") return true;
+    const num = Number(input);
+    if (Number.isNaN(num)) return false;
+    if (num < 1) return false;
+    return true;
+  },
+  playerType: (input: string): boolean => findPlayerType(input) !== undefined,
 };
 
 // Trigger Deno's Node compatibility layer by explicitly importing from node
@@ -36,7 +68,7 @@ async function getSetupViaInput(): Promise<[number, PlayerInit[]]> {
       ["Invalid seed!", "red"],
       " Enter a positive integer to use as the seed or leave blank for a random seed.",
     ],
-    SEED_VALIDATOR,
+    VALIDATORS.seed,
   );
   const seed: number =
     seedInput === "" ? Math.floor(Math.random() * 2 ** 32) : Number(seedInput);
@@ -70,7 +102,8 @@ async function getSetupViaInput(): Promise<[number, PlayerInit[]]> {
   // Print a newline
   sl([""]);
 
-  const playerInputs: { name: string; type: "human" | "bot" }[] = [];
+  const players: PlayerInit[] = [];
+
   for (let i: number = 0; i < playerCount; i++) {
     const playerName: string = await getValidatedUserInput(
       nbrInput,
@@ -85,45 +118,38 @@ async function getSetupViaInput(): Promise<[number, PlayerInit[]]> {
         ` Try only using letters, and ensure that there isn't already a player with that name.`,
       ],
       (input: string): boolean => {
-        if (playerInputs.some((p) => p.name === input)) return false;
+        if (players.some((p) => p.name === input)) return false;
         return true;
       },
     );
 
-    const playerType: string = await getValidatedUserInput(
+    const playerTypeInput: string = await getValidatedUserInput(
       nbrInput,
       [
         `What player type is `,
         [playerName, "magenta"],
         "?",
-        [` (enter either "human" or "bot")`, "gray"],
+        [` (enter one of ${PLAYER_IDS})`, "gray"],
       ],
-      [["Invalid player type!", "red"], ` Enter either "human" or "bot".`],
-      (input: string): boolean => {
-        if (input.toLowerCase() === "human") return true;
-        if (input.toLowerCase() === "bot") return true;
-        return false;
-      },
+      [["Invalid player type!", "red"], ` Enter one of ${PLAYER_IDS}.`],
+      VALIDATORS.playerType,
     );
+
+    const playerType: PlayerType = findPlayerType(playerTypeInput)!;
 
     sl([
       [`Player ${i} is named `, "gray"],
       [playerName, "yellow"],
       [" and is a ", "gray"],
-      [playerType.toLowerCase(), "yellow"],
+      [playerType.name, "yellow"],
       [".\n", "gray"],
     ]);
 
-    playerInputs.push({
+    players.push({
       name: playerName,
-      type: playerType.toLowerCase() as "human" | "bot",
+      driver: playerType.driver,
     });
   }
-
-  const players: PlayerInit[] = playerInputs.map((p) => ({
-    name: p.name,
-    driver: p.type === "human" ? manualDriver : prngDriver,
-  }));
 
   return [seed, players];
 }
@@ -165,7 +191,7 @@ function getSetupViaArgs(): [number, PlayerInit[]] | undefined {
   if (typeof values.seed === "undefined") {
     seed = Math.floor(Math.random() * 2 ** 32);
   } else {
-    if (typeof values.seed !== "string" || !SEED_VALIDATOR(values.seed))
+    if (typeof values.seed !== "string" || !VALIDATORS.seed(values.seed))
       throw new Error("Invalid arg for seed!");
 
     seed = Number(values.seed);
@@ -202,17 +228,14 @@ function getSetupViaArgs(): [number, PlayerInit[]] | undefined {
 
     const parsedType = rawType.toLowerCase();
 
-    let driver: Driver;
+    const playerType = findPlayerType(parsedType);
 
-    if (parsedType === "human") {
-      driver = manualDriver;
-    } else if (parsedType === "bot") {
-      driver = prngDriver;
-    } else {
+    if (playerType === undefined)
       throw new Error(
-        'Invalid args for players! Player type must be "human" or "bot"',
+        `Invalid args for players! Player type must be one of ${PLAYER_IDS}`,
       );
-    }
+
+    const driver = playerType.driver;
 
     return {
       name,

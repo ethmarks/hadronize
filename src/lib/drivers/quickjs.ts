@@ -223,6 +223,3 @@ export function quickjsDriverFactory(code: string): Driver {
     return res;
   };
 }
-
-export const js = (strings: TemplateStringsArray): Driver =>
-  quickjsDriverFactory(strings[0]);

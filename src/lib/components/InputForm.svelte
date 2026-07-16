@@ -3,8 +3,10 @@
     import type { PlayerInit } from "../Player.ts";
     import { QUARK_STYLES, type QuarkStyle } from "./Quark.svelte";
 
-    import { prngDriver } from "../drivers/prng.ts";
-    import { evDriver } from "../drivers/ev.ts";
+    import {
+        STOCK_DRIVER_PROGRAMS,
+        getDriver,
+    } from "../drivers/stockDrivers.ts";
     import { manualDriver } from "../drivers/manual.ts";
 
     import { slide } from "svelte/transition";
@@ -21,13 +23,13 @@
     let { submitForm }: Props = $props();
 
     let playerCount: number = $state(3);
-    let playerInputs: { name: string; type: "Human" | "Bot" }[] = $state([
-        { name: "Alice", type: "Human" },
-        { name: "Bob", type: "Bot" },
-        { name: "Charlie", type: "Bot" },
-        { name: "David", type: "Bot" },
-        { name: "Eve", type: "Bot" },
-        { name: "Frank", type: "Bot" },
+    let playerInputs: { name: string; type: string }[] = $state([
+        { name: "Alice", type: "manual" },
+        { name: "Bob", type: "ev" },
+        { name: "Charlie", type: "ev" },
+        { name: "David", type: "ev" },
+        { name: "Eve", type: "ev" },
+        { name: "Frank", type: "ev" },
     ]);
 
     let seed: number = $state(1);
@@ -44,7 +46,7 @@
     function onsubmit() {
         const inits = playerInputs.slice(0, playerCount).map((p) => ({
             name: p.name,
-            driver: p.type === "Human" ? manualDriver : evDriver,
+            driver: p.type === "manual" ? manualDriver : getDriver(p.type),
         }));
 
         submitForm(seed, inits, speed, quarkStyle);
@@ -95,8 +97,18 @@
                             id={`player${index}-type`}
                             bind:value={player.type}
                         >
-                            <option value="Human">Human</option>
-                            <option value="Bot">Bot</option>
+                            <option
+                                value="manual"
+                                title="Manually controlled player. Drag the quark on desktop or tap a chamber on mobile, or you can use the browser console."
+                                >Human</option
+                            >
+                            {#each STOCK_DRIVER_PROGRAMS as program}
+                                <option
+                                    value={program.id}
+                                    title={program.description}
+                                    >{program.name} (bot)</option
+                                >
+                            {/each}
                         </select>
                     </div>
                 </div>

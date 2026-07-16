@@ -1,9 +1,14 @@
 import { expect, describe, it } from "vitest";
 import { Hadronize } from "../Hadronize.ts";
-import { evDriver } from "./ev.ts";
 import { dogpileDriver } from "./dogpile.ts";
 import type { PlayerInit } from "../Player.ts";
 import { getRigging } from "../utils/rigging.ts";
+import { STOCK_DRIVER_PROGRAMS } from "./stockDrivers.ts";
+import { quickjsDriverFactory } from "./quickjs.ts";
+
+const evDriver = quickjsDriverFactory(
+  STOCK_DRIVER_PROGRAMS.find((program) => program.id === "ev")?.code!,
+);
 
 const getPlayers: (count: number) => PlayerInit[] = (count: number) =>
   Array.from({ length: count }).map((_, index) => ({
