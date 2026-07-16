@@ -80,6 +80,24 @@ expectedValues.sort((valA, valB) => valB.ev - valA.ev);
 return expectedValues[0].player;
 `,
   },
+  {
+    name: "Tit for tat",
+    id: "mimick",
+    description:
+      "Replicates the previous player's action. Apparently tit for tat strategies are supposed to be very effective in game theory, but I guess they don't work very well in Hadronize because this bot sucks.",
+    code: js`
+const timeline = state.timeline;
+
+if (timeline === undefined || timeline.length === 0) {
+  // If it's the first turn, we just default to random.
+  return Math.floor(Math.random() * state.players.length);
+}
+
+const lastTurn = timeline.at(-1);
+
+return lastTurn.observation.observer;
+`,
+  },
 ];
 
 export function getProgram(id: string): DriverProgram {
