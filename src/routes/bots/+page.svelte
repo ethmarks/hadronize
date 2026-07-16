@@ -3,25 +3,92 @@
     const js = (strings: TemplateStringsArray): string => strings[0];
 
     const INJECT_EXAMPLE_SNIPPET = js`const state = {
-  turn: 1,
-  activePlayer: 0,
-  superposedQuark: ["charm", "top", "strange"],
+  turn: 3,
+  activePlayer: 2,
+  superposedQuark: ["bottom", "up", "strange"],
   players: [
-      {
+    {
+      order: 0,
+      name: "Alice",
+      chamber: ["bottom", "bottom", "top"],
+      score: 2,
+    },
+    {
+      order: 1,
+      name: "Bob",
+      chamber: ["bottom", "up", "strange", "top", "down"],
+      score: 0,
+    },
+    {
+      order: 2,
+      name: "Charlie",
+      chamber: ["top", "bottom", "strange", "strange"],
+      score: 0,
+    },
+  ],
+  timeline: [
+    {
+      turn: 1,
+      activePlayer: 0,
+      superposedQuark: ["charm", "bottom", "strange"],
+      players: [
+        {
           order: 0,
           name: "Alice",
-          chamber: ["strange", "strange", "top", "top"],
+          chamber: ["bottom", "strange", "bottom", "top"],
           score: 0,
-      },
-      {
+        },
+        {
           order: 1,
           name: "Bob",
-          chamber: ["up", "up", "down", "charm"],
+          chamber: ["bottom", "up", "strange", "top"],
           score: 0,
+        },
+        {
+          order: 2,
+          name: "Charlie",
+          chamber: ["top", "bottom", "strange", "strange"],
+          score: 0,
+        },
+      ],
+      observation: {
+        activeFlavor: "strange",
+        reaction: "hadronized",
+        observer: 0,
       },
+    },
+    {
+      turn: 2,
+      activePlayer: 1,
+      superposedQuark: ["charm", "down", "up"],
+      players: [
+        {
+          order: 0,
+          name: "Alice",
+          chamber: ["bottom", "bottom", "top"],
+          score: 2,
+        },
+        {
+          order: 1,
+          name: "Bob",
+          chamber: ["bottom", "up", "strange", "top"],
+          score: 0,
+        },
+        {
+          order: 2,
+          name: "Charlie",
+          chamber: ["top", "bottom", "strange", "strange"],
+          score: 0,
+        },
+      ],
+      observation: {
+        activeFlavor: "down",
+        reaction: "no reaction",
+        observer: 1,
+      },
+    },
   ],
-  timeline: [],
-};
+  };
 
 const pad = {
   read: () => _scratchpadContent;
