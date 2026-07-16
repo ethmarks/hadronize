@@ -182,7 +182,11 @@ return me;
         gap: 0.5rem;
     }
 
-    .botedit > p {
-        font-style: italic;
+    .botedit {
+        display: grid;
+
+        & > p {
+            font-style: italic;
+        }
     }
 </style>
