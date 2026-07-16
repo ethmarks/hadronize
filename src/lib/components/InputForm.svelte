@@ -1,11 +1,12 @@
 <script lang="ts">
     import { MIN_PLAYERS, MAX_PLAYERS } from "../Hadronize.ts";
-    import type { PlayerInit } from "../Player.ts";
+    import type { Driver, PlayerInit } from "../Player.ts";
     import { QUARK_STYLES, type QuarkStyle } from "./Quark.svelte";
 
-    import { prngDriver } from "../drivers/prng.ts";
-    import { evDriver } from "../drivers/ev.ts";
     import { manualDriver } from "../drivers/manual.ts";
+    import { fetchPlayerTypes } from "../ui/playerTypes.ts";
+    import { type DriverProgram } from "../drivers/stockDrivers.ts";
+    import { quickjsDriverFactory } from "../drivers/quickjs.ts";
 
     import { slide } from "svelte/transition";
 
@@ -21,13 +22,13 @@
     let { submitForm }: Props = $props();
 
     let playerCount: number = $state(3);
-    let playerInputs: { name: string; type: "Human" | "Bot" }[] = $state([
-        { name: "Alice", type: "Human" },
-        { name: "Bob", type: "Bot" },
-        { name: "Charlie", type: "Bot" },
-        { name: "David", type: "Bot" },
-        { name: "Eve", type: "Bot" },
-        { name: "Frank", type: "Bot" },
+    let playerInputs: { name: string; type: string }[] = $state([
+        { name: "Alice", type: "manual" },
+        { name: "Bob", type: "ev" },
+        { name: "Charlie", type: "ev" },
+        { name: "David", type: "ev" },
+        { name: "Eve", type: "ev" },
+        { name: "Frank", type: "ev" },
     ]);
 
     let seed: number = $state(1);
@@ -38,13 +39,25 @@
 
     let quarkStyle: QuarkStyle = $state("solid");
 
+    // this will run once on the server during prerendering and once every time
+    // the user loads the page. During prerendering it will return the stock
+    // programs, and at runtime it will return the localstorage contents.
+    let playerTypes: DriverProgram[] = fetchPlayerTypes();
+
     const capitalizer = (str: string) =>
         str.charAt(0).toUpperCase() + str.slice(1);
+
+    const getDriver = (id: string): Driver => {
+        const program = playerTypes.find((program) => program.id === id);
+        if (program === undefined)
+            throw new Error(`couldn't find driver program for '${id}'`);
+        return quickjsDriverFactory(program.code);
+    };
 
     function onsubmit() {
         const inits = playerInputs.slice(0, playerCount).map((p) => ({
             name: p.name,
-            driver: p.type === "Human" ? manualDriver : evDriver,
+            driver: p.type === "manual" ? manualDriver : getDriver(p.type),
         }));
 
         submitForm(seed, inits, speed, quarkStyle);
@@ -95,8 +108,18 @@
                             id={`player${index}-type`}
                             bind:value={player.type}
                         >
-                            <option value="Human">Human</option>
-                            <option value="Bot">Bot</option>
+                            <option
+                                value="manual"
+                                title="Manually controlled player. Drag the quark on desktop or tap a chamber on mobile, or you can use the browser console."
+                                >Human</option
+                            >
+                            {#each playerTypes as program}
+                                <option
+                                    value={program.id}
+                                    title={program.description}
+                                    >{program.name} (bot)</option
+                                >
+                            {/each}
                         </select>
                     </div>
                 </div>

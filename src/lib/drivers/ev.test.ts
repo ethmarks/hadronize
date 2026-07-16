@@ -1,9 +1,14 @@
 import { expect, describe, it } from "vitest";
 import { Hadronize } from "../Hadronize.ts";
-import { evDriver } from "./ev.ts";
 import { dogpileDriver } from "./dogpile.ts";
 import type { PlayerInit } from "../Player.ts";
 import { getRigging } from "../utils/rigging.ts";
+import { STOCK_DRIVER_PROGRAMS } from "./stockDrivers.ts";
+import { quickjsDriverFactory } from "./quickjs.ts";
+
+const evDriver = quickjsDriverFactory(
+  STOCK_DRIVER_PROGRAMS.find((program) => program.id === "ev")?.code!,
+);
 
 const getPlayers: (count: number) => PlayerInit[] = (count: number) =>
   Array.from({ length: count }).map((_, index) => ({
@@ -37,10 +42,9 @@ const runEVDriver: (seed: number) => Promise<number> = async (
   game.produceQuark();
   const state = game.updateState();
 
-  const result = await game.activePlayer.driver(
-    state,
-    game.activePlayer.scratchpad,
-  );
+  const result = await game.activePlayer.driver(state);
+
+  if (result === undefined) throw new Error("prng driver returned undefined");
 
   return result;
 };
@@ -73,10 +77,7 @@ describe("EV Driver", () => {
 
         const state = game.updateState();
 
-        const result = await game.activePlayer.driver(
-          state,
-          game.activePlayer.scratchpad,
-        );
+        const result = await game.activePlayer.driver(state);
 
         expect(result).toBe(game.activePlayer.order);
       });
@@ -98,10 +99,7 @@ describe("EV Driver", () => {
 
         const state = game.updateState();
 
-        const result = await game.activePlayer.driver(
-          state,
-          game.activePlayer.scratchpad,
-        );
+        const result = await game.activePlayer.driver(state);
 
         expect(result).toBe(nonActivePlayer.order);
       });
@@ -118,10 +116,7 @@ describe("EV Driver", () => {
 
         const state = game.updateState();
 
-        const result = await game.activePlayer.driver(
-          state,
-          game.activePlayer.scratchpad,
-        );
+        const result = await game.activePlayer.driver(state);
 
         expect(result).toBe(game.activePlayer.order);
       });
@@ -138,10 +133,7 @@ describe("EV Driver", () => {
 
         const state = game.updateState();
 
-        const result = await game.activePlayer.driver(
-          state,
-          game.activePlayer.scratchpad,
-        );
+        const result = await game.activePlayer.driver(state);
 
         expect(result).toBe(game.activePlayer.order);
       });
@@ -171,10 +163,7 @@ describe("EV Driver", () => {
 
         const state = game.updateState();
 
-        const result = await game.activePlayer.driver(
-          state,
-          game.activePlayer.scratchpad,
-        );
+        const result = await game.activePlayer.driver(state);
 
         expect(result).toBe(nonActivePlayer.order);
       });

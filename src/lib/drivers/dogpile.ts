@@ -1,5 +1,5 @@
 import type { CurrentGameState } from "../Hadronize.ts";
-import type { Scratchpad, Driver } from "../Player.ts";
+import type { Driver } from "../Player.ts";
 
 /**
  * An extremely similar driver that just dogpiles on the player who goes
@@ -8,5 +8,4 @@ import type { Scratchpad, Driver } from "../Player.ts";
  */
 export const dogpileDriver: Driver = async (
   state: CurrentGameState,
-  pad: Scratchpad,
 ): Promise<number> => 0;

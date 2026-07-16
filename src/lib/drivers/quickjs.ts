@@ -1,0 +1,200 @@
+import {
+  getQuickJS,
+  QuickJSContext,
+  shouldInterruptAfterDeadline,
+} from "quickjs-emscripten";
+
+import type { CurrentGameState } from "../Hadronize.ts";
+import type { Driver } from "../Player.ts";
+
+const QuickJS = await getQuickJS();
+
+class QuickJSError {
+  constructor(public message: string) {}
+}
+
+function injectState(vm: QuickJSContext, state: CurrentGameState): void {
+  const stateJSON = JSON.stringify(state);
+
+  const jsonHandle = vm.newString(stateJSON);
+
+  const stateHandle = vm
+    .unwrapResult(vm.evalCode(`JSON.parse`))
+    .consume((jsonParseFn) => {
+      return vm.unwrapResult(
+        vm.callFunction(jsonParseFn, vm.undefined, jsonHandle),
+      );
+    });
+
+  jsonHandle.dispose();
+
+  vm.setProp(vm.global, "state", stateHandle);
+  stateHandle.dispose();
+}
+
+function determinizeMathDotRandom(
+  vm: QuickJSContext,
+  state: CurrentGameState,
+): void {
+  const stateJSON = JSON.stringify(state);
+
+  /**
+   * Simple hash for converting strings into 32-bit integers (the format that
+   * mulberry32 takes as its seed)
+   */
+  function djb2Hash(str: string): number {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) + hash + str.charCodeAt(i);
+    }
+    return hash >>> 0; // Force hash num into a 32-bit unsigned integer
+  }
+
+  let seed = djb2Hash(stateJSON);
+
+  const mulberryHandle = vm.newFunction("prng", () => {
+    // https://github.com/cprosche/mulberry32
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    const val = ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+
+    return vm.newNumber(val);
+  });
+
+  const mathHandle = vm.getProp(vm.global, "Math");
+
+  vm.setProp(mathHandle, "random", mulberryHandle);
+
+  mathHandle.dispose();
+  mulberryHandle.dispose();
+}
+
+/**
+ * Adapted from
+ *
+ * https://github.com/ethmarks/nolet/blob/main/src/lib/runSnippet.ts
+ */
+function runSnippet(
+  userCode: string,
+  state: CurrentGameState,
+  iife: boolean = true,
+): unknown {
+  const vm = QuickJS.newContext();
+
+  injectState(vm, state);
+
+  determinizeMathDotRandom(vm, state);
+
+  // Remove non-deterministic functions from the global object.
+  vm.evalCode("delete Date;");
+  vm.evalCode("delete performance;");
+
+  const code = iife ? `(() => {\n${userCode}\n})();` : userCode;
+
+  vm.runtime.setInterruptHandler(
+    shouldInterruptAfterDeadline(Date.now() + 1000),
+  );
+
+  let result;
+
+  try {
+    result = vm.evalCode(code);
+  } catch (err) {
+    const errMsg =
+      err instanceof Error
+        ? err.message
+        : "Unknown error while executing code.";
+
+    if (errMsg.includes("too much recursion")) {
+      return new QuickJSError(
+        "Your code uses more recursion that the engine can execute. This probably means that you have an infinite loop.",
+      );
+    }
+
+    return new QuickJSError(errMsg);
+  }
+
+  const output = (() => {
+    if (typeof result === "undefined") {
+      return new QuickJSError("Unknown error while executing code.");
+    }
+
+    if (result.error) {
+      const error = vm.dump(result.error);
+      result.error.dispose();
+
+      if (!(
+        typeof error.name === "string" && typeof error.message === "string"
+      )) {
+        return new QuickJSError("Unknown error while executing code.");
+      }
+
+      const errName = error.name as string;
+      const errMsg = error.message as string;
+
+      if (errName === "InternalError" && errMsg.includes("interrupted")) {
+        return new QuickJSError(
+          "Your code took too long to execute, so it was terminated early to prevent crashing the page. You might have an infinite loop in your code, or maybe you're just using a very inefficient algorithm.",
+        );
+      }
+
+      if (
+        (errName === "TypeError" && errMsg.includes("not a function")) ||
+        (errName === "ReferenceError" && errMsg.includes("is not defined"))
+      ) {
+        // The user might have tried to use one of the built-in functions that
+        // we removed.
+        if (code.includes("Date")) {
+          return new QuickJSError(
+            "It looks like you tried to use `Date`. `Date` is unavailable because it can produce non-deterministic outputs, which are disallowed in pure functional programming. Find another way to approach the problem.",
+          );
+        }
+        if (code.includes("performance")) {
+          return new QuickJSError(
+            "It looks like you tried to use `performance`. `performance` is unavailable because it produces non-deterministic outputs, which are disallowed in pure functional programming. Find another way to approach the problem.",
+          );
+        }
+
+        if (code.includes("console")) {
+          return new QuickJSError(
+            "It looks like you tried to use `console`. `console` is unavailable in QuickJS. Try doing an early return instead and reading the error output.",
+          );
+        }
+      }
+
+      return new QuickJSError(`${errName}: ${errMsg}`);
+    } else {
+      const value = vm.dump(result.value);
+      result.value.dispose();
+
+      return value;
+    }
+  })();
+
+  vm.dispose();
+
+  return output;
+}
+
+export function quickjsDriverFactory(code: string): Driver {
+  return async (state: CurrentGameState): Promise<number | undefined> => {
+    const me = state.players[state.activePlayer];
+
+    const res = runSnippet(code, state);
+
+    if (res instanceof QuickJSError) {
+      console.error(`Error from QuickJS driver (${me.name}): ${res.message}`);
+      return;
+    }
+
+    if (typeof res !== "number") {
+      console.error(
+        `QuickJS driver (${me.name}) returned a ${typeof res} instead of a number.`,
+      );
+      return;
+    }
+
+    return res;
+  };
+}

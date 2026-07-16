@@ -1,4 +1,3 @@
-import { prngDriver } from "./drivers/prng.ts";
 import {
   Chamber,
   Player,
@@ -502,12 +501,16 @@ export class Hadronize {
 
     await hooks?.preDriver?.({ game: this });
 
-    const observerOrder = await this.activePlayer.driver(
-      state,
-      this.activePlayer.scratchpad,
-    );
+    let driverResponse = await this.activePlayer.driver(state);
 
-    const observer = this.players[observerOrder];
+    if (driverResponse === undefined || !(driverResponse in this.players)) {
+      console.warn(
+        `${this.activePlayer.name}'s [#${this.activePlayer.order}] driver did not return a valid response. Defaulting to self-observe.`,
+      );
+      driverResponse = this.activePlayer.order;
+    }
+
+    const observer = this.players[driverResponse];
 
     await hooks?.preObservation?.({ game: this, observer });
 

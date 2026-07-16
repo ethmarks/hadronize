@@ -1,7 +1,12 @@
 import { expect, describe, it } from "vitest";
 import { Hadronize } from "../Hadronize.ts";
-import { prngDriver } from "./prng.ts";
 import { dogpileDriver } from "./dogpile.ts";
+import { STOCK_DRIVER_PROGRAMS } from "./stockDrivers.ts";
+import { quickjsDriverFactory } from "./quickjs.ts";
+
+const prngDriver = quickjsDriverFactory(
+  STOCK_DRIVER_PROGRAMS.find((program) => program.id === "prng")?.code!,
+);
 
 const runPrngDriver: (seed?: number) => Promise<number> = async (
   seed: number = 1,
@@ -24,7 +29,9 @@ const runPrngDriver: (seed?: number) => Promise<number> = async (
   if (prngPlayer.name !== "prng")
     throw new Error("runPrngDriver did not initialize players correctly");
 
-  const result = await prngPlayer.driver(state, prngPlayer.scratchpad);
+  const result = await prngPlayer.driver(state);
+
+  if (result === undefined) throw new Error("prng driver returned undefined");
 
   return result;
 };
