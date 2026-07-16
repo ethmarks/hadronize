@@ -1,13 +1,12 @@
 <script lang="ts">
     import { MIN_PLAYERS, MAX_PLAYERS } from "../Hadronize.ts";
-    import type { PlayerInit } from "../Player.ts";
+    import type { Driver, PlayerInit } from "../Player.ts";
     import { QUARK_STYLES, type QuarkStyle } from "./Quark.svelte";
 
-    import {
-        STOCK_DRIVER_PROGRAMS,
-        getDriver,
-    } from "../drivers/stockDrivers.ts";
     import { manualDriver } from "../drivers/manual.ts";
+    import { fetchPlayerTypes } from "../ui/playerTypes.ts";
+    import { type DriverProgram } from "../drivers/stockDrivers.ts";
+    import { quickjsDriverFactory } from "../drivers/quickjs.ts";
 
     import { slide } from "svelte/transition";
 
@@ -40,8 +39,20 @@
 
     let quarkStyle: QuarkStyle = $state("solid");
 
+    // this will run once on the server during prerendering and once every time
+    // the user loads the page. During prerendering it will return the stock
+    // programs, and at runtime it will return the localstorage contents.
+    let playerTypes: DriverProgram[] = fetchPlayerTypes();
+
     const capitalizer = (str: string) =>
         str.charAt(0).toUpperCase() + str.slice(1);
+
+    const getDriver = (id: string): Driver => {
+        const program = playerTypes.find((program) => program.id === id);
+        if (program === undefined)
+            throw new Error(`couldn't find driver program for '${id}'`);
+        return quickjsDriverFactory(program.code);
+    };
 
     function onsubmit() {
         const inits = playerInputs.slice(0, playerCount).map((p) => ({
@@ -102,7 +113,7 @@
                                 title="Manually controlled player. Drag the quark on desktop or tap a chamber on mobile, or you can use the browser console."
                                 >Human</option
                             >
-                            {#each STOCK_DRIVER_PROGRAMS as program}
+                            {#each playerTypes as program}
                                 <option
                                     value={program.id}
                                     title={program.description}
