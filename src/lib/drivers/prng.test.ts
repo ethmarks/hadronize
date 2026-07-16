@@ -26,6 +26,8 @@ const runPrngDriver: (seed?: number) => Promise<number> = async (
 
   const result = await prngPlayer.driver(state, prngPlayer.scratchpad);
 
+  if (result === undefined) throw new Error("prng driver returned undefined");
+
   return result;
 };
 

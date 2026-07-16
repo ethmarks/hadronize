@@ -42,6 +42,8 @@ const runEVDriver: (seed: number) => Promise<number> = async (
     game.activePlayer.scratchpad,
   );
 
+  if (result === undefined) throw new Error("prng driver returned undefined");
+
   return result;
 };
 
