@@ -30,14 +30,58 @@ export async function evaluateDriverCombo(
   });
 }
 
+// https://github.com/cprosche/mulberry32
+function mulberry32(seed: number) {
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+type Elo = number;
+
+async function rankDrivers(
+  driversToRank: Driver[],
+  gamesToPlay: number,
+): Promise<Elo[]> {
+  const elos: Elo[] = driversToRank.map(() => 0);
+
+  const rng = mulberry32(9);
+
+  const GAME_SIZE = 6;
+
+  for (let i = 0; i < gamesToPlay; i++) {
+    const seed = rng();
+
+    const indices = Array.from({ length: GAME_SIZE }).map(() =>
+      Math.floor(rng() * driversToRank.length),
+    );
+
+    const drivers = indices.map((index) => driversToRank[index]);
+
+    const rankings = await evaluateDriverCombo(seed, drivers);
+
+    indices.forEach((eloIndex, rankingIndex) => {
+      elos[eloIndex] += rankings[rankingIndex];
+    });
+  }
+
+  return elos;
+}
+
 async function demo() {
-  const prngDriver = getDriver("prng");
+  const driverIDs = ["prng", "ev", "mimick"];
 
-  const drivers = [prngDriver, prngDriver, prngDriver, prngDriver];
+  const elos = await rankDrivers(
+    driverIDs.map((id) => getDriver(id)),
+    500,
+  );
 
-  const ranking = await evaluateDriverCombo(1, drivers);
-
-  console.log(ranking);
+  console.log(
+    elos.map((elo, index) => `${driverIDs[index]}: ${elo}`).join("\n"),
+  );
 }
 
 if (import.meta.main) {
