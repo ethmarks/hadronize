@@ -62,7 +62,7 @@
 
         submitForm(seed, inits, speed, quarkStyle);
 
-        randomizeSeed();
+        if (overrideSeed === false) randomizeSeed();
     }
 
     $effect(() => {
