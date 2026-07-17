@@ -98,6 +98,25 @@ const lastTurn = timeline.at(-1);
 return lastTurn.observation.observer;
 `,
   },
+  {
+    name: "Kingslayer",
+    id: "kingslayer",
+    description: "Chooses the player with the highest score.",
+    code: js`
+const highestScore = state.players.reduce(
+  (highest, player) => (player.score > highest ? player.score : highest),
+  0,
+);
+
+const highestScoringPlayers = state.players.filter(
+  (player) => player.score === highestScore,
+);
+
+const index = Math.floor(Math.random() * highestScoringPlayers.length);
+
+return highestScoringPlayers[index].order;
+      `,
+  },
 ];
 
 export function getProgram(id: string): DriverProgram {
