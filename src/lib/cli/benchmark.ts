@@ -1,16 +1,18 @@
 import { Hadronize, type Result } from "../Hadronize.ts";
 import type { Driver, PlayerInit } from "../Player.ts";
+
 import { getDriver } from "../drivers/stockDrivers.ts";
+import { dogpileDriver } from "../drivers/dogpile.ts";
 
 import { parseArgs, type ParseArgsConfig } from "node:util";
 
-const DEFAULT_COUNT = 10000;
+const DEFAULT_COUNT = 1000;
 const DEFAULT_DRIVER = "prng";
 
 export async function runGame(
   seed: number,
   inits: PlayerInit[],
-): Promise<Exclude<Result, undefined>> {
+): Promise<number> {
   const game = new Hadronize(seed, inits);
 
   let result: Result = undefined;
@@ -19,7 +21,7 @@ export async function runGame(
     result = await game.executeTurn();
   }
 
-  return result;
+  return game.turn;
 }
 
 export async function runBenchmark(
@@ -40,7 +42,7 @@ export async function runBenchmark(
 
   const statusReposIntervals = Math.round(Math.min(count / 30, 100));
 
-  let results: Result[] = [];
+  let totalTurns: number = 0;
 
   // run games sequentially
   for (let i = 0; i < count; i++) {
@@ -48,8 +50,8 @@ export async function runBenchmark(
       console.log(`${Math.round((i / count) * 100)}%`);
     }
 
-    const result = await runGame(i, inits);
-    results.push(result);
+    const finalTurn = await runGame(i, inits);
+    totalTurns += finalTurn;
   }
 
   console.log("100%");
@@ -58,7 +60,7 @@ export async function runBenchmark(
   const ms = fin - start;
   const seconds = ms / 1000;
 
-  console.log(results);
+  console.log(`Simulated ${totalTurns} turns across ${count} games`);
 
   console.log(
     `Took ${ms}ms (${seconds}s). Speed is ${count / seconds} games per second`,
