@@ -4,7 +4,7 @@ import { getDriver } from "../drivers/stockDrivers.ts";
 
 import { parseArgs, type ParseArgsConfig } from "node:util";
 
-const DEFAULT_COUNT = 1000;
+const DEFAULT_COUNT = 10000;
 const DEFAULT_DRIVER = "prng";
 
 export async function runGame(
@@ -38,14 +38,14 @@ export async function runBenchmark(
   console.log("Starting benchmark...");
   const start = new Date().getTime();
 
-  const statusReposIntervals = 100;
+  const statusReposIntervals = Math.round(Math.min(count / 30, 100));
 
   let results: Result[] = [];
 
   // run games sequentially
   for (let i = 0; i < count; i++) {
     if (i % statusReposIntervals === 0) {
-      console.log(`${(i / count) * 100}%`);
+      console.log(`${Math.round((i / count) * 100)}%`);
     }
 
     const result = await runGame(i, inits);
