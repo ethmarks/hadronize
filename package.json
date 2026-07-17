@@ -11,7 +11,8 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test": "vitest",
-    "cli": "tsx ./src/lib/cli/demo.ts"
+    "cli": "tsx ./src/lib/cli/demo.ts",
+    "bench": "tsx ./src/lib/cli/benchmark.ts"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",
