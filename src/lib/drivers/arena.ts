@@ -22,7 +22,7 @@ export async function evaluateDriverCombo(
   const sortedPlayers = game.state!.players.sort((b, a) => b.score - a.score);
 
   return inits.map(({ name }) => {
-    const rank = sortedPlayers.findIndex((p) => p.name === name);
+    const rank = sortedPlayers.findIndex((p) => p.name === name) + 1;
 
     if (rank === undefined) throw new Error("unreachable state");
 
@@ -77,7 +77,12 @@ async function rankDrivers(
     );
 
     driverCombo.forEach(({ originalIndex }, rankingIndex) => {
-      drivers[originalIndex].elo += rankings[rankingIndex];
+      const ranking = rankings[rankingIndex];
+
+      // only increment elo if the player actually won
+      if (ranking === driverCombo.length - 1) {
+        drivers[originalIndex].elo += 1;
+      }
     });
   }
 
@@ -85,7 +90,7 @@ async function rankDrivers(
 }
 
 async function demo() {
-  const driverIDs = ["prng", "ev", "mimick"];
+  const driverIDs = ["prng", "ev", "mimick", "kingslayer", "charm"];
 
   const elos = await rankDrivers(
     driverIDs.map((id) => getDriver(id)),
