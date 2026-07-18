@@ -48,10 +48,7 @@ export class StoreManager {
 
   public result: Result = $state(undefined);
 
-  constructor(
-    public game: Hadronize,
-    public labelDefaultColor: string,
-  ) {
+  constructor(public game: Hadronize) {
     this.quarks = $state(this.game.quarks.map(this.initQuark));
 
     this.chambers = $state(this.game.players.map(this.initChamber));
@@ -101,7 +98,7 @@ export class StoreManager {
       x: 0,
       y: 0,
       text: this.game.players[player.order].name,
-      color: this.labelDefaultColor,
+      status: "passive",
       fontSizeRem: 2,
     };
 

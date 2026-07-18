@@ -46,10 +46,6 @@ export class LayoutManager {
     // Store getters
     public syncQuarks: () => void,
     public getResult: () => Result,
-
-    // Constants
-    public labelDefaultColor: string,
-    public labelActiveColor: string,
   ) {}
 
   /**
@@ -131,10 +127,8 @@ export class LayoutManager {
   placeChamberLabel(chamber: UIChamber) {
     chamber.label.x = chamber.x;
     chamber.label.y = chamber.y - chamber.quarkRadius - this.quarkSize;
-    chamber.label.color =
-      this.game.activePlayer.order === chamber.order
-        ? this.labelActiveColor
-        : this.labelDefaultColor;
+    chamber.label.status =
+      this.game.activePlayer.order === chamber.order ? "active" : "passive";
   }
 
   updateContainer() {
@@ -245,7 +239,7 @@ export class LayoutManager {
       quark.y = this.container.height;
     });
 
-    chamber.label.color = "transparent";
+    chamber.label.status = "hidden";
   }
 
   focalizeChamber(chamber: UIChamber) {
@@ -259,8 +253,8 @@ export class LayoutManager {
 
     this.placeQuarks(chamber);
 
-    chamber.label.color = "#98c379";
-    chamber.label.text += " Wins!";
     this.placeChamberLabel(chamber);
+    chamber.label.status = "yay";
+    chamber.label.text += " Wins!";
   }
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
     import Quark from "./Quark.svelte";
     import DropIndicator from "./DropIndicator.svelte";
-    import Label from "./Label.svelte";
+    import Label, { type LabelProps } from "./Label.svelte";
     import { LayoutManager } from "../ui/layout.svelte.ts";
     import { MouseManager } from "../ui/mouse.svelte.ts";
     import { StoreManager } from "../ui/store.svelte.ts";
@@ -11,7 +11,7 @@
 
     import { type CliOptions } from "../cli/print.ts";
 
-    import { onMount } from "svelte";
+    import { mount, onMount, unmount } from "svelte";
 
     interface Props {
         gameParams: ConstructorParameters<typeof Hadronize>;
@@ -20,9 +20,6 @@
     }
 
     let { gameParams, speed, abortSignal }: Props = $props();
-
-    const LABEL_DEFAULT_COLOR = "black";
-    const LABEL_ACTIVE_COLOR = "#f2b74b";
 
     const CLI_OPT: CliOptions = {
         abbreviate: true,
@@ -41,7 +38,7 @@
     // managers use a non-null assertion operator on game.superposedIndex.
     game.produceQuark();
 
-    const store = new StoreManager(game, LABEL_DEFAULT_COLOR);
+    const store = new StoreManager(game);
 
     const layout = new LayoutManager(
         game,
@@ -49,8 +46,6 @@
         store.chambers,
         () => store.syncQuarks(),
         () => store.result,
-        LABEL_DEFAULT_COLOR,
-        LABEL_ACTIVE_COLOR,
     );
 
     const mouse = new MouseManager(
@@ -60,6 +55,32 @@
         () => store.result,
     );
 
+    let popupLabelContainer: HTMLElement;
+
+    function makePopupLabel(text: string, ms: number = 500): void {
+        // init
+        const popupLabelProps: LabelProps = $state({
+            text,
+            status: "popup",
+            x: layout.container.x,
+            y: layout.container.y,
+            fontSizeRem: 2.9,
+        });
+        const instance = mount(Label, {
+            target: popupLabelContainer,
+            props: popupLabelProps,
+            intro: false,
+        });
+
+        // rise up
+        popupLabelProps.y = layout.container.y - 70;
+
+        // end
+        setTimeout(() => {
+            unmount(instance, { outro: true });
+        }, ms);
+    }
+
     const loop = new LoopManager(
         game,
         store,
@@ -67,6 +88,7 @@
         mouse,
         () => speed,
         CLI_OPT,
+        makePopupLabel,
         // svelte-ignore state_referenced_locally
         abortSignal,
     );
@@ -111,6 +133,8 @@
             <Label {...chamber.label} />
         {/each}
     </div>
+
+    <div class="popupLabel" bind:this={popupLabelContainer}></div>
 
     <DropIndicator {...mouse.dropIndicator} />
 </div>

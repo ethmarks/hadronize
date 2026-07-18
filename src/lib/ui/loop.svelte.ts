@@ -23,6 +23,7 @@ export class LoopManager {
     public mouse: MouseManager,
     public getSpeed: () => number,
     public opt: CliOptions,
+    public makePopupLabel: (text: string) => void,
     public abortSignal?: AbortSignal,
   ) {}
 
@@ -70,11 +71,28 @@ export class LoopManager {
         await this.sleep(250);
       },
 
-      preChecks: async (ctx: { observation: Observation }) => {
+      preChecks: async (ctx: { game: Hadronize; observation: Observation }) => {
         const reaction = ctx.observation.reaction;
 
         if (reaction === "hadronized") {
+          const newestHadron = ctx.game.activePlayer.chamber.hadrons.at(-1);
+
+          if (newestHadron === undefined) {
+            throw new Error(
+              "reaction was set equal to hadronized but the active player doesn't have any hadrons.",
+            );
+          }
+
+          const term = newestHadron.term;
+
+          console.log(term);
+          console.log(this.makePopupLabel);
+
           playSound("hadronize.ogg", 0.5);
+
+          this.makePopupLabel(`${term}`);
+
+          console.log("so it worked");
         } else if (reaction === "tunneled") {
           playSound("tunnel.ogg");
         }
