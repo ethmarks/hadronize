@@ -5,6 +5,8 @@
 
 Quark-themed set collection game you can play in your browser.
 
+![Hadronize banner](./.github/screenshot_banner.png)
+
 ## How to use
 
 Hadronize is still under very heavy development, and right now the only usable part of Hadronize is the CLI. However, the CLI is (mostly) fully-functional, and you can use in a few different ways.
