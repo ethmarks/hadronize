@@ -16,10 +16,11 @@
     interface Props {
         gameParams: ConstructorParameters<typeof Hadronize>;
         speed: number;
+        termPopups: boolean;
         abortSignal?: AbortSignal;
     }
 
-    let { gameParams, speed, abortSignal }: Props = $props();
+    let { gameParams, speed, termPopups, abortSignal }: Props = $props();
 
     const CLI_OPT: CliOptions = {
         abbreviate: true,
@@ -58,6 +59,8 @@
     let popupLabelContainer: HTMLElement;
 
     function makePopupLabel(text: string, ms: number = 500): void {
+        if (!termPopups) return;
+
         // init
         const popupLabelProps: LabelProps = $state({
             text,

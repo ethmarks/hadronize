@@ -26,6 +26,7 @@
         inits: PlayerInit[],
         speed: number,
         inputQuarkStyle: QuarkStyle,
+        termPopups: boolean,
     ) {
         // This is the first guaranteed user interaction, so we hijack it to
         // decode the sounds
@@ -45,12 +46,17 @@
 
         quarkStyle = inputQuarkStyle;
 
-        mountGame(seed, inits, speed);
+        mountGame(seed, inits, speed, termPopups);
     }
 
     let aborter: AbortController;
 
-    function mountGame(seed: number, inits: PlayerInit[], speed?: number) {
+    function mountGame(
+        seed: number,
+        inits: PlayerInit[],
+        speed: number,
+        termPopups: boolean,
+    ) {
         // Don't start a new game while another one is still running
         if (gameInstance) return;
 
@@ -64,7 +70,8 @@
             target: gameContainer,
             props: {
                 gameParams: [seed, inits],
-                speed: speed ?? 1,
+                speed,
+                termPopups,
                 abortSignal: aborter.signal,
             },
         });

@@ -16,6 +16,7 @@
             inits: PlayerInit[],
             speed: number,
             quarkStyle: QuarkStyle,
+            termPopups: boolean,
         ) => void;
     }
 
@@ -39,6 +40,8 @@
 
     let quarkStyle: QuarkStyle = $state("solid");
 
+    let termPopups: boolean = $state(false);
+
     // this will run once on the server during prerendering and once every time
     // the user loads the page. During prerendering it will return the stock
     // programs, and at runtime it will return the localstorage contents.
@@ -60,7 +63,7 @@
             driver: p.type === "manual" ? manualDriver : getDriver(p.type),
         }));
 
-        submitForm(seed, inits, speed, quarkStyle);
+        submitForm(seed, inits, speed, quarkStyle, termPopups);
 
         if (overrideSeed === false) randomizeSeed();
     }
@@ -129,7 +132,7 @@
         <details>
             <summary>Advanced </summary>
 
-            <div class="overrideSeedContainer">
+            <div class="boolInput">
                 <label for="seed">Override seed</label>
 
                 <input
@@ -165,6 +168,15 @@
                     <option value={style}>{capitalizer(style)}</option>
                 {/each}
             </select>
+
+            <div class="boolInput">
+                <label for="termPopups">Show hadron term popup labels</label>
+                <input
+                    id="termPopups"
+                    type="checkbox"
+                    bind:checked={termPopups}
+                />
+            </div>
         </details>
 
         <button type="submit">Start Game</button>
@@ -200,7 +212,7 @@
         }
     }
 
-    .overrideSeedContainer {
+    .boolInput {
         display: flex;
         align-items: center;
         justify-content: start;
