@@ -85,14 +85,9 @@ export class LoopManager {
 
           const term = newestHadron.term;
 
-          console.log(term);
-          console.log(this.makePopupLabel);
-
           playSound("hadronize.ogg", 0.5);
 
           this.makePopupLabel(`${term}`);
-
-          console.log("so it worked");
         } else if (reaction === "tunneled") {
           playSound("tunnel.ogg");
         }
