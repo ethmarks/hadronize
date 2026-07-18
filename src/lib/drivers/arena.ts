@@ -40,13 +40,19 @@ function mulberry32(seed: number) {
   };
 }
 
-type Elo = number;
+interface DriverRank {
+  driver: Driver;
+  elo: number;
+}
 
 async function rankDrivers(
   driversToRank: Driver[],
   gamesToPlay: number,
-): Promise<Elo[]> {
-  const elos: Elo[] = driversToRank.map(() => 0);
+): Promise<DriverRank[]> {
+  const drivers: DriverRank[] = driversToRank.map((driver) => ({
+    driver,
+    elo: 1200,
+  }));
 
   const rng = mulberry32(9);
 
@@ -55,20 +61,27 @@ async function rankDrivers(
   for (let i = 0; i < gamesToPlay; i++) {
     const seed = rng();
 
-    const indices = Array.from({ length: GAME_SIZE }).map(() =>
-      Math.floor(rng() * driversToRank.length),
+    const driverCombo: { originalIndex: number; driver: Driver }[] = Array.from(
+      { length: GAME_SIZE },
+    ).map(() => {
+      const index = Math.floor(rng() * driversToRank.length);
+      return {
+        originalIndex: index,
+        driver: driversToRank[index],
+      };
+    });
+
+    const rankings = await evaluateDriverCombo(
+      seed,
+      driverCombo.map((dc) => dc.driver),
     );
 
-    const drivers = indices.map((index) => driversToRank[index]);
-
-    const rankings = await evaluateDriverCombo(seed, drivers);
-
-    indices.forEach((eloIndex, rankingIndex) => {
-      elos[eloIndex] += rankings[rankingIndex];
+    driverCombo.forEach(({ originalIndex }, rankingIndex) => {
+      drivers[originalIndex].elo += rankings[rankingIndex];
     });
   }
 
-  return elos;
+  return drivers;
 }
 
 async function demo() {
@@ -80,7 +93,7 @@ async function demo() {
   );
 
   console.log(
-    elos.map((elo, index) => `${driverIDs[index]}: ${elo}`).join("\n"),
+    elos.map((elo, index) => `${driverIDs[index]}: ${elo.elo}`).join("\n"),
   );
 }
 
