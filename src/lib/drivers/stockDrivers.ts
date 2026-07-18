@@ -112,9 +112,16 @@ const highestScoringPlayers = state.players.filter(
   (player) => player.score === highestScore,
 );
 
-const index = Math.floor(Math.random() * highestScoringPlayers.length);
+const highscoreMe = highestScoringPlayers.find(
+  (player) => player.order === state.activePlayer,
+);
 
-return highestScoringPlayers[index].order;
+if (highscoreMe !== undefined) {
+  return highscoreMe.order
+} else {
+  const index = Math.floor(Math.random() * highestScoringPlayers.length);
+  return highestScoringPlayers[index].order;
+}
       `,
   },
   {
