@@ -1,6 +1,9 @@
 # Hadronize
 
-Quark-themed set collection game you can play in your browser
+[![Demo](https://img.shields.io/badge/demo-live-green)](https://ethmarks.github.io/hadronize/)
+[![GitHub](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/ethmarks/hadronize)
+
+Quark-themed set collection game you can play in your browser.
 
 ## How to use
 
