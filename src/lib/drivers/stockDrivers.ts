@@ -117,6 +117,44 @@ const index = Math.floor(Math.random() * highestScoringPlayers.length);
 return highestScoringPlayers[index].order;
       `,
   },
+  {
+    name: "Gentleman",
+    id: "charm",
+    description: "Collects as many charm quarks as possible.",
+    code: js`
+if (!state.superposedQuark.includes("charm")) {
+  // If charm isn't even a possibility, what's the point? I'll just do a
+  // self-observe I guess.
+  return state.activePlayer;
+}
+
+// Helper for determining how charming a given player is
+const charmingness = (player) =>
+  player.chamber.filter((quark) => quark === "charm").length;
+
+const mostCharm = state.players.reduce((most, player) => {
+  const charm = charmingness(player);
+  return charm > most ? charm : most;
+}, 0);
+
+const mostCharmingPlayers = state.players.filter(
+  (player) => charmingness(player) === mostCharm,
+);
+
+const charmingMe = mostCharmingPlayers.find(
+  (player) => player.order === state.activePlayer,
+);
+
+if (charmingMe !== undefined) {
+  // Prefer self-observes to lock in charm so others can't steal charm
+  return charmingMe.order;
+} else {
+  // Try to steal charm from others
+  const index = Math.floor(Math.random() * mostCharmingPlayers.length);
+  return mostCharmingPlayers[index].order;
+}
+`,
+  },
 ];
 
 export function getProgram(id: string): DriverProgram {
