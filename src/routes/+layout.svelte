@@ -17,7 +17,7 @@
         ["Play", "/play"],
         ["Bots", "/bots"],
         ["CLI", "/cli"],
-        ["Rules", "/rules"],
+        ["How to Play", "/how"],
         ["Source", "https://github.com/ethmarks/hadronize"],
     ];
 </script>
