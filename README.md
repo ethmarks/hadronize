@@ -105,12 +105,13 @@ superposition is between charm, strange, and up. Alice...
 
 ## Acknowledgements
 
-The rules/mechanics of Hadronize are _heavily_ inspired by the card game
-[Mantis](https://www.explodingkittens.com/products/mantis) by Exploding Kittens.
-My original intention was to just create a digital version of Mantis, but I was
-concerned about copyright, so instead I created a separate game with _very_
-similar rules to Mantis (though there are some differences) with a quantum
-physics theme of my own design.
+- Thanks to Exploding Kittens for making [Mantis](https://www.explodingkittens.com/products/mantis), which Hadronize is _heavily_ inspired by.
+- Thanks to [
+View EvgenyOrekhov's full-sized avatar
+Evgeny Orekhov ](https://github.com/EvgenyOrekhov) for making [holiday.css](https://holidaycss.js.org/), which is used as a base for the website styles (though the actual game UI was made entirely by me).
+- Thanks to [Fabrice Bellard](https://github.com/bellard) for making [QuickJS](https://github.com/bellard/quickjs) and to [Jake Teton-Landis](https://github.com/justjake) for [porting it to WASM](https://github.com/justjake/quickjs-emscripten), which is used for running the drivers.
+- Thanks to [Jonas Pytte](https://github.com/jonpyt) for making [Prism code editor](https://github.com/jonpyt/prism-code-editor), which is used for the IDE in the bot editor.
+- Thanks to [Oleksii](https://github.com/alexeyraspopov) for making [picocolors](https://github.com/alexeyraspopov/picocolors), which is used for the ANSI colors in the CLI.
 
 ## License
 
