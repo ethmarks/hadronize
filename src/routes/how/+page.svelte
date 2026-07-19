@@ -71,7 +71,7 @@
     </li>
     <li>
         You shouldn't need to mess with the advanced settings, unless you're
-        colorblind, in which case you should change the quark style the
+        colorblind, in which case you should change the quark style to
         "patterned".
     </li>
     <li>Press "Start Game"</li>
@@ -337,7 +337,7 @@
     composed of all the same flavor. There are some exceptions, like
     <a href="https://en.wikipedia.org/wiki/Delta_baryon"
         >Delta-plus-plus baryons</a
-    >, but they're extremely unstable.
+    >, but they're also extremely unstable.
 </p>
 
 <p>
