@@ -307,7 +307,44 @@
 
 <h3>Conclusion</h3>
 
-<p>Congratulations! You now know how to play Hadronize. Have fun!</p>
+<blockquote>
+    Congratulations! You now know how to play Hadronize. <a href="./play"
+        >Go play!</a
+    >
+</blockquote>
+
+<p>
+    While you're here, did you know that the theme of Hadronize is based on
+    actual physics?
+</p>
+
+<p>
+    <a href="https://en.wikipedia.org/wiki/Hadronization">Hadronization</a> is a
+    real process where quarks bond together via the
+    <a href="https://en.wikipedia.org/wiki/Strong_interaction"
+        >strong nuclear force</a
+    >
+    and form <a href="https://en.wikipedia.org/wiki/Hadron">hadrons</a>. In
+    reality, the only standard configurations are groups of threes (which are
+    called
+    <a href="https://en.wikipedia.org/wiki/Baryon">baryons</a>).
+    <a href="https://en.wikipedia.org/wiki/Meson">Mesons</a> are hadrons made of
+    two quarks, but they only form matter-antimatter pairs. Groups of four (<a
+        href="https://en.wikipedia.org/wiki/Tetraquark">tetraquarks</a
+    >) and five (<a href="https://en.wikipedia.org/wiki/Pentaquark"
+        >pentaquarks</a
+    >) do exist, but they're extremely unstable. Also, baryons usually aren't
+    composed of all the same flavor. There are some exceptions, like
+    <a href="https://en.wikipedia.org/wiki/Delta_baryon"
+        >Delta-plus-plus baryons</a
+    >, but they're extremely unstable.
+</p>
+
+<p>
+    As you can see, I had to compromise a bit on scientific realism to avoid
+    making the game boring, but hopefully you'll agree that Hadronize is more
+    realistic than most works with a "quantum" theme.
+</p>
 
 <style>
     img,
