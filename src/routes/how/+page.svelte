@@ -300,9 +300,9 @@
     of developing Hadronize (<a
         href="https://hackatime.hackclub.com/@ethmarks/project/hadronize"
         >more than 100</a
-    >), I have never once hit the turn limit unless I was specifically trying to
-    for testing purposes. If you manage accidentally encounter the turn limit,
-    you should feel accomplished.
+    >) and many playtests with friends, I have never once hit the turn limit
+    unless I was specifically trying to for testing purposes. If you manage
+    accidentally encounter the turn limit, you should feel accomplished.
 </p>
 
 <h3>Conclusion</h3>
