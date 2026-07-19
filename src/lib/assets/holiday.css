@@ -340,6 +340,7 @@ video,
 embed,
 object {
     width: 100%;
+    height: auto;
 }
 
 [type="range"],
