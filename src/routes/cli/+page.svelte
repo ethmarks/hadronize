@@ -28,7 +28,9 @@
     No installation or repo cloning needed!
 </p>
 
-<pre><code>deno run -A http://ethmarks.github.io/hadronize/cli.ts</code></pre>
+<pre id="deno"><code
+        >deno run -A http://ethmarks.github.io/hadronize/cli.ts</code
+    ></pre>
 
 <p>
     If you don't have <a href="https://deno.com/">Deno</a> installed, you can
@@ -70,21 +72,21 @@ cd hadronize</code
     ></pre>
 
 <ul>
-    <li>
+    <li id="npm">
         npm
         <pre><code
                 >npm install
 npm run cli</code
             ></pre>
     </li>
-    <li>
+    <li id="pnpm">
         pnpm
         <pre><code
                 >pnpm install
 pnpm run cli</code
             ></pre>
     </li>
-    <li>
+    <li id="bun">
         bun
         <pre><code
                 >bun install

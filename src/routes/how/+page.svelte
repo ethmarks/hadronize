@@ -221,7 +221,7 @@
 </p>
 
 <ul>
-    <li>
+    <li id="desktop">
         <p>
             Desktop: just drag and drop the superposed quark onto your target
             chamber. An indicator will appear around the chamber when you've
@@ -239,7 +239,7 @@
             ></video>
         </figure>
     </li>
-    <li>
+    <li id="mobile">
         <p>Mobile: just tap on your target chamber. Simple as that.</p>
 
         <figure>
@@ -254,7 +254,7 @@
             ></video>
         </figure>
     </li>
-    <li>
+    <li id="console">
         <p>
             Browser console (bonus): you can also play Hadronize in the browser
             console! Just type in the name of the player whose chamber you want
