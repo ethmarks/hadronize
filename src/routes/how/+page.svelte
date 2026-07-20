@@ -14,7 +14,7 @@
 </script>
 
 <svelte:head>
-    <title>How to Play | Hadronize</title>
+    <title>How to Play Hadronize</title>
 </svelte:head>
 
 <h2>How to Play</h2>

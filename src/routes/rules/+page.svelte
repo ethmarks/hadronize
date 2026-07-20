@@ -1,5 +1,5 @@
 <svelte:head>
-    <title>Rules | Hadronize</title>
+    <title>Hadronize Rules</title>
 </svelte:head>
 
 <h2>Rules</h2>

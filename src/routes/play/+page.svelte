@@ -98,7 +98,7 @@
 </script>
 
 <svelte:head>
-    <title>Play | Hadronize</title>
+    <title>Play Hadronize</title>
 </svelte:head>
 
 <h2>Play</h2>

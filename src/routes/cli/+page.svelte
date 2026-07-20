@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-    <title>CLI | Hadronize</title>
+    <title>Hadronize CLI</title>
 </svelte:head>
 
 <h2>CLI</h2>

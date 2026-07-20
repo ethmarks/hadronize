@@ -138,6 +138,10 @@ return me;
     });
 </script>
 
+<svelte:head>
+    <title>Hadronize Bot Editor</title>
+</svelte:head>
+
 <h2>Bots</h2>
 
 <p>You can create your own Hadronize bots and play against them!</p>
