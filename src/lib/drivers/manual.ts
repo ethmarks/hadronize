@@ -45,7 +45,7 @@ async function getUserInput(state: CurrentGameState): Promise<string> {
 
     // Event listener lets the UI take a turn via CustomEvent.
     window.addEventListener("takeTurn", (event) => {
-      takeTurn((event as any).detail.playerOrder);
+      takeTurn((event as CustomEvent).detail.playerOrder);
     });
 
     // Pause execution until takeTurn() is run
