@@ -9,6 +9,7 @@ Quark-themed set collection game you can play in your browser.
 
 ## Quickstart
 
+> [!TIP]
 > **The recommended starting point is <https://ethmarks.github.io/hadronize/how>.**
 
 If you'd like to jump right in without reading the rules or instructions, you can either visit <https://ethmarks.github.io/hadronize/play> to play in your browser, or you can run the following command to play in your terminal:
