@@ -1,8 +1,9 @@
 import {
   getQuickJS,
-  QuickJSContext,
   shouldInterruptAfterDeadline,
-} from "quickjs-emscripten";
+  type QuickJSContext,
+  type QuickJSHandle,
+} from "../deps/quickjs-emscripten.ts";
 
 import type { CurrentGameState } from "../Hadronize.ts";
 import type { Driver } from "../Player.ts";
@@ -20,7 +21,7 @@ function injectState(vm: QuickJSContext, state: CurrentGameState): void {
 
   const stateHandle = vm
     .unwrapResult(vm.evalCode(`JSON.parse`))
-    .consume((jsonParseFn) => {
+    .consume((jsonParseFn: QuickJSHandle) => {
       return vm.unwrapResult(
         vm.callFunction(jsonParseFn, vm.undefined, jsonHandle),
       );
