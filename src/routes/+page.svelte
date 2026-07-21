@@ -14,7 +14,6 @@
     </p>
 
     <p>
-        To get started, <a href="./rules">read the rules</a>, then head to the
-        <a href="./play">play page</a>.
+        To get started, head to the <a href="./how">How to Play page</a>.
     </p>
 </main>
