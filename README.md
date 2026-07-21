@@ -5,7 +5,7 @@
 
 Quark-themed set collection game you can play in your browser.
 
-![Hadronize banner](./.github/screenshot_banner.png)
+![Hadronize banner](./src/lib/assets/banner2.png)
 
 ## Quickstart
 

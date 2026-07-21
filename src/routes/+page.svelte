@@ -1,3 +1,7 @@
+<script lang="ts">
+    import banner from "$lib/assets/banner2.png";
+</script>
+
 <svelte:head>
     <title>Hadronize</title>
 </svelte:head>
@@ -13,7 +17,22 @@
         you might wind up gifting the quark to an opponent!
     </p>
 
+    <figure>
+        <img
+            alt="Hadronize setup form"
+            src={banner}
+            width="1711"
+            height="762"
+        />
+    </figure>
+
     <p>
         To get started, head to the <a href="./how">How to Play page</a>.
     </p>
 </main>
+
+<style lang="scss">
+    img {
+        border-radius: 1rem;
+    }
+</style>
