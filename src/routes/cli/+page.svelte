@@ -29,7 +29,7 @@
 </p>
 
 <pre id="deno"><code
-        >deno run -A http://ethmarks.github.io/hadronize/cli.ts</code
+        >deno run -A https://ethmarks.github.io/hadronize/cli.ts</code
     ></pre>
 
 <p>
@@ -42,19 +42,19 @@
     <li>
         npm
         <pre><code
-                >npx deno run -A http://ethmarks.github.io/hadronize/cli.ts</code
+                >npx deno run -A https://ethmarks.github.io/hadronize/cli.ts</code
             ></pre>
     </li>
     <li>
         pnpm
         <pre><code
-                >pnpm dlx deno run -A http://ethmarks.github.io/hadronize/cli.ts</code
+                >pnpm dlx deno run -A https://ethmarks.github.io/hadronize/cli.ts</code
             ></pre>
     </li>
     <li>
         bun
         <pre><code
-                >bunx deno run -A http://ethmarks.github.io/hadronize/cli.ts</code
+                >bunx deno run -A https://ethmarks.github.io/hadronize/cli.ts</code
             ></pre>
     </li>
 </ul>
