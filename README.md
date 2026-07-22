@@ -143,13 +143,35 @@ If it's already tried all of the adjustments and it *still* can't make everythin
 
 ## Running Locally
 
-To run the web UI locally, make sure that you have git and pnpm installed, then run these commands:
+Prerequisites:
+
+- pnpm 10.28.0
+- Node 24.15.0
+
+Installing:
 
 ```sh
 git clone https://github.com/ethmarks/hadronize.git
 cd hadronize
 pnpm install
+```
+
+Running the web UI:
+
+```sh
 pnpm dev
+```
+
+Running the test suite:
+
+```sh
+pnpm test
+```
+
+Running the CLI natively (I've also tested this with Deno 2.9.3 and Bun 1.3.14):
+
+```sh
+pnpm run cli
 ```
 
 ## Acknowledgements
