@@ -26,7 +26,7 @@ deno run -A https://ethmarks.github.io/hadronize/cli.ts
 - **User-created bots**: Players can be controlled by bots whose source code can be altered on-the-fly at runtime in the [bot editor](https://ethmarks.github.io/hadronize/bots).
 - **CLI that also works in the browser console**: The [Hadronize CLI](#cli) can run in Node, Deno, Bun, and the browser console. The first three required making the entire codebase a polyglot that only uses the subset of TypeScript that both Node and Deno support without a compatibility layer. To make the browser console accept user input, I used a trick involving dynamically created named window properties.
 - **Comprehensive test suite**: 120 total unit tests that verify that the game logic is implemented correctly and detect regressions.
-- **Easy onboarding**: [How to play page](https://ethmarks.github.io/hadronize/how) that explains how the rules and how to use the UI in 3-4 minutes assuming zero knowledge.
+- **Easy onboarding**: [How to play page](https://ethmarks.github.io/hadronize/how) that explains the rules and how to use the UI in 3-4 minutes assuming zero knowledge.
 
 ## How it Works
 
@@ -55,12 +55,12 @@ I wrote 380+ lines of unit tests using Vitest that verify that each function in 
 
 All players are controlled by drivers, which are basically just JavaScript functions that take the current game state as their input and output what action the player should take. The two main driver types are the manual driver and QuickJS drivers.
 
-The [manual driver](https://github.com/ethmarks/hadronize/blob/main/src/lib/drivers/manual.ts) is the one assigned to human players. It automatically detects whether its being run in a terminal or a browser and behaves accordingly. 
+The [manual driver](https://github.com/ethmarks/hadronize/blob/main/src/lib/drivers/manual.ts) is the one assigned to human players. It automatically detects whether it's being run in a terminal or a browser and behaves accordingly. 
 - In the terminal, it automatically routes to the standard input function for the runtime (`prompt` on Deno and Bun, `readline.question` on Node) and queries the user for input using that function. 
-- In the browser, it sets up an event listener that the UI can trigger via the `takeTurn` Custom Event. It also creates named properties of `window` for each player that, when called, invoke an anonymous getter function which executes the turn. Then it waits for user input by pausing execution with a void promise until either the event listener fires or one of the `window` properties are invoked, both of which resolve the promise and resume execution. 
+- In the browser, it sets up an event listener that the UI can trigger via the `takeTurn` Custom Event. It also creates named properties of `window` for each player that, when called, invoke an anonymous getter function which executes the turn. Then it waits for user input by pausing execution with a void promise until either the event listener fires or one of the `window` properties is invoked, both of which resolve the promise and resume execution. 
 
 Most bot drivers are produced using the [QuickJS driver factory](https://github.com/ethmarks/hadronize/blob/main/src/lib/drivers/quickjs.ts). It's a function that inputs a string of JavaScript code and outputs a driver that runs that code using QuickJS. This allows drivers to be created on-the-fly from user code.
-- The `Math.random` function is swapped with a custom function that stringifes the current game state, passes the string through a [djb2](https://github.com/dim13/djb2) hash, and uses the hashed result to seed a [mulberry32](https://github.com/cprosche/mulberry32) PRNG. This ensures that all bots remain completely deterministic while still allowing users to use randomness.
+- The `Math.random` function is swapped with a custom function that stringifies the current game state, passes the string through a [djb2](https://github.com/dim13/djb2) hash, and uses the hashed result to seed a [mulberry32](https://github.com/cprosche/mulberry32) PRNG. This ensures that all bots remain completely deterministic while still allowing users to use randomness.
 - The untrusted code is executed with an interrupt handler to guard against infinite loops that would crash the UI. Infinite recursion is also safely handled.
 
 ### CLI
