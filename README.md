@@ -5,7 +5,7 @@
 
 Quark-themed set collection game you can play in your browser.
 
-![Hadronize banner](./src/lib/assets/banner2.png)
+<p align="center"><img src="./src/lib/assets/banner2.png" /></p>
 
 ## Quickstart
 
@@ -37,7 +37,7 @@ The codebase can basically be divided into four sections:
 
 ### Game Logic
 
-![Game logic source code](./.github/logiccode.png)
+<p align="center"><img src="./.github/logiccode.png" /></p>
 
 The game logic is composed of only a handful of files, which keep track of the game state, implement methods, and define the types and interfaces that every other part of the codebase uses.
 
@@ -49,7 +49,7 @@ I wrote 380+ lines of unit tests using Vitest that verify that each function in 
 
 ### Drivers
 
-![Source code for a bot](./.github/botcode.png)
+<p align="center"><img src="./.github/botcode.png" /></p>
 
 All players are controlled by drivers, which are basically just JavaScript functions that take the current game state as their input and output what action the player should take. The two main driver types are the manual driver and QuickJS drivers.
 
@@ -63,7 +63,7 @@ Most bot drivers are produced using the [QuickJS driver factory](https://github.
 
 ### CLI
 
-![Hadronize CLI](./.github/cli.png)
+<p align="center"><img src="./.github/cli.png" /></p>
 
 The Hadronize CLI was the first interface I built after writing the game logic.
 
@@ -94,7 +94,7 @@ Bob (1) +s
 
 ### Web UI
 
-![Hadronize Web UI](./.github/ui.png)
+<p align="center"><img src="./.github/ui.png" /></p>
 
 The Hadronize web UI is the most complex part of the project.
 
