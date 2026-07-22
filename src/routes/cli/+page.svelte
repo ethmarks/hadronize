@@ -95,7 +95,7 @@ bun run cli</code
     </li>
     <li>
         deno
-        <pre><code>deno run cli</code></pre>
+        <pre><code>deno task cli</code></pre>
     </li>
 </ul>
 
