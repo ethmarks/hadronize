@@ -15,8 +15,10 @@ Quark-themed set collection game you can play in your browser.
 However, if you'd like to jump right in without reading the rules or instructions, you can either visit <https://ethmarks.github.io/hadronize/play> to play in your browser, or you can run the following command to play in your terminal: 
 
 ```sh
-npx deno run -A http://ethmarks.github.io/hadronize/cli.ts
+deno run -A https://ethmarks.github.io/hadronize/cli.ts
 ```
+
+(if you don't have Deno installed globally, you can prefix command with `npx`, `pnpm dlx`, or `bunx` and it should work because of the [Deno wrapper on npm](https://www.npmjs.com/package/deno))
 
 ## Features
 
