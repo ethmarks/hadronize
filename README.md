@@ -37,6 +37,8 @@ The codebase can basically be divided into four sections:
 
 ### Game Logic
 
+![Game logic source code](./.github/logiccode.png)
+
 The game logic is composed of only a handful of files, which keep track of the game state, implement methods, and define the types and interfaces that every other part of the codebase uses.
 
 All of the game logic is perfectly deterministic. I used a seeded [mulberry32](https://github.com/cprosche/mulberry32) PRNG to pre-generate the superposition and flavor of all quarks that will ever be used in the game to avoid making nondeterministic code.
@@ -46,6 +48,8 @@ Quark data is stored exclusively in a single global `game.quarks` array. Players
 I wrote 380+ lines of unit tests using Vitest that verify that each function in the game logic alters the game state to produce the expected state.
 
 ### Drivers
+
+![Source code for a bot](./.github/botcode.png)
 
 All players are controlled by drivers, which are basically just JavaScript functions that take the current game state as their input and output what action the player should take. The two main driver types are the manual driver and QuickJS drivers.
 
@@ -58,6 +62,8 @@ Most bot drivers are produced using the [QuickJS driver factory](https://github.
 - The untrusted code is executed with an interrupt handler to guard against infinite loops that would crash the UI. Infinite recursion is also safely handled.
 
 ### CLI
+
+![Hadronize CLI](./.github/cli.png)
 
 The Hadronize CLI was the first interface I built after writing the game logic.
 
@@ -87,6 +93,8 @@ Bob (1) +s
 ```
 
 ### Web UI
+
+![Hadronize Web UI](./.github/ui.png)
 
 The Hadronize web UI is the most complex part of the project.
 
