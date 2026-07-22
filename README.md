@@ -39,7 +39,7 @@ The codebase can basically be divided into four sections:
 
 <p align="center"><img src="./.github/logiccode.png" /></p>
 
-The game logic is composed of only a handful of files, which keep track of the game state, implement methods, and define the types and interfaces that every other part of the codebase uses.
+The game logic is composed of about ~1,100 lines of TypeScript, which keeps track of the game state, implements methods, and defines the types and interfaces that every other part of the codebase uses.
 
 All of the game logic is perfectly deterministic. I used a seeded [mulberry32](https://github.com/cprosche/mulberry32) PRNG to pre-generate the superposition and flavor of all quarks that will ever be used in the game to avoid making nondeterministic code.
 
@@ -115,7 +115,7 @@ Chambers can be in one of two layout modes: full mode and count mode.
 
 Full mode is the default, and it looks the nicest in my opinion. Each quark occupies one vertex on a regular polygon. So if a chamber has 6 quarks, they'll be arranged in a hexagon with 120-degree interior angles.
 
-Count mode is the space-saving fallback that looks less nice but us much more compact, especially for large chambers. Each quark flavor (plus hadrons) occupies one vertex on a regular polygon, so the largest possible shape is a heptagon. The number of quarks of each flavor (plus hadrons) is communicated by changing the quark text to a number.
+Count mode is the space-saving fallback that looks less nice but is much more compact, especially for large chambers. Each quark flavor (plus hadrons) occupies one vertex on a regular polygon, so the largest possible shape is a heptagon. The number of quarks of each flavor (plus hadrons) is communicated by changing the quark text to a number.
 
 Chambers also have labels, which *are* actual DOM elements. Similar to the quark component, the label component has its position passed through a Svelte spring for smooth movement.
 
