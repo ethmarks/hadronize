@@ -141,6 +141,17 @@ The adjustments that it can make, in ascending order of disruptiveness:
 
 If it's already tried all of the adjustments and it *still* can't make everything fit without overlapping, it gives up and returns its best attempt. In practice, I've only been able to make this happen by emulating absurdly small screen sizes (<200px wide). With realistic screen sizes, it can consistently keep every element visible on screen, even with dozens of quarks.
 
+## Running Locally
+
+To run the web UI locally, make sure that you have git and pnpm installed, then run these commands:
+
+```sh
+git clone https://github.com/ethmarks/hadronize.git
+cd hadronize
+pnpm install
+pnpm dev
+```
+
 ## Acknowledgements
 
 - Thanks to Exploding Kittens for making [Mantis](https://www.explodingkittens.com/products/mantis), which Hadronize is _heavily_ inspired by.
