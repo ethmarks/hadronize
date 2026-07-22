@@ -3,7 +3,7 @@
 [![Demo](https://img.shields.io/badge/demo-live-green)](https://ethmarks.github.io/hadronize/)
 [![GitHub](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/ethmarks/hadronize)
 
-Quark-themed set collection game you can play in your browser.
+Quark-themed set collection game where players combine quarks to form hadrons. Playable in your browser, terminal, or browser console (!).
 
 <p align="center"><img src="./src/lib/assets/banner2.png" /></p>
 
@@ -125,7 +125,7 @@ Chambers also have labels, which *are* actual DOM elements. Similar to the quark
 
 The layout optimization algorithm is what allows Hadronize to run perfectly on every screen resolution without using hardcoded breakpoints.
 
-Each time a new layout update is triggered, the layout manager calculates a brand new layout plan from scratch. Once it's finished calculating, it applies the layout plan onto the actual layout variables that are used to move the quarks on the screen. The reason for using a virtual layout os that modifying the layout variables directly while calculating the layout would trigger a flurry of hundreds of reactive updates from Svelte, which would slow down the page much more than calculating everything virtually and then applying it.
+Each time a new layout update is triggered, the layout manager calculates a brand new layout plan from scratch. Once it's finished calculating, it applies the layout plan onto the actual layout variables that are used to move the quarks on the screen. The reason for using a virtual layout is that modifying the layout variables directly while calculating the layout would trigger a flurry of hundreds of reactive updates from Svelte, which would slow down the page much more than calculating everything virtually and then applying it.
 
 Each layout plan initializes the layout variables to their ideal, preferred values. Then it repeats the following steps:
 
@@ -145,7 +145,7 @@ If it's already tried all of the adjustments and it *still* can't make everythin
 
 ## Running Locally
 
-Prerequisites:
+Prerequisites (version numbers are just what I use; other versions probably work too):
 
 - pnpm 10.28.0
 - Node 24.15.0
