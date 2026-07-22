@@ -99,7 +99,7 @@ bun run cli</code
     </li>
 </ul>
 
-<h3>Browser</h3>
+<h3 id="browser-console">Browser Console</h3>
 
 <p>
     You can also play Hadronize in the browser console. Just <a

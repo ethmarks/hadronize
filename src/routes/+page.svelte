@@ -9,14 +9,6 @@
 <main>
     <h2>Welcome to Hadronize!</h2>
 
-    <p>
-        Hadronize is a quark-themed set collection game. On each turn, a player
-        gets to decide who will observe a quark in superposition. Choose wisely,
-        and you can score your quarks by hadronizing them, or you can steal
-        another player's quarks by quantum-tunneling them. Choose poorly, and
-        you might wind up gifting the quark to an opponent!
-    </p>
-
     <figure>
         <img
             alt="Hadronize setup form"
@@ -27,8 +19,15 @@
     </figure>
 
     <p>
-        To get started, head to the <a href="./how">How to Play page</a>.
+        Quark-themed set collection game where players combine quarks to form
+        hadrons. Playable in your <a href="./how">browser</a>,
+        <a href="./cli">terminal</a>, or even
+        <a href="./cli#browser-console">browser console</a> (!).
     </p>
+
+    <blockquote>
+        To get started, head to the <a href="./how">How to Play</a> page.
+    </blockquote>
 </main>
 
 <style lang="scss">

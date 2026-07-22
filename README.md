@@ -3,7 +3,7 @@
 [![Demo](https://img.shields.io/badge/demo-live-green)](https://ethmarks.github.io/hadronize/)
 [![GitHub](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/ethmarks/hadronize)
 
-Quark-themed set collection game where players combine quarks to form hadrons. Playable in your browser, terminal, or browser console (!).
+Quark-themed set collection game where players combine quarks to form hadrons. Playable in your browser, terminal, or even browser console (!).
 
 <p align="center"><img src="./src/lib/assets/banner2.png" /></p>
 
@@ -18,7 +18,7 @@ However, if you'd like to jump right in without reading the rules or instruction
 deno run -A https://ethmarks.github.io/hadronize/cli.ts
 ```
 
-(if you don't have Deno installed globally, you can prefix command with `npx`, `pnpm dlx`, or `bunx` and it should work because of the [Deno wrapper on npm](https://www.npmjs.com/package/deno))
+(if you don't have Deno installed globally, you can prefix the command with `npx`, `pnpm dlx`, or `bunx` and it should work because of the [Deno wrapper on npm](https://www.npmjs.com/package/deno))
 
 ## Features
 
